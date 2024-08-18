@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 )
@@ -20,21 +19,20 @@ type acceptedVals struct {
 }
 
 func handlerUsers(w http.ResponseWriter, r *http.Request) {
+	// Unmarshal body data and return params
 	params, err := getParams(r, w)
 	if err != nil {
 		log.Printf("\nError: %v", err)
 	}
+
 	switch r.Method {
+	// POST create a user
 	case http.MethodPost:
-
-		fmt.Printf("This is params.username and params.pass: %v and %v", params.Username, params.Password)
-
 		payload := &returnVals{
 			Username: params.Username,
 		}
 		respondWithJSON(w, 200, payload)
 	}
-
 }
 
 func getParams(r *http.Request, w http.ResponseWriter) (acceptedVals, error) {
