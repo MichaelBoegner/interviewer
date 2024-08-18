@@ -15,7 +15,8 @@ func main() {
 		Addr:    ":" + port,
 		Handler: mux,
 	}
-
+	mux.HandleFunc("/api/users", handlerUsers)
 	log.Printf("Serving files from %s on port: %s\n", filepathRoot, port)
 	log.Fatal(srv.ListenAndServe())
+
 }
