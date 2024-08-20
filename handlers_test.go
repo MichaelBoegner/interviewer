@@ -3,44 +3,54 @@ package main
 import (
 	"bytes"
 	"encoding/json"
-	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestHandlerUsers(t *testing.T) {
-	// Create a request to pass to handler
-	payload := map[string]string{"username": "testuser", "password": "testpass"}
-	jsonPayload, err := json.Marshal(payload)
-	if err != nil {
-		t.Fatal(err)
+	// Mock DB connection
+	db, mock, err := sqlmock.New()
+	require.NoError(t, err)
+	defer db.Close()
+
+	apiCfgMock := &apiConfig{
+		DB: db,
 	}
 
-	req, err := http.NewRequest(http.MethodPost, "/api/users", bytes.NewBuffer((jsonPayload)))
-	if err != nil {
-		t.Fatal(err)
-	}
+	// Expect the INSERT query to be called
+	mock.ExpectExec("INSERT INTO users").
+		WithArgs("testuser").
+		WillReturnResult(sqlmock.NewResult(1, 1))
 
-	// Create a ResponseRecorder to record the response
-	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(handlerUsers)
+	// Create a new HTTP request
+	testBody := map[string]string{
+		"username": "testuser",
+		"password": "test1234",
+	}
+	body, err := json.Marshal(testBody)
+	require.NoError(t, err)
+
+	// Create a new HTTP request with the JSON body
+	req := httptest.NewRequest(http.MethodPost, "/api/users", bytes.NewBuffer(body))
+	w := httptest.NewRecorder()
 
 	// Call the handler
-	handler.ServeHTTP(rr, req)
+	apiCfgMock.handlerUsers(w, req)
 
-	// Check the status code
-	if status := rr.Code; status != http.StatusOK {
-		t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusOK)
-	}
+	// Expected payload
+	expectedPayload := `{"username":"testuser"}`
 
-	// Check the response body
-	expected := `{"username":"testuser"}`
-	result, err := io.ReadAll(rr.Body)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if !bytes.Equal(result, []byte(expected)) {
-		t.Errorf("handler returned unexpected body: \ngot %v \nwant %v\n", string(result), expected)
-	}
+	// Assertions
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.JSONEq(t, expectedPayload, w.Body.String())
+	assert.Equal(t, "application/json", w.Header().Get("Content-Type"))
+
+	// Ensure that the SQL expectations were met
+	err = mock.ExpectationsWereMet()
+	require.NoError(t, err)
 }

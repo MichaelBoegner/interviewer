@@ -1,9 +1,14 @@
 package main
 
 import (
+	"database/sql"
 	"log"
 	"net/http"
 )
+
+type apiConfig struct {
+	DB *sql.DB
+}
 
 func main() {
 	const filepathRoot = "."
@@ -15,7 +20,9 @@ func main() {
 		Addr:    ":" + port,
 		Handler: mux,
 	}
-	mux.HandleFunc("/api/users", handlerUsers)
+
+	apiCfg := &apiConfig{}
+	mux.HandleFunc("/api/users", apiCfg.handlerUsers)
 	log.Printf("Serving files from %s on port: %s\n", filepathRoot, port)
 	log.Fatal(srv.ListenAndServe())
 

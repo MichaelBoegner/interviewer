@@ -18,16 +18,22 @@ type acceptedVals struct {
 	Password string `json:"password"`
 }
 
-func handlerUsers(w http.ResponseWriter, r *http.Request) {
+func (apiCfg *apiConfig) handlerUsers(w http.ResponseWriter, r *http.Request) {
 	// Unmarshal body data and return params
 	params, err := getParams(r, w)
 	if err != nil {
-		log.Printf("\nError: %v", err)
+		log.Printf("Error: %v\n", err)
 	}
 
 	switch r.Method {
 	// POST create a user
 	case http.MethodPost:
+		_, err := apiCfg.DB.Exec("INSERT INTO users (username) VALUES ($1)", params.Username)
+		if err != nil {
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			return
+		}
+
 		payload := &returnVals{
 			Username: params.Username,
 		}
