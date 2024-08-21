@@ -1,13 +1,14 @@
 package main
 
 import (
-	"database/sql"
 	"log"
 	"net/http"
+
+	"github.com/michaelboegner/interviewer/database"
 )
 
 type apiConfig struct {
-	DB *sql.DB
+	DB *database.DB
 }
 
 func main() {

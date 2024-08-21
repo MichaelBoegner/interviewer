@@ -18,6 +18,7 @@ func TestHandlerUsers(t *testing.T) {
 	require.NoError(t, err)
 	defer db.Close()
 
+	// Mock instance of &apiConfig{}
 	apiCfgMock := &apiConfig{
 		DB: db,
 	}

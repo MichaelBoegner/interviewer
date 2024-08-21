@@ -41,6 +41,33 @@ func (apiCfg *apiConfig) handlerUsers(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (apiCfg *apiConfig) handlerLogin(w http.ResponseWriter, r *http.Request) {
+	// Unmarshal body data and return params
+	params, err := getParams(r, w)
+	if err != nil {
+		log.Printf("Error: %v\n", err)
+	}
+
+	switch r.Method {
+	// POST login a user
+	case http.MethodPost:
+		user, id, token, err := cfg.db.LoginUser(params.Email, params.Password, jwtSecret, params.ExpiresInSeconds)
+		if err != nil {
+			respondWithError(w, 401, "Unauthorized")
+		}
+
+		payload := &returnVals{
+			Id:           id,
+			Email:        user.Email,
+			Token:        token,
+			RefreshToken: user.RefreshToken,
+			IsChirpyRed:  cfg.db.DatabaseStructure.Users[id].IsChirpyRed,
+		}
+
+		respondWithJSON(w, 200, payload)
+	}
+}
+
 func getParams(r *http.Request, w http.ResponseWriter) (acceptedVals, error) {
 	decoder := json.NewDecoder(r.Body)
 	params := acceptedVals{}
