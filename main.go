@@ -8,7 +8,7 @@ import (
 )
 
 type apiConfig struct {
-	DB *database.DB
+	DB *database.Database
 }
 
 func main() {
@@ -22,7 +22,15 @@ func main() {
 		Handler: mux,
 	}
 
-	apiCfg := &apiConfig{}
+	db, err := database.StartDB()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	apiCfg := &apiConfig{
+		DB: db,
+	}
+
 	mux.HandleFunc("/api/users", apiCfg.handlerUsers)
 	log.Printf("Serving files from %s on port: %s\n", filepathRoot, port)
 	log.Fatal(srv.ListenAndServe())

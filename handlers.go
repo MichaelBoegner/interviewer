@@ -11,6 +11,8 @@ type returnVals struct {
 	Id       int    `json:"id,omitempty"`
 	Body     string `json:"body,omitempty"`
 	Username string `json:"username,omitempty"`
+	Email    string `json:"email,omitempty"`
+	Token    string `json:"token,omitempty"`
 }
 
 type acceptedVals struct {
@@ -20,53 +22,51 @@ type acceptedVals struct {
 
 func (apiCfg *apiConfig) handlerUsers(w http.ResponseWriter, r *http.Request) {
 	// Unmarshal body data and return params
-	params, err := getParams(r, w)
+	_, err := getParams(r, w)
 	if err != nil {
 		log.Printf("Error: %v\n", err)
 	}
 
-	switch r.Method {
-	// POST create a user
-	case http.MethodPost:
-		_, err := apiCfg.DB.Exec("INSERT INTO users (username) VALUES ($1)", params.Username)
-		if err != nil {
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-			return
-		}
+	// switch r.Method {
+	// // POST create a user
+	// case http.MethodPost:
+	// 	_, err := apiCfg.DB.Exec("INSERT INTO users (username) VALUES ($1)", params.Username)
+	// 	if err != nil {
+	// 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	// 		return
+	// 	}
 
-		payload := &returnVals{
-			Username: params.Username,
-		}
-		respondWithJSON(w, 200, payload)
-	}
+	// 	payload := &returnVals{
+	// 		Username: params.Username,
+	// 	}
+	// 	respondWithJSON(w, 200, payload)
+	// }
 }
 
-func (apiCfg *apiConfig) handlerLogin(w http.ResponseWriter, r *http.Request) {
-	// Unmarshal body data and return params
-	params, err := getParams(r, w)
-	if err != nil {
-		log.Printf("Error: %v\n", err)
-	}
+// func (apiCfg *apiConfig) handlerLogin(w http.ResponseWriter, r *http.Request) {
+// 	// Unmarshal body data and return params
+// 	params, err := getParams(r, w)
+// 	if err != nil {
+// 		log.Printf("Error: %v\n", err)
+// 	}
 
-	switch r.Method {
-	// POST login a user
-	case http.MethodPost:
-		user, id, token, err := cfg.db.LoginUser(params.Email, params.Password, jwtSecret, params.ExpiresInSeconds)
-		if err != nil {
-			respondWithError(w, 401, "Unauthorized")
-		}
+// 	switch r.Method {
+// 	// POST login a user
+// 	case http.MethodPost:
+// 		user, id, token, err := apiCfg.DB.LoginUser(params.Email, params.Password, jwtSecret, params.ExpiresInSeconds)
+// 		if err != nil {
+// 			respondWithError(w, 401, "Unauthorized")
+// 		}
 
-		payload := &returnVals{
-			Id:           id,
-			Email:        user.Email,
-			Token:        token,
-			RefreshToken: user.RefreshToken,
-			IsChirpyRed:  cfg.db.DatabaseStructure.Users[id].IsChirpyRed,
-		}
+// 		payload := &returnVals{
+// 			Id:    id,
+// 			Email: user.Email,
+// 			Token: token,
+// 		}
 
-		respondWithJSON(w, 200, payload)
-	}
-}
+// 		respondWithJSON(w, 200, payload)
+// 	}
+// }
 
 func getParams(r *http.Request, w http.ResponseWriter) (acceptedVals, error) {
 	decoder := json.NewDecoder(r.Body)
