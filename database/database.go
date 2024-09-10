@@ -8,11 +8,7 @@ import (
 	_ "github.com/lib/pq"
 )
 
-type Database struct {
-	DB *sql.DB
-}
-
-func StartDB() (*Database, error) {
+func StartDB() (*sql.DB, error) {
 	connStr := "user=michaelboegner dbname=interviewerio sslmode=disable"
 
 	// Open the connection
@@ -20,7 +16,6 @@ func StartDB() (*Database, error) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer db.Close()
 
 	// Ensure the connection is successful
 	err = db.Ping()
@@ -29,10 +24,6 @@ func StartDB() (*Database, error) {
 	}
 	fmt.Println("Connected to the database successfully!")
 
-	database := &Database{
-		DB: db,
-	}
-
-	return database, nil
+	return db, nil
 
 }

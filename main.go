@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"log"
 	"net/http"
 
@@ -8,7 +9,7 @@ import (
 )
 
 type apiConfig struct {
-	DB *database.Database
+	DB *sql.DB
 }
 
 func main() {
