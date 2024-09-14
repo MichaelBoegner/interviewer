@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 )
@@ -44,7 +43,6 @@ func (apiCfg *apiConfig) handlerUsers(w http.ResponseWriter, r *http.Request) {
 	case http.MethodPost:
 		_, err := apiCfg.DB.Exec("INSERT INTO users (username, password, email) VALUES ($1, $2, $3)", params.Username, params.Password, params.Email)
 		if err != nil {
-			fmt.Printf("Error coming back: %v", err)
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 			return
 		}
@@ -65,47 +63,36 @@ func (apiCfg *apiConfig) handlerUsers(w http.ResponseWriter, r *http.Request) {
 			Users: userMap,
 		}
 		for rows.Next() {
-			fmt.Printf("\nNext Row\n")
 			user := User{}
 			rows.Scan(&user.Id, &user.Username, &user.Email)
-			fmt.Printf("username: %v \nemail: %v\n", user.Username, user.Email)
 			users.Users[user.Id] = user
-			fmt.Printf("Users: %v\n", users.Users)
 		}
-		fmt.Printf("Users completed: %v\n", users.Users)
+
 		payload := &returnVals{
 			Users: users.Users,
 		}
-		fmt.Printf("Payload: %v\n", payload)
 
 		respondWithJSON(w, http.StatusOK, payload)
 	}
 }
 
-// func (apiCfg *apiConfig) handlerLogin(w http.ResponseWriter, r *http.Request) {
-// 	// Unmarshal body data and return params
-// 	params, err := getParams(r, w)
-// 	if err != nil {
-// 		log.Printf("Error: %v\n", err)
-// 	}
+func (apiCfg *apiConfig) handlerLogin(w http.ResponseWriter, r *http.Request) {
+	// Unmarshal body data and return params
+	params, err := getParams(r, w)
+	if err != nil {
+		log.Printf("Error: %v\n", err)
+	}
 
-// 	switch r.Method {
-// 	// POST login a user
-// 	case http.MethodPost:
-// 		user, id, token, err := apiCfg.DB.LoginUser(params.Email, params.Password, jwtSecret, params.ExpiresInSeconds)
-// 		if err != nil {
-// 			respondWithError(w, 401, "Unauthorized")
-// 		}
-
-// 		payload := &returnVals{
-// 			Id:    id,
-// 			Email: user.Email,
-// 			Token: token,
-// 		}
-
-// 		respondWithJSON(w, 200, payload)
-// 	}
-// }
+	switch r.Method {
+	// POST login a user
+	case http.MethodPost:
+		_, err := apiCfg.DB.Exec("SELECT (username, password) from users WHERE username = $1 and password = $2 ", params.Username, params.Password)
+		if err != nil {
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			return
+		}
+	}
+}
 
 func getParams(r *http.Request, w http.ResponseWriter) (acceptedVals, error) {
 	decoder := json.NewDecoder(r.Body)

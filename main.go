@@ -33,6 +33,8 @@ func main() {
 	}
 
 	mux.HandleFunc("/api/users", apiCfg.handlerUsers)
+	mux.HandleFunc("/api/login", apiCfg.handlerLogin)
+
 	log.Printf("Serving files from %s on port: %s\n", filepathRoot, port)
 	log.Fatal(srv.ListenAndServe())
 
