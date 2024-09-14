@@ -65,7 +65,6 @@ func (apiCfg *apiConfig) handlerUsers(w http.ResponseWriter, r *http.Request) {
 			Users: userMap,
 		}
 		for rows.Next() {
-			rows.Next()
 			fmt.Printf("\nNext Row\n")
 			user := User{}
 			rows.Scan(&user.Id, &user.Username, &user.Email)
