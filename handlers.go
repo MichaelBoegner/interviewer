@@ -14,13 +14,13 @@ type acceptedVals struct {
 }
 
 type Users struct {
-	users map[int]User
+	Users map[int]User
 }
 
 type User struct {
-	id       int
-	username string
-	email    string
+	Id       int
+	Username string
+	Email    string
 }
 type returnVals struct {
 	Error    string       `json:"error,omitempty"`
@@ -62,20 +62,20 @@ func (apiCfg *apiConfig) handlerUsers(w http.ResponseWriter, r *http.Request) {
 		}
 		userMap := make(map[int]User)
 		users := &Users{
-			users: userMap,
+			Users: userMap,
 		}
 		for rows.Next() {
 			rows.Next()
 			fmt.Printf("\nNext Row\n")
 			user := User{}
-			rows.Scan(&user.id, &user.username, &user.email)
-			fmt.Printf("username: %v \nemail: %v\n", user.username, user.email)
-			users.users[user.id] = user
-			fmt.Printf("Users: %v\n", users.users)
+			rows.Scan(&user.Id, &user.Username, &user.Email)
+			fmt.Printf("username: %v \nemail: %v\n", user.Username, user.Email)
+			users.Users[user.Id] = user
+			fmt.Printf("Users: %v\n", users.Users)
 		}
-		fmt.Printf("Users completed: %v\n", users.users)
+		fmt.Printf("Users completed: %v\n", users.Users)
 		payload := &returnVals{
-			Users: users.users,
+			Users: users.Users,
 		}
 		fmt.Printf("Payload: %v\n", payload)
 
