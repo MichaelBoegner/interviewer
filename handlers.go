@@ -35,15 +35,16 @@ type returnVals struct {
 }
 
 func (apiCfg *apiConfig) handlerUsers(w http.ResponseWriter, r *http.Request) {
-	// Unmarshal body data and return params
-	params, err := getParams(r, w)
-	if err != nil {
-		log.Printf("Error: %v\n", err)
-	}
 
 	switch r.Method {
 	// POST create a user
 	case http.MethodPost:
+		// Unmarshal body data and return params
+		params, err := getParams(r, w)
+		if err != nil {
+			log.Printf("Error: %v\n", err)
+			return
+		}
 		password, err := bcrypt.GenerateFromPassword([]byte(params.Password), bcrypt.MinCost)
 		if err != nil {
 			log.Printf("Error: %v\n", err)
@@ -110,13 +111,13 @@ func (apiCfg *apiConfig) handlerLogin(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Invalid username or password", http.StatusUnauthorized)
 			return
 		}
-	}
 
-	payload := returnVals{
-		Username: params.Username,
-	}
+		payload := returnVals{
+			Username: params.Username,
+		}
 
-	respondWithJSON(w, http.StatusOK, payload)
+		respondWithJSON(w, http.StatusOK, payload)
+	}
 }
 
 func getParams(r *http.Request, w http.ResponseWriter) (acceptedVals, error) {
@@ -132,7 +133,13 @@ func getParams(r *http.Request, w http.ResponseWriter) (acceptedVals, error) {
 }
 
 func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
-	w.Header().Set("Content-Type", "application/json")
+	if w.Header().Get("Content-Type") == "" {
+		w.Header().Set("Content-Type", "application/json")
+	}
+
+	if code != 0 {
+		w.WriteHeader(code)
+	}
 
 	data, err := json.Marshal(payload)
 	if err != nil {
@@ -141,22 +148,26 @@ func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
 		return
 	}
 
-	w.WriteHeader(code)
 	w.Write(data)
 }
 
 func respondWithError(w http.ResponseWriter, code int, msg string) {
-	w.Header().Add("Content-Type", "application/json")
+	if w.Header().Get("Content-Type") == "" {
+		w.Header().Set("Content-Type", "application/json")
+	}
+
+	if code != 0 {
+		w.WriteHeader(code)
+	}
+
 	respBody := returnVals{
 		Error: msg,
 	}
-
 	data, err := json.Marshal(respBody)
 	if err != nil {
 		log.Printf("Error marshalling JSON: %s", err)
 		return
 	}
 
-	w.WriteHeader(code)
 	w.Write(data)
 }
