@@ -120,6 +120,14 @@ func (apiCfg *apiConfig) handlerLogin(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (apiCfg *apiConfig) handlerInterviews(w http.ResponseWriter, r *http.Request) {
+	// Unmarshal body data and return params
+	params, err := getParams(r, w)
+	if err != nil {
+		log.Printf("Error: %v\n", err)
+	}
+}
+
 func getParams(r *http.Request, w http.ResponseWriter) (acceptedVals, error) {
 	decoder := json.NewDecoder(r.Body)
 	params := acceptedVals{}
