@@ -123,15 +123,15 @@ func (apiCfg *apiConfig) handlerLogin(w http.ResponseWriter, r *http.Request) {
 }
 
 func (apiCfg *apiConfig) handlerInterviews(w http.ResponseWriter, r *http.Request) {
-	// Unmarshal body data and return params
-	params, err := getParams(r, w)
-	if err != nil {
-		log.Printf("Error: %v\n", err)
-	}
-
 	switch r.Method {
 	// POST start a resource instance of an interview and return the first question
 	case http.MethodPost:
+		// Unmarshal body data and return params
+		params, err := getParams(r, w)
+		if err != nil {
+			log.Printf("Error: %v\n", err)
+		}
+
 		firstQuestion, err := chatgpt.GetFirstQuestion(params.Username)
 		if err != nil {
 			log.Printf("First question failed to generate due to error: %v", err)
