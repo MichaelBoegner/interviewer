@@ -44,7 +44,7 @@ func main() {
 
 	mux.HandleFunc("/api/users", apiCfg.handlerUsers)
 	mux.HandleFunc("/api/login", apiCfg.handlerLogin)
-	//handlerInterviews is going to take a map of user data and return the first question from ChatGPT
+	//handlerInterviews is going to take a map of user data, interview preferences, and return the first question from ChatGPT
 	mux.HandleFunc("/api/interviews", apiCfg.handlerInterviews)
 
 	log.Printf("Serving files from %s on port: %s\n", filepathRoot, port)
