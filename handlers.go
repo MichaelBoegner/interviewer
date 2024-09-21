@@ -6,7 +6,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/michaelboegner/interviewer/chatgpt"
+	"github.com/michaelboegner/interviewer/interview"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -26,14 +26,14 @@ type User struct {
 	Email    string
 }
 type returnVals struct {
-	Error         string       `json:"error,omitempty"`
-	Id            int          `json:"id,omitempty"`
-	Body          string       `json:"body,omitempty"`
-	Username      string       `json:"username,omitempty"`
-	Email         string       `json:"email,omitempty"`
-	Token         string       `json:"token,omitempty"`
-	Users         map[int]User `json:"users,omitempty"`
-	FirstQuestion string       `json:"firstQuestion,omitempty"`
+	Error     string         `json:"error,omitempty"`
+	Id        int            `json:"id,omitempty"`
+	Body      string         `json:"body,omitempty"`
+	Username  string         `json:"username,omitempty"`
+	Email     string         `json:"email,omitempty"`
+	Token     string         `json:"token,omitempty"`
+	Users     map[int]User   `json:"users,omitempty"`
+	Questions map[int]string `json:"firstQuestion,omitempty"`
 }
 
 func (apiCfg *apiConfig) usersHandler(w http.ResponseWriter, r *http.Request) {
@@ -127,18 +127,18 @@ func (apiCfg *apiConfig) interviewsHandler(w http.ResponseWriter, r *http.Reques
 	// POST start a resource instance of an interview and return the first question
 	case http.MethodPost:
 		// Unmarshal body data and return params
-		params, err := getParams(r, w)
+		_, err := getParams(r, w)
 		if err != nil {
 			log.Printf("Error: %v\n", err)
 		}
 
-		firstQuestion, err := chatgpt.GetFirstQuestion(params.Username)
+		interviewNew, err := interview.StartInterview(1, 30, 3, "easy")
 		if err != nil {
-			log.Printf("First question failed to generate due to error: %v", err)
+			log.Printf("Interview failed to start: %v", err)
 		}
 
 		payload := returnVals{
-			FirstQuestion: firstQuestion,
+			Questions: interviewNew.Questions,
 		}
 
 		respondWithJSON(w, http.StatusOK, payload)
