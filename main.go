@@ -6,10 +6,12 @@ import (
 	"net/http"
 
 	"github.com/michaelboegner/interviewer/database"
+	"github.com/michaelboegner/interviewer/internal/interview"
 )
 
 type apiConfig struct {
-	DB *sql.DB
+	DB            *sql.DB
+	InterviewRepo *interview.Repository
 }
 
 func enableCors(next http.Handler) http.Handler {
@@ -38,8 +40,11 @@ func main() {
 		log.Fatal(err)
 	}
 
+	interviewRepo := interview.NewRepository(db)
+
 	apiCfg := &apiConfig{
-		DB: db,
+		DB:            db,
+		InterviewRepo: interviewRepo,
 	}
 
 	mux.HandleFunc("/api/users", apiCfg.usersHandler)

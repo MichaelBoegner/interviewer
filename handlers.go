@@ -137,6 +137,13 @@ func (apiCfg *apiConfig) interviewsHandler(w http.ResponseWriter, r *http.Reques
 			log.Printf("Interview failed to start: %v", err)
 		}
 
+		_, err = apiCfg.DB.Exec("INSERT INTO interviews (user_id, length, number_questions, difficulty, status, score, language, questions, created_at, updated_at) VALUES ($1, $2, $3)", params.Username, password, params.Email)
+		if err != nil {
+			log.Printf("Error: %v\n", err)
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			return
+		}
+
 		payload := returnVals{
 			Questions: interviewNew.Questions,
 		}
