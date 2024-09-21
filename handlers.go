@@ -36,7 +36,7 @@ type returnVals struct {
 	FirstQuestion string       `json:"firstQuestion,omitempty"`
 }
 
-func (apiCfg *apiConfig) handlerUsers(w http.ResponseWriter, r *http.Request) {
+func (apiCfg *apiConfig) usersHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	// POST create a user
@@ -88,7 +88,7 @@ func (apiCfg *apiConfig) handlerUsers(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (apiCfg *apiConfig) handlerLogin(w http.ResponseWriter, r *http.Request) {
+func (apiCfg *apiConfig) loginHandler(w http.ResponseWriter, r *http.Request) {
 	// Unmarshal body data and return params
 	params, err := getParams(r, w)
 	if err != nil {
@@ -122,7 +122,7 @@ func (apiCfg *apiConfig) handlerLogin(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (apiCfg *apiConfig) handlerInterviews(w http.ResponseWriter, r *http.Request) {
+func (apiCfg *apiConfig) interviewsHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	// POST start a resource instance of an interview and return the first question
 	case http.MethodPost:

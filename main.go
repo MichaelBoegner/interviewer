@@ -42,10 +42,10 @@ func main() {
 		DB: db,
 	}
 
-	mux.HandleFunc("/api/users", apiCfg.handlerUsers)
-	mux.HandleFunc("/api/login", apiCfg.handlerLogin)
+	mux.HandleFunc("/api/users", apiCfg.usersHandler)
+	mux.HandleFunc("/api/login", apiCfg.loginHandler)
 	//handlerInterviews is going to take a map of user data, interview preferences, and return the first question from ChatGPT
-	mux.HandleFunc("/api/interviews", apiCfg.handlerInterviews)
+	mux.HandleFunc("/api/interviews", apiCfg.interviewsHandler)
 
 	log.Printf("Serving files from %s on port: %s\n", filepathRoot, port)
 	log.Fatal(http.ListenAndServe(":8080", enableCors(mux)))

@@ -1,7 +1,18 @@
 package chatgpt
 
-import "fmt"
+import (
+	"fmt"
+	"log"
+	"net/http"
+)
 
 func GetFirstQuestion(username string) (string, error) {
-	return fmt.Sprintf("%v, for your first question, what is the airspeed of an unladdened swallow?", username), nil
+	client := &http.Client{}
+	resp, err := client.Get("https://example.com")
+	if err != nil {
+		log.Printf("Error getting first question from ChatGPT: %v", err)
+		return "", err
+	}
+
+	return fmt.Sprintf("%v, this is the first questino: %v", username, resp), nil
 }
