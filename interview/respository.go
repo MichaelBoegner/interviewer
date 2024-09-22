@@ -2,6 +2,8 @@ package interview
 
 import (
 	"database/sql"
+	"encoding/json"
+	"fmt"
 )
 
 type Repository struct {
@@ -15,6 +17,11 @@ func NewRepository(db *sql.DB) *Repository {
 }
 
 func (repo *Repository) CreateInterview(interview *Interview) (int, error) {
+	questionsJSON, err := json.Marshal(interview.Questions)
+	if err != nil {
+		return 0, fmt.Errorf("failed to marshal questions: %v", err)
+	}
+
 	query := `
     INSERT INTO interviews (user_id, length, number_questions, difficulty, status, score, language, questions)
     VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
@@ -22,10 +29,10 @@ func (repo *Repository) CreateInterview(interview *Interview) (int, error) {
     `
 
 	var id int
-	err := repo.DB.QueryRow(query,
+	err = repo.DB.QueryRow(query,
 		interview.UserId, interview.Length, interview.NumberQuestions,
 		interview.Difficulty, interview.Status, interview.Score,
-		interview.Language, interview.Questions).Scan(&id)
+		interview.Language, questionsJSON).Scan(&id)
 
 	if err != nil {
 		return 0, err

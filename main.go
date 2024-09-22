@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/michaelboegner/interviewer/database"
-	"github.com/michaelboegner/interviewer/internal/interview"
+	"github.com/michaelboegner/interviewer/interview"
 )
 
 type apiConfig struct {

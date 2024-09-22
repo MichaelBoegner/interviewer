@@ -2,10 +2,11 @@ package interview
 
 import (
 	"fmt"
+	"log"
 	"time"
 )
 
-func StartInterview(userId, length, numberQuestions int, difficulty string) (*Interview, error) {
+func StartInterview(repo *Repository, userId, length, numberQuestions int, difficulty string) (*Interview, error) {
 	questions := map[int]string{1: "What is the speed of a swallow", 2: "What is your favorite color?"}
 	now := time.Now()
 
@@ -21,6 +22,14 @@ func StartInterview(userId, length, numberQuestions int, difficulty string) (*In
 		CreatedAt:       now,
 		UpdatedAt:       now,
 	}
+
+	id, err := repo.CreateInterview(interview)
+	if err != nil {
+		log.Printf("CreateInterview error: %v", err)
+		return nil, err
+	}
+
+	interview.Id = id
 
 	fmt.Printf("Interview: %v", interview)
 	return interview, nil
