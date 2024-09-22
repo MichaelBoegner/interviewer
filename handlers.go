@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/michaelboegner/interviewer/interview"
+	"github.com/michaelboegner/interviewer/user"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -16,24 +17,15 @@ type acceptedVals struct {
 	Email    string `json:"email"`
 }
 
-type Users struct {
-	Users map[int]User
-}
-
-type User struct {
-	Id       int
-	Username string
-	Email    string
-}
 type returnVals struct {
-	Error     string         `json:"error,omitempty"`
-	Id        int            `json:"id,omitempty"`
-	Body      string         `json:"body,omitempty"`
-	Username  string         `json:"username,omitempty"`
-	Email     string         `json:"email,omitempty"`
-	Token     string         `json:"token,omitempty"`
-	Users     map[int]User   `json:"users,omitempty"`
-	Questions map[int]string `json:"firstQuestion,omitempty"`
+	Error     string            `json:"error,omitempty"`
+	Id        int               `json:"id,omitempty"`
+	Body      string            `json:"body,omitempty"`
+	Username  string            `json:"username,omitempty"`
+	Email     string            `json:"email,omitempty"`
+	Token     string            `json:"token,omitempty"`
+	Users     map[int]user.User `json:"users,omitempty"`
+	Questions map[int]string    `json:"firstQuestion,omitempty"`
 }
 
 func (apiCfg *apiConfig) usersHandler(w http.ResponseWriter, r *http.Request) {
@@ -51,11 +43,9 @@ func (apiCfg *apiConfig) usersHandler(w http.ResponseWriter, r *http.Request) {
 			log.Printf("Error: %v\n", err)
 		}
 
-		_, err = apiCfg.DB.Exec("INSERT INTO users (username, password, email) VALUES ($1, $2, $3)", params.Username, password, params.Email)
+		err = apiCfg.UserRepo.CreateUser(params.Username, params.Email, password)
 		if err != nil {
-			log.Printf("Error: %v\n", err)
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-			return
 		}
 
 		payload := &returnVals{
@@ -65,18 +55,10 @@ func (apiCfg *apiConfig) usersHandler(w http.ResponseWriter, r *http.Request) {
 		respondWithJSON(w, 200, payload)
 
 	case http.MethodGet:
-		rows, err := apiCfg.DB.Query("SELECT id, username, email FROM users")
+
+		users, err := user.GetUsers(apiCfg.UserRepo)
 		if err != nil {
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		}
-		userMap := make(map[int]User)
-		users := &Users{
-			Users: userMap,
-		}
-		for rows.Next() {
-			user := User{}
-			rows.Scan(&user.Id, &user.Username, &user.Email)
-			users.Users[user.Id] = user
+			log.Printf("GetUsers failed due to: %v", err)
 		}
 
 		payload := &returnVals{
