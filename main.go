@@ -32,11 +32,6 @@ func main() {
 
 	mux := http.NewServeMux()
 
-	// srv := &http.Server{
-	// 	Addr:    ":" + port,
-	// 	Handler: mux,
-	// }
-
 	db, err := database.StartDB()
 	if err != nil {
 		log.Fatal(err)
@@ -53,7 +48,7 @@ func main() {
 
 	mux.HandleFunc("/api/users", apiCfg.usersHandler)
 	mux.HandleFunc("/api/login", apiCfg.loginHandler)
-	//handlerInterviews is going to take a map of user data, interview preferences, and return the first question from ChatGPT
+	// handlerInterviews is takes a token and interview preferences, and create new Interview resource.
 	mux.HandleFunc("/api/interviews", apiCfg.interviewsHandler)
 
 	log.Printf("Serving files from %s on port: %s\n", filepathRoot, port)

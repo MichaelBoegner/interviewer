@@ -1,7 +1,6 @@
 package main
 
 import (
-	"database/sql"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -26,6 +25,7 @@ type returnVals struct {
 	Token     string            `json:"token,omitempty"`
 	Users     map[int]user.User `json:"users,omitempty"`
 	Questions map[int]string    `json:"firstQuestion,omitempty"`
+	JWToken   string            `json:"jwtoken,omitempty"`
 }
 
 func (apiCfg *apiConfig) usersHandler(w http.ResponseWriter, r *http.Request) {
@@ -55,7 +55,6 @@ func (apiCfg *apiConfig) usersHandler(w http.ResponseWriter, r *http.Request) {
 		respondWithJSON(w, 200, payload)
 
 	case http.MethodGet:
-
 		users, err := user.GetUsers(apiCfg.UserRepo)
 		if err != nil {
 			log.Printf("GetUsers failed due to: %v", err)
@@ -70,33 +69,23 @@ func (apiCfg *apiConfig) usersHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (apiCfg *apiConfig) loginHandler(w http.ResponseWriter, r *http.Request) {
-	// Unmarshal body data and return params
-	params, err := getParams(r, w)
-	if err != nil {
-		log.Printf("Error: %v\n", err)
-	}
-
 	switch r.Method {
 	// POST login a user
 	case http.MethodPost:
-		var hashedPassword string
-		err = apiCfg.DB.QueryRow("SELECT password from users WHERE username = $1", params.Username).Scan(&hashedPassword)
-		if err == sql.ErrNoRows {
-			http.Error(w, "Invalid username or password", http.StatusUnauthorized)
-			return
-		} else if err != nil {
-			log.Printf("Error querying database: %v\n", err)
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-			return
-		}
-		err = bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(params.Password))
+		// Unmarshal body data and return params
+		params, err := getParams(r, w)
 		if err != nil {
-			http.Error(w, "Invalid username or password", http.StatusUnauthorized)
-			return
+			log.Printf("Error: %v\n", err)
+		}
+
+		jwToken, err := user.LoginUser(apiCfg.UserRepo, params.Username, params.Password)
+		if err != nil {
+			respondWithError(w, http.StatusUnauthorized, "Invalid username or password.")
 		}
 
 		payload := returnVals{
 			Username: params.Username,
+			JWToken:  jwToken,
 		}
 
 		respondWithJSON(w, http.StatusOK, payload)
