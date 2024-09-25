@@ -1,7 +1,6 @@
 package user
 
 import (
-	"database/sql"
 	"log"
 	"os"
 	"strconv"
@@ -12,19 +11,13 @@ import (
 )
 
 func LoginUser(repo *Repository, username, password string) (string, error) {
-	var hashedPassword string
-	var id int
-	err := repo.DB.QueryRow("SELECT id, password from users WHERE username = $1", username).Scan(&id, &hashedPassword)
-	if err == sql.ErrNoRows {
-		log.Printf("Username invalid: %v", err)
-		return "", err
-	} else if err != nil {
-		log.Printf("Error querying database: %v\n", err)
+	id, hashedPassword, err := repo.GetPasswordandID(username)
+	if err != nil {
 		return "", err
 	}
+
 	err = bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
 	if err != nil {
-		log.Printf("Password invalid: %v", err)
 		return "", err
 	}
 
@@ -35,6 +28,19 @@ func LoginUser(repo *Repository, username, password string) (string, error) {
 	}
 
 	return jwToken, nil
+}
+
+func GetUsers(repo *Repository) (*Users, error) {
+	userMap := make(map[int]User)
+	users := &Users{
+		Users: userMap,
+	}
+	usersReturned, err := repo.GetUsers(users)
+	if err != nil {
+		log.Printf("GetUsers from database failed due to: %v", err)
+		return nil, err
+	}
+	return usersReturned, nil
 }
 
 func createJWT(id, expires int) (string, error) {
@@ -64,17 +70,4 @@ func createJWT(id, expires int) (string, error) {
 	}
 
 	return s, nil
-}
-
-func GetUsers(repo *Repository) (*Users, error) {
-	userMap := make(map[int]User)
-	users := &Users{
-		Users: userMap,
-	}
-	usersReturned, err := repo.GetUsers(users)
-	if err != nil {
-		log.Printf("GetUsers from database failed due to: %v", err)
-		return nil, err
-	}
-	return usersReturned, nil
 }
