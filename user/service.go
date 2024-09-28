@@ -1,6 +1,8 @@
 package user
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"log"
 	"os"
 	"strconv"
@@ -9,6 +11,25 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 )
+
+func CreateUser(repo *Repository, username, email, password string) (*User, error) {
+	now := time.Now()
+
+	user := &User{
+		Username:  username,
+		Email:     email,
+		Password:  []byte(password),
+		CreatedAt: now,
+		UpdatedAt: now,
+	}
+
+	err := repo.CreateUser(user)
+	if err != nil {
+		return nil, err
+	}
+
+	return user, nil
+}
 
 func LoginUser(repo *Repository, username, password string) (string, error) {
 	id, hashedPassword, err := repo.GetPasswordandID(username)
@@ -70,4 +91,17 @@ func createJWT(id, expires int) (string, error) {
 	}
 
 	return s, nil
+}
+
+func createRefreshToken() (string, time.Time, error) {
+	refreshLength := 32
+	refreshBytes := make([]byte, refreshLength)
+	_, err := rand.Read([]byte(refreshBytes))
+	if err != nil {
+		return "", time.Time{}, err
+	}
+	refreshToken := hex.EncodeToString(refreshBytes)
+	expiry := time.Now().Add(time.Duration(168*60) * time.Hour)
+
+	return refreshToken, expiry, nil
 }

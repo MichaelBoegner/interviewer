@@ -15,12 +15,21 @@ func NewRepository(db *sql.DB) *Repository {
 	}
 }
 
-func (repo *Repository) CreateUser(username, email string, password []byte) error {
-	_, err := repo.DB.Exec("INSERT INTO users (username, password, email) VALUES ($1, $2, $3)", username, password, email)
+func (repo *Repository) CreateUser(user *User) error {
+	_, err := repo.DB.Exec(
+		"INSERT INTO users (username, password, email, created_at, updated_at) "+
+			"VALUES ($1, $2, $3, $4, $5)",
+		user.Username,
+		user.Password,
+		user.Email,
+		user.CreatedAt,
+		user.UpdatedAt,
+	)
 	if err != nil {
 		log.Printf("Error: %v\n", err)
 		return err
 	}
+
 	return nil
 }
 

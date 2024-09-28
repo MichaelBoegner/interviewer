@@ -43,14 +43,14 @@ func (apiCfg *apiConfig) usersHandler(w http.ResponseWriter, r *http.Request) {
 			log.Printf("Error: %v\n", err)
 		}
 
-		err = apiCfg.UserRepo.CreateUser(params.Username, params.Email, password)
+		user, err := user.CreateUser(apiCfg.UserRepo, Username, params.Email, password)
 		if err != nil {
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		}
 
 		payload := &returnVals{
-			Username: params.Username,
-			Email:    params.Email,
+			Username: user.Username,
+			Email:    user.Email,
 		}
 		respondWithJSON(w, 200, payload)
 
