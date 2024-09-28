@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS interviews (
     score INT,                             
     language VARCHAR(50) NOT NULL,         
     questions JSONB,                       
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, 
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP  
+    created_at TIMESTAMP, 
+    updated_at TIMESTAMP  
     
 );
