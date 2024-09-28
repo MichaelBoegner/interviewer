@@ -15,15 +15,20 @@ import (
 func CreateUser(repo *Repository, username, email, password string) (*User, error) {
 	now := time.Now()
 
+	passwordHashed, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.MinCost)
+	if err != nil {
+		log.Printf("Error: %v\n", err)
+	}
+
 	user := &User{
 		Username:  username,
 		Email:     email,
-		Password:  []byte(password),
+		Password:  []byte(passwordHashed),
 		CreatedAt: now,
 		UpdatedAt: now,
 	}
 
-	err := repo.CreateUser(user)
+	err = repo.CreateUser(user)
 	if err != nil {
 		return nil, err
 	}

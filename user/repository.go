@@ -36,7 +36,9 @@ func (repo *Repository) CreateUser(user *User) error {
 func (repo *Repository) GetPasswordandID(username string) (int, string, error) {
 	var hashedPassword string
 	var id int
-	err := repo.DB.QueryRow("SELECT id, password from users WHERE username = $1", username).Scan(&id, &hashedPassword)
+	err := repo.DB.QueryRow("SELECT id, password from users WHERE username = $1",
+		username,
+	).Scan(&id, &hashedPassword)
 	if err == sql.ErrNoRows {
 		log.Printf("Username invalid: %v", err)
 		return 0, "", err
@@ -51,7 +53,6 @@ func (repo *Repository) GetPasswordandID(username string) (int, string, error) {
 func (repo *Repository) GetUsers(users *Users) (*Users, error) {
 	rows, err := repo.DB.Query("SELECT id, username, email FROM users")
 	if err != nil {
-		// http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return nil, err
 	}
 	for rows.Next() {

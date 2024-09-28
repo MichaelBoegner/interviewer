@@ -7,7 +7,6 @@ import (
 
 	"github.com/michaelboegner/interviewer/interview"
 	"github.com/michaelboegner/interviewer/user"
-	"golang.org/x/crypto/bcrypt"
 )
 
 type acceptedVals struct {
@@ -38,12 +37,8 @@ func (apiCfg *apiConfig) usersHandler(w http.ResponseWriter, r *http.Request) {
 			log.Printf("Error: %v\n", err)
 			return
 		}
-		password, err := bcrypt.GenerateFromPassword([]byte(params.Password), bcrypt.MinCost)
-		if err != nil {
-			log.Printf("Error: %v\n", err)
-		}
 
-		user, err := user.CreateUser(apiCfg.UserRepo, Username, params.Email, password)
+		user, err := user.CreateUser(apiCfg.UserRepo, params.Username, params.Email, params.Password)
 		if err != nil {
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		}
@@ -102,7 +97,7 @@ func (apiCfg *apiConfig) interviewsHandler(w http.ResponseWriter, r *http.Reques
 			log.Printf("Error: %v\n", err)
 		}
 
-		interviewNew, err := interview.StartInterview(apiCfg.InterviewRepo, 1, 30, 3, "easy")
+		interviewStarted, err := interview.StartInterview(apiCfg.InterviewRepo, 1, 30, 3, "easy")
 		if err != nil {
 			log.Printf("Interview failed to start: %v", err)
 		}
@@ -114,7 +109,7 @@ func (apiCfg *apiConfig) interviewsHandler(w http.ResponseWriter, r *http.Reques
 		}
 
 		payload := returnVals{
-			Questions: interviewNew.Questions,
+			Questions: interviewStarted.Questions,
 		}
 
 		respondWithJSON(w, http.StatusOK, payload)

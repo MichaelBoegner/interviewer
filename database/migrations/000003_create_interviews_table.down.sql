@@ -1,0 +1,1 @@
+-- No down.sql file for this migration to avoid accidentally dropping the table
