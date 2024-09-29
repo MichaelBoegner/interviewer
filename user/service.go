@@ -1,8 +1,6 @@
 package user
 
 import (
-	"crypto/rand"
-	"encoding/hex"
 	"log"
 	"os"
 	"strconv"
@@ -96,17 +94,4 @@ func createJWT(id, expires int) (string, error) {
 	}
 
 	return s, nil
-}
-
-func createRefreshToken() (string, time.Time, error) {
-	refreshLength := 32
-	refreshBytes := make([]byte, refreshLength)
-	_, err := rand.Read([]byte(refreshBytes))
-	if err != nil {
-		return "", time.Time{}, err
-	}
-	refreshToken := hex.EncodeToString(refreshBytes)
-	expiry := time.Now().Add(time.Duration(168*60) * time.Hour)
-
-	return refreshToken, expiry, nil
 }

@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/michaelboegner/interviewer/interview"
+	"github.com/michaelboegner/interviewer/token"
 	"github.com/michaelboegner/interviewer/user"
 )
 
@@ -114,6 +115,11 @@ func (apiCfg *apiConfig) interviewsHandler(w http.ResponseWriter, r *http.Reques
 
 		respondWithJSON(w, http.StatusOK, payload)
 	}
+}
+
+func (apiCfg *apiConfig) refreshTokensHandler(w http.ResponseWriter, r *http.Request) {
+	refreshToken, err := token.CreateRefreshToken(apiCfg.TokenRepo, 1)
+
 }
 
 func getParams(r *http.Request, w http.ResponseWriter) (acceptedVals, error) {
