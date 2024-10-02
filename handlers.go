@@ -2,8 +2,10 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"log"
 	"net/http"
+	"strings"
 
 	"github.com/michaelboegner/interviewer/interview"
 	"github.com/michaelboegner/interviewer/token"
@@ -11,28 +13,29 @@ import (
 )
 
 type acceptedVals struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
-	Email    string `json:"email"`
+	Username    string `json:"username"`
+	Password    string `json:"password"`
+	Email       string `json:"email"`
+	AccessToken string `json:"access_token"`
 }
 
 type returnVals struct {
-	Error     string            `json:"error,omitempty"`
-	Id        int               `json:"id,omitempty"`
-	Body      string            `json:"body,omitempty"`
-	Username  string            `json:"username,omitempty"`
-	Email     string            `json:"email,omitempty"`
-	Token     string            `json:"token,omitempty"`
-	Users     map[int]user.User `json:"users,omitempty"`
-	Questions map[int]string    `json:"firstQuestion,omitempty"`
-	JWToken   string            `json:"jwtoken,omitempty"`
+	Error        string            `json:"error,omitempty"`
+	Id           int               `json:"id,omitempty"`
+	Body         string            `json:"body,omitempty"`
+	Username     string            `json:"username,omitempty"`
+	Email        string            `json:"email,omitempty"`
+	Token        string            `json:"token,omitempty"`
+	Users        map[int]user.User `json:"users,omitempty"`
+	Questions    map[int]string    `json:"firstQuestion,omitempty"`
+	JWToken      string            `json:"jwtoken,omitempty"`
+	RefreshToken string            `json:"refresh_token,omitempty"`
 }
 
 func (apiCfg *apiConfig) usersHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	// POST create a user
 	case http.MethodPost:
-		// Unmarshal body data and return params
 		params, err := getParams(r, w)
 		if err != nil {
 			log.Printf("Error: %v\n", err)
@@ -68,20 +71,25 @@ func (apiCfg *apiConfig) loginHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	// POST login a user
 	case http.MethodPost:
-		// Unmarshal body data and return params
 		params, err := getParams(r, w)
 		if err != nil {
 			log.Printf("Error: %v\n", err)
 		}
 
-		jwToken, err := user.LoginUser(apiCfg.UserRepo, params.Username, params.Password)
+		jwToken, userID, err := user.LoginUser(apiCfg.UserRepo, params.Username, params.Password)
 		if err != nil {
 			respondWithError(w, http.StatusUnauthorized, "Invalid username or password.")
 		}
 
+		refreshToken, err := token.CreateRefreshToken(apiCfg.TokenRepo, userID)
+		if err != nil {
+			respondWithError(w, http.StatusUnauthorized, "")
+		}
+
 		payload := returnVals{
-			Username: params.Username,
-			JWToken:  jwToken,
+			Username:     params.Username,
+			JWToken:      jwToken,
+			RefreshToken: refreshToken,
 		}
 
 		respondWithJSON(w, http.StatusOK, payload)
@@ -92,7 +100,6 @@ func (apiCfg *apiConfig) interviewsHandler(w http.ResponseWriter, r *http.Reques
 	switch r.Method {
 	// POST start a resource instance of an interview and return the first question
 	case http.MethodPost:
-		// Unmarshal body data and return params
 		_, err := getParams(r, w)
 		if err != nil {
 			log.Printf("Error: %v\n", err)
@@ -101,12 +108,6 @@ func (apiCfg *apiConfig) interviewsHandler(w http.ResponseWriter, r *http.Reques
 		interviewStarted, err := interview.StartInterview(apiCfg.InterviewRepo, 1, 30, 3, "easy")
 		if err != nil {
 			log.Printf("Interview failed to start: %v", err)
-		}
-
-		if err != nil {
-			log.Printf("Error: %v\n", err)
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-			return
 		}
 
 		payload := returnVals{
@@ -118,8 +119,37 @@ func (apiCfg *apiConfig) interviewsHandler(w http.ResponseWriter, r *http.Reques
 }
 
 func (apiCfg *apiConfig) refreshTokensHandler(w http.ResponseWriter, r *http.Request) {
-	refreshToken, err := token.CreateRefreshToken(apiCfg.TokenRepo, 1)
+	switch r.Method {
+	// POST generate and return userID and a refreshToken
+	case http.MethodPost:
+		authToken, err := getHeaderToken(r)
+		if err != nil {
+			respondWithError(w, http.StatusUnauthorized, "")
+		}
 
+		userID, err := token.ExtractUserIDFromToken(authToken)
+		if err != nil {
+			respondWithError(w, http.StatusUnauthorized, "")
+		}
+
+		refreshToken, err := token.CreateRefreshToken(apiCfg.TokenRepo, userID)
+		if err != nil {
+			respondWithError(w, http.StatusUnauthorized, "")
+		}
+
+		jwToken, err := token.CreateJWT(userID, 0)
+		if err != nil {
+			log.Printf("JWT creation failed: %v", err)
+			respondWithError(w, http.StatusInternalServerError, "")
+		}
+
+		payload := &returnVals{
+			Id:           userID,
+			JWToken:      jwToken,
+			RefreshToken: refreshToken,
+		}
+		respondWithJSON(w, http.StatusAccepted, payload)
+	}
 }
 
 func getParams(r *http.Request, w http.ResponseWriter) (acceptedVals, error) {
@@ -132,6 +162,15 @@ func getParams(r *http.Request, w http.ResponseWriter) (acceptedVals, error) {
 	}
 
 	return params, nil
+}
+
+func getHeaderToken(r *http.Request) (string, error) {
+	tokenParts := strings.Split(r.Header.Get("Authorization"), " ")
+	if len(tokenParts) < 2 {
+		err := errors.New("Authoization header is malformed")
+		return "", err
+	}
+	return tokenParts[1], nil
 }
 
 func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {

@@ -34,24 +34,24 @@ func CreateUser(repo *Repository, username, email, password string) (*User, erro
 	return user, nil
 }
 
-func LoginUser(repo *Repository, username, password string) (string, error) {
+func LoginUser(repo *Repository, username, password string) (string, int, error) {
 	id, hashedPassword, err := repo.GetPasswordandID(username)
 	if err != nil {
-		return "", err
+		return "", 0, err
 	}
 
 	err = bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
 	if err != nil {
-		return "", err
+		return "", 0, err
 	}
 
 	jwToken, err := createJWT(id, 0)
 	if err != nil {
 		log.Printf("JWT creation failed: %v", err)
-		return "", err
+		return "", 0, err
 	}
 
-	return jwToken, nil
+	return jwToken, id, nil
 }
 
 func GetUsers(repo *Repository) (*Users, error) {

@@ -17,9 +17,9 @@ func NewRepository(db *sql.DB) *Repository {
 
 func (repo *Repository) AddRefreshToken(token *RefreshToken) error {
 	_, err := repo.DB.Exec(
-		"INSERT INTO users (user_id, refresh_token, expires_at, created_at, updated_at) "+
+		"INSERT INTO refresh_tokens (user_id, refresh_token, expires_at, created_at, updated_at) "+
 			"VALUES ($1, $2, $3, $4, $5)",
-		token.Id,
+		token.UserID,
 		token.RefreshToken,
 		token.ExpiresAt,
 		token.CreatedAt,
