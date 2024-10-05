@@ -2,23 +2,14 @@ package main
 
 import (
 	"encoding/json"
-	"errors"
 	"log"
 	"net/http"
-	"strings"
 
 	"github.com/michaelboegner/interviewer/interview"
+	"github.com/michaelboegner/interviewer/middleware"
 	"github.com/michaelboegner/interviewer/token"
 	"github.com/michaelboegner/interviewer/user"
 )
-
-type acceptedVals struct {
-	UserID      int    `json:"user_id"`
-	Username    string `json:"username"`
-	Password    string `json:"password"`
-	Email       string `json:"email"`
-	AccessToken string `json:"access_token"`
-}
 
 type returnVals struct {
 	Error        string            `json:"error,omitempty"`
@@ -38,11 +29,7 @@ func (apiCfg *apiConfig) usersHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	// POST create a user
 	case http.MethodPost:
-		params, err := getParams(r, w)
-		if err != nil {
-			log.Printf("Error: %v\n", err)
-			return
-		}
+		params := r.Context().Value("params").(middleware.AcceptedVals)
 
 		user, err := user.CreateUser(apiCfg.UserRepo, params.Username, params.Email, params.Password)
 		if err != nil {
@@ -73,10 +60,7 @@ func (apiCfg *apiConfig) loginHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	// POST login a user
 	case http.MethodPost:
-		params, err := getParams(r, w)
-		if err != nil {
-			log.Printf("Error: %v\n", err)
-		}
+		params := r.Context().Value("params").(middleware.AcceptedVals)
 
 		jwToken, userID, err := user.LoginUser(apiCfg.UserRepo, params.Username, params.Password)
 		if err != nil {
@@ -103,11 +87,6 @@ func (apiCfg *apiConfig) interviewsHandler(w http.ResponseWriter, r *http.Reques
 	switch r.Method {
 	// POST start a resource instance of an interview and return the first question
 	case http.MethodPost:
-		_, err := getParams(r, w)
-		if err != nil {
-			log.Printf("Error: %v\n", err)
-		}
-
 		interviewStarted, err := interview.StartInterview(apiCfg.InterviewRepo, 1, 30, 3, "easy")
 		if err != nil {
 			log.Printf("Interview failed to start: %v", err)
@@ -125,15 +104,8 @@ func (apiCfg *apiConfig) refreshTokensHandler(w http.ResponseWriter, r *http.Req
 	switch r.Method {
 	// POST generate and return userID and a refreshToken
 	case http.MethodPost:
-		providedToken, err := getHeaderToken(r)
-		if err != nil {
-			respondWithError(w, http.StatusUnauthorized, "")
-		}
-
-		params, err := getParams(r, w)
-		if err != nil {
-			log.Printf("Error: %v\n", err)
-		}
+		providedToken := r.Context().Value("token").(string)
+		params := r.Context().Value("params").(middleware.AcceptedVals)
 
 		storedToken, err := token.GetStoredRefreshToken(apiCfg.TokenRepo, params.UserID)
 		if err != nil {
@@ -163,27 +135,6 @@ func (apiCfg *apiConfig) refreshTokensHandler(w http.ResponseWriter, r *http.Req
 		}
 		respondWithJSON(w, http.StatusAccepted, payload)
 	}
-}
-
-func getParams(r *http.Request, w http.ResponseWriter) (acceptedVals, error) {
-	decoder := json.NewDecoder(r.Body)
-	params := acceptedVals{}
-	err := decoder.Decode(&params)
-	if err != nil {
-		respondWithError(w, 500, "Error decoding params")
-		return params, err
-	}
-
-	return params, nil
-}
-
-func getHeaderToken(r *http.Request) (string, error) {
-	tokenParts := strings.Split(r.Header.Get("Authorization"), " ")
-	if len(tokenParts) < 2 {
-		err := errors.New("Authoization header is malformed")
-		return "", err
-	}
-	return tokenParts[1], nil
 }
 
 func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {

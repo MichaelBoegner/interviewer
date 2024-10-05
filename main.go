@@ -7,6 +7,7 @@ import (
 
 	"github.com/michaelboegner/interviewer/database"
 	"github.com/michaelboegner/interviewer/interview"
+	"github.com/michaelboegner/interviewer/middleware"
 	"github.com/michaelboegner/interviewer/token"
 	"github.com/michaelboegner/interviewer/user"
 )
@@ -50,11 +51,11 @@ func main() {
 		TokenRepo:     tokenRepo,
 	}
 
-	mux.HandleFunc("/api/users", apiCfg.usersHandler)
-	mux.HandleFunc("/api/auth/login", apiCfg.loginHandler)
+	mux.Handle("/api/users", middleware.GetContext(http.HandlerFunc(apiCfg.usersHandler)))
+	mux.Handle("/api/auth/login", middleware.GetContext(http.HandlerFunc(apiCfg.loginHandler)))
 	// handlerInterviews is takes a token and interview preferences, and create new Interview resource.
-	mux.HandleFunc("/api/interviews", apiCfg.interviewsHandler)
-	mux.HandleFunc("/api/auth/token", apiCfg.refreshTokensHandler)
+	mux.Handle("/api/interviews", middleware.GetContext(http.HandlerFunc(apiCfg.interviewsHandler)))
+	mux.Handle("/api/auth/token", middleware.GetContext(http.HandlerFunc(apiCfg.refreshTokensHandler)))
 
 	log.Printf("Serving files from %s on port: %s\n", filepathRoot, port)
 	log.Fatal(http.ListenAndServe(":8080", enableCors(mux)))
