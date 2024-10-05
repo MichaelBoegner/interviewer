@@ -2,6 +2,7 @@ package token
 
 import (
 	"crypto/rand"
+	"crypto/subtle"
 	"encoding/hex"
 	"fmt"
 	"log"
@@ -38,6 +39,18 @@ func CreateRefreshToken(repo *Repository, userID int) (string, error) {
 	}
 
 	return refreshToken.RefreshToken, nil
+}
+
+func GetStoredRefreshToken(repo *Repository, userID int) (string, error) {
+	storedToken, err := repo.GetStoredRefreshToken(userID)
+	if err != nil {
+		return "", err
+	}
+	return storedToken, nil
+}
+
+func VerifyRefreshToken(storedToken, providedToken string) bool {
+	return subtle.ConstantTimeCompare([]byte(storedToken), []byte(providedToken)) == 1
 }
 
 func ExtractUserIDFromToken(tokenString string) (int, error) {

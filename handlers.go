@@ -13,6 +13,7 @@ import (
 )
 
 type acceptedVals struct {
+	UserID      int    `json:"user_id"`
 	Username    string `json:"username"`
 	Password    string `json:"password"`
 	Email       string `json:"email"`
@@ -22,6 +23,7 @@ type acceptedVals struct {
 type returnVals struct {
 	Error        string            `json:"error,omitempty"`
 	Id           int               `json:"id,omitempty"`
+	UserID       int               `json:"user_id,omitempty"`
 	Body         string            `json:"body,omitempty"`
 	Username     string            `json:"username,omitempty"`
 	Email        string            `json:"email,omitempty"`
@@ -87,6 +89,7 @@ func (apiCfg *apiConfig) loginHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		payload := returnVals{
+			UserID:       userID,
 			Username:     params.Username,
 			JWToken:      jwToken,
 			RefreshToken: refreshToken,
@@ -122,29 +125,39 @@ func (apiCfg *apiConfig) refreshTokensHandler(w http.ResponseWriter, r *http.Req
 	switch r.Method {
 	// POST generate and return userID and a refreshToken
 	case http.MethodPost:
-		authToken, err := getHeaderToken(r)
+		providedToken, err := getHeaderToken(r)
 		if err != nil {
 			respondWithError(w, http.StatusUnauthorized, "")
 		}
 
-		userID, err := token.ExtractUserIDFromToken(authToken)
+		params, err := getParams(r, w)
+		if err != nil {
+			log.Printf("Error: %v\n", err)
+		}
+
+		storedToken, err := token.GetStoredRefreshToken(apiCfg.TokenRepo, params.UserID)
+		if err != nil {
+			respondWithError(w, http.StatusUnauthorized, "User ID is invalid.")
+		}
+
+		ok := token.VerifyRefreshToken(storedToken, providedToken)
+		if !ok {
+			respondWithError(w, http.StatusUnauthorized, "Refresh token is invalid.")
+		}
+
+		refreshToken, err := token.CreateRefreshToken(apiCfg.TokenRepo, params.UserID)
 		if err != nil {
 			respondWithError(w, http.StatusUnauthorized, "")
 		}
 
-		refreshToken, err := token.CreateRefreshToken(apiCfg.TokenRepo, userID)
-		if err != nil {
-			respondWithError(w, http.StatusUnauthorized, "")
-		}
-
-		jwToken, err := token.CreateJWT(userID, 0)
+		jwToken, err := token.CreateJWT(params.UserID, 0)
 		if err != nil {
 			log.Printf("JWT creation failed: %v", err)
 			respondWithError(w, http.StatusInternalServerError, "")
 		}
 
 		payload := &returnVals{
-			Id:           userID,
+			Id:           params.UserID,
 			JWToken:      jwToken,
 			RefreshToken: refreshToken,
 		}

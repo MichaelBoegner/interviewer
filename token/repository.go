@@ -32,3 +32,18 @@ func (repo *Repository) AddRefreshToken(token *RefreshToken) error {
 
 	return nil
 }
+
+func (repo *Repository) GetStoredRefreshToken(userID int) (string, error) {
+	var storedToken string
+	err := repo.DB.QueryRow("SELECT refresh_token from refresh_tokens WHERE user_id = $1",
+		userID,
+	).Scan(&storedToken)
+	if err == sql.ErrNoRows {
+		log.Printf("User ID invalid: %v", err)
+		return "", err
+	} else if err != nil {
+		log.Printf("Error querying database: %v\n", err)
+		return "", err
+	}
+	return storedToken, nil
+}
