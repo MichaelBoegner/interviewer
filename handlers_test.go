@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -11,24 +13,64 @@ import (
 	"github.com/michaelboegner/interviewer/user"
 )
 
-func TestUsersHandler(t *testing.T) {
-	// Mock repository logic
-	mockUserRepo := user.NewMockRepo()
+func TestUsersHandler_Post(t *testing.T) {
+	tests := []struct {
+		name           string
+		reqBody        string
+		params         middleware.AcceptedVals
+		expectedStatus int
+		expectError    bool
+	}{
+		{
+			name:    "CreateUser_Success",
+			reqBody: `{"username":"testuser", "email":"test@example.com", "password":"password"}`,
+			params: middleware.AcceptedVals{
+				Username: "testuser",
+				Email:    "test@example.com",
+				Password: "password",
+			},
+			expectedStatus: http.StatusOK,
+			expectError:    false,
+		},
+		{
+			name:           "MissingParams",
+			reqBody:        `{"username":"", "email":"", "password":""}`,
+			params:         middleware.AcceptedVals{},
+			expectedStatus: http.StatusBadRequest,
+			expectError:    true,
+		},
+	}
 
-	apiCfg := &apiConfig{UserRepo: mockUserRepo}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			// Arrange
+			mockUserRepo := user.NewMockRepo()
+			apiCfg := &apiConfig{UserRepo: mockUserRepo}
 
-	// Simulate a request
-	req := httptest.NewRequest(http.MethodPost, "/api/users", strings.NewReader(`{"username":"testuser", "email": "test1@example.com", "password":"password"}`))
-	req = req.WithContext(context.WithValue(req.Context(), "params", middleware.AcceptedVals{
-		Username: "testuser", Email: "test1@example.com", Password: "password",
-	}))
-	w := httptest.NewRecorder()
+			req := httptest.NewRequest(http.MethodPost, "/api/users", strings.NewReader(tc.reqBody))
+			req = req.WithContext(context.WithValue(req.Context(), "params", tc.params))
+			w := httptest.NewRecorder()
 
-	// Call the handler
-	apiCfg.usersHandler(w, req)
+			// Act
+			apiCfg.usersHandler(w, req)
 
-	// Assert the response
-	if w.Code != http.StatusOK {
-		t.Fatalf("expected status %d, got %d", http.StatusOK, w.Code)
+			// Assert
+			if w.Code != tc.expectedStatus {
+				t.Fatalf("expected status %d, got %d", tc.expectedStatus, w.Code)
+			}
+
+			var resp returnVals
+
+			err := json.Unmarshal(w.Body.Bytes(), &resp)
+			fmt.Printf("resp: %v\n", resp)
+			if err != nil {
+				t.Fatalf("failed to unmarshal response: %v", err)
+			}
+
+			fmt.Printf("resp.Error: %v\n", resp.Error)
+			if tc.expectError && resp.Error == "" {
+				t.Errorf("expected error message, got none")
+			}
+		})
 	}
 }

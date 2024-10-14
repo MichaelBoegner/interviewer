@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 
@@ -31,16 +32,21 @@ func (apiCfg *apiConfig) usersHandler(w http.ResponseWriter, r *http.Request) {
 	case http.MethodPost:
 		params := r.Context().Value("params").(middleware.AcceptedVals)
 
-		user, err := user.CreateUser(apiCfg.UserRepo, params.Username, params.Email, params.Password)
-		if err != nil {
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		}
+		if params.Username == "" || params.Email == "" || params.Password == "" {
+			fmt.Printf("Params.Username: %v, Params.Email: %v, Params.Password: %v", params.Username, params.Email, params.Password)
+			respondWithError(w, http.StatusBadRequest, "Username, Email, and Password required")
+		} else {
+			user, err := user.CreateUser(apiCfg.UserRepo, params.Username, params.Email, params.Password)
+			if err != nil {
+				respondWithError(w, http.StatusInternalServerError, "Internal Server Error")
+			}
 
-		payload := &returnVals{
-			Username: user.Username,
-			Email:    user.Email,
+			payload := &returnVals{
+				Username: user.Username,
+				Email:    user.Email,
+			}
+			respondWithJSON(w, 200, payload)
 		}
-		respondWithJSON(w, 200, payload)
 
 	case http.MethodGet:
 		users, err := user.GetUsers(apiCfg.UserRepo)
@@ -168,6 +174,8 @@ func respondWithError(w http.ResponseWriter, code int, msg string) {
 	respBody := returnVals{
 		Error: msg,
 	}
+
+	fmt.Printf("RESPBODY: %v\n", respBody)
 	data, err := json.Marshal(respBody)
 	if err != nil {
 		log.Printf("Error marshalling JSON: %s", err)
