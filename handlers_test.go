@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/michaelboegner/interviewer/middleware"
+	"github.com/michaelboegner/interviewer/token"
 	"github.com/michaelboegner/interviewer/user"
 )
 
@@ -119,6 +120,67 @@ func TestUsersHandler_Get(t *testing.T) {
 			resp, err := checkResponse(w, tc.respBody, tc.expectError)
 			if err != nil {
 				t.Fatalf("expected response %v and error %v\ngot response: %v and error %v", tc.respBody, tc.expectError, resp, resp.Error)
+			}
+		})
+	}
+}
+
+func TestLoginHandler_Post(t *testing.T) {
+	tests := []struct {
+		name           string
+		reqBody        string
+		params         middleware.AcceptedVals
+		expectedStatus int
+		expectError    bool
+		respBody       returnVals
+	}{
+		{
+			name:    "LoginUser_Success",
+			reqBody: `{"username":"testuser", "password":"password"}`,
+			params: middleware.AcceptedVals{
+				Username: "testuser",
+				Password: "password",
+			},
+			expectedStatus: http.StatusOK,
+			expectError:    false,
+			respBody: returnVals{
+				ID:           1,
+				JWToken:      "",
+				RefreshToken: "",
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			// Arrange
+			mockTokenRepo := token.NewMockRepo()
+			mockUserRepo := user.NewMockRepo()
+			apiCfg := &apiConfig{
+				TokenRepo: mockTokenRepo,
+				UserRepo:  mockUserRepo,
+			}
+
+			req := httptest.NewRequest(http.MethodPost, "/api/auth/login", strings.NewReader(tc.reqBody))
+			req = req.WithContext(context.WithValue(req.Context(), "params", tc.params))
+			w := httptest.NewRecorder()
+
+			// Act
+			apiCfg.loginHandler(w, req)
+
+			// Assert
+			if w.Code != tc.expectedStatus {
+				t.Fatalf("expected status %d, got %d", tc.expectedStatus, w.Code)
+			}
+
+			// Validate resp
+			resp, err := checkResponse(w, tc.respBody, tc.expectError)
+			if err != nil {
+				t.Fatalf("expected response %v and error %v\ngot response: %v and error %v", tc.respBody, tc.expectError, resp, resp.Error)
+			}
+
+			if resp.JWToken == "" || resp.RefreshToken == "" {
+				t.Fatalf("expected non-empty tokens, got empty jwt or refresh token")
 			}
 		})
 	}

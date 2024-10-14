@@ -13,7 +13,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-func CreateRefreshToken(repo *Repository, userID int) (string, error) {
+func CreateRefreshToken(repo TokenRepo, userID int) (string, error) {
 	now := time.Now()
 
 	refreshLength := 32
@@ -41,7 +41,7 @@ func CreateRefreshToken(repo *Repository, userID int) (string, error) {
 	return refreshToken.RefreshToken, nil
 }
 
-func GetStoredRefreshToken(repo *Repository, userID int) (string, error) {
+func GetStoredRefreshToken(repo TokenRepo, userID int) (string, error) {
 	storedToken, err := repo.GetStoredRefreshToken(userID)
 	if err != nil {
 		return "", err

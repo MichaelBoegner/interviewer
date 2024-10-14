@@ -16,7 +16,7 @@ type apiConfig struct {
 	DB            *sql.DB
 	InterviewRepo *interview.Repository
 	UserRepo      user.UserRepo
-	TokenRepo     *token.Repository
+	TokenRepo     token.TokenRepo
 }
 
 func enableCors(next http.Handler) http.Handler {

@@ -31,7 +31,10 @@ func (apiCfg *apiConfig) usersHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	// POST create a user
 	case http.MethodPost:
-		params := r.Context().Value("params").(middleware.AcceptedVals)
+		params, ok := r.Context().Value("params").(middleware.AcceptedVals)
+		if !ok {
+			respondWithError(w, http.StatusBadRequest, "Invalid request parameters")
+		}
 
 		if params.Username == "" || params.Email == "" || params.Password == "" {
 			respondWithError(w, http.StatusBadRequest, "Username, Email, and Password required")
@@ -78,7 +81,10 @@ func (apiCfg *apiConfig) loginHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	// POST login a user
 	case http.MethodPost:
-		params := r.Context().Value("params").(middleware.AcceptedVals)
+		params, ok := r.Context().Value("params").(middleware.AcceptedVals)
+		if !ok {
+			respondWithError(w, http.StatusBadRequest, "Invalid request parameters")
+		}
 
 		jwToken, userID, err := user.LoginUser(apiCfg.UserRepo, params.Username, params.Password)
 		if err != nil {
@@ -123,14 +129,17 @@ func (apiCfg *apiConfig) refreshTokensHandler(w http.ResponseWriter, r *http.Req
 	// POST generate and return userID and a refreshToken
 	case http.MethodPost:
 		providedToken := r.Context().Value("token").(string)
-		params := r.Context().Value("params").(middleware.AcceptedVals)
+		params, ok := r.Context().Value("params").(middleware.AcceptedVals)
+		if !ok {
+			respondWithError(w, http.StatusBadRequest, "Invalid request parameters")
+		}
 
 		storedToken, err := token.GetStoredRefreshToken(apiCfg.TokenRepo, params.UserID)
 		if err != nil {
 			respondWithError(w, http.StatusUnauthorized, "User ID is invalid.")
 		}
 
-		ok := token.VerifyRefreshToken(storedToken, providedToken)
+		ok = token.VerifyRefreshToken(storedToken, providedToken)
 		if !ok {
 			respondWithError(w, http.StatusUnauthorized, "Refresh token is invalid.")
 		}

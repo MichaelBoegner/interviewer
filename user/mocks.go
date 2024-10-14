@@ -28,5 +28,5 @@ func (m *MockRepo) GetUser(user *User) (*User, error) {
 }
 
 func (m *MockRepo) GetPasswordandID(username string) (int, string, error) {
-	return 1, "testuser", nil
+	return 1, "password", nil
 }
