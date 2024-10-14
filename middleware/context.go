@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"strings"
@@ -34,14 +34,14 @@ func GetContext(next http.Handler) http.Handler {
 		}
 
 		// Read the request body into a byte slice
-		body, err := ioutil.ReadAll(r.Body)
+		body, err := io.ReadAll(r.Body)
 		if err != nil {
 			respondWithError(w, http.StatusBadRequest, "Failed to read request body")
 			return
 		}
 
 		// Recreate the request body for the handler (as it is read-only once consumed)
-		r.Body = ioutil.NopCloser(bytes.NewBuffer(body))
+		r.Body = io.NopCloser(bytes.NewBuffer(body))
 
 		// Decode the body into AcceptedVals struct
 		var params AcceptedVals

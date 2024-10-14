@@ -15,7 +15,7 @@ import (
 type apiConfig struct {
 	DB            *sql.DB
 	InterviewRepo *interview.Repository
-	UserRepo      *user.Repository
+	UserRepo      user.UserRepo
 	TokenRepo     *token.Repository
 }
 

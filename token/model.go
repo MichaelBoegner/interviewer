@@ -22,3 +22,8 @@ type CustomClaims struct {
 func (c *CustomClaims) GetAudience() (jwt.ClaimStrings, error) {
 	return c.Audience, nil
 }
+
+type TokenRepo interface {
+	CreateRefreshToken(userID int) (string, error)
+	GetStoredRefreshToken(userID int) (string, error)
+}

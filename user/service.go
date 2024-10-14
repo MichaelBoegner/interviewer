@@ -10,7 +10,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-func CreateUser(repo *Repository, username, email, password string) (*User, error) {
+func CreateUser(repo UserRepo, username, email, password string) (*User, error) {
 	now := time.Now()
 
 	passwordHashed, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.MinCost)
@@ -34,7 +34,7 @@ func CreateUser(repo *Repository, username, email, password string) (*User, erro
 	return user, nil
 }
 
-func LoginUser(repo *Repository, username, password string) (string, int, error) {
+func LoginUser(repo UserRepo, username, password string) (string, int, error) {
 	id, hashedPassword, err := repo.GetPasswordandID(username)
 	if err != nil {
 		return "", 0, err
@@ -54,7 +54,7 @@ func LoginUser(repo *Repository, username, password string) (string, int, error)
 	return jwToken, id, nil
 }
 
-func GetUsers(repo *Repository) (*Users, error) {
+func GetUsers(repo UserRepo) (*Users, error) {
 	userMap := make(map[int]User)
 	users := &Users{
 		Users: userMap,

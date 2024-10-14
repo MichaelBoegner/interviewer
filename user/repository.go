@@ -57,8 +57,8 @@ func (repo *Repository) GetUsers(users *Users) (*Users, error) {
 	}
 	for rows.Next() {
 		user := User{}
-		rows.Scan(&user.Id, &user.Username, &user.Email)
-		users.Users[user.Id] = user
+		rows.Scan(&user.ID, &user.Username, &user.Email)
+		users.Users[user.ID] = user
 	}
 	return users, nil
 }

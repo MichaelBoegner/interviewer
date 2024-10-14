@@ -7,10 +7,16 @@ type Users struct {
 }
 
 type User struct {
-	Id        int
+	ID        int
 	Username  string
 	Email     string
 	Password  []byte
 	CreatedAt time.Time
 	UpdatedAt time.Time
+}
+
+type UserRepo interface {
+	CreateUser(user *User) error
+	GetPasswordandID(username string) (int, string, error)
+	GetUsers(users *Users) (*Users, error)
 }

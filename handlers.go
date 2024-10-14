@@ -13,7 +13,7 @@ import (
 
 type returnVals struct {
 	Error        string            `json:"error,omitempty"`
-	Id           int               `json:"id,omitempty"`
+	ID           int               `json:"id,omitempty"`
 	UserID       int               `json:"user_id,omitempty"`
 	Body         string            `json:"body,omitempty"`
 	Username     string            `json:"username,omitempty"`
@@ -129,7 +129,7 @@ func (apiCfg *apiConfig) refreshTokensHandler(w http.ResponseWriter, r *http.Req
 		}
 
 		payload := &returnVals{
-			Id:           params.UserID,
+			ID:           params.UserID,
 			JWToken:      jwToken,
 			RefreshToken: refreshToken,
 		}

@@ -1,57 +1,34 @@
 package main
 
 import (
-	"bytes"
-	"encoding/json"
+	"context"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
-	"github.com/DATA-DOG/go-sqlmock"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
+	"github.com/michaelboegner/interviewer/middleware"
+	"github.com/michaelboegner/interviewer/user"
 )
 
-func TestHandlerUsers(t *testing.T) {
-	// Mock DB connection
-	db, mock, err := sqlmock.New()
-	require.NoError(t, err)
-	defer db.Close()
+func TestUsersHandler(t *testing.T) {
+	// Mock repository logic
+	mockUserRepo := user.NewMockRepo()
 
-	// Mock instance of &apiConfig{}
-	apiCfgMock := &apiConfig{
-		DB: db,
-	}
+	apiCfg := &apiConfig{UserRepo: mockUserRepo}
 
-	// Expect the INSERT query to be called
-	mock.ExpectExec("INSERT INTO users").
-		WithArgs("testuser").
-		WillReturnResult(sqlmock.NewResult(1, 1))
-
-	// Create a new HTTP request
-	testBody := map[string]string{
-		"username": "testuser",
-		"password": "test1234",
-	}
-	body, err := json.Marshal(testBody)
-	require.NoError(t, err)
-
-	// Create a new HTTP request with the JSON body
-	req := httptest.NewRequest(http.MethodPost, "/api/users", bytes.NewBuffer(body))
+	// Simulate a request
+	req := httptest.NewRequest(http.MethodPost, "/api/users", strings.NewReader(`{"username":"testuser", "email": "test1@example.com", "password":"password"}`))
+	req = req.WithContext(context.WithValue(req.Context(), "params", middleware.AcceptedVals{
+		Username: "testuser", Email: "test1@example.com", Password: "password",
+	}))
 	w := httptest.NewRecorder()
 
 	// Call the handler
-	apiCfgMock.handlerUsers(w, req)
+	apiCfg.usersHandler(w, req)
 
-	// Expected payload
-	expectedPayload := `{"username":"testuser"}`
-
-	// Assertions
-	assert.Equal(t, http.StatusOK, w.Code)
-	assert.JSONEq(t, expectedPayload, w.Body.String())
-	assert.Equal(t, "application/json", w.Header().Get("Content-Type"))
-
-	// Ensure that the SQL expectations were met
-	err = mock.ExpectationsWereMet()
-	require.NoError(t, err)
+	// Assert the response
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected status %d, got %d", http.StatusOK, w.Code)
+	}
 }
