@@ -51,7 +51,7 @@ func main() {
 		TokenRepo:     tokenRepo,
 	}
 
-	mux.Handle("/api/users", middleware.GetContext(http.HandlerFunc(apiCfg.usersHandler)))
+	mux.Handle("/api/users/{id}", middleware.GetContext(http.HandlerFunc(apiCfg.usersHandler)))
 	mux.Handle("/api/auth/login", middleware.GetContext(http.HandlerFunc(apiCfg.loginHandler)))
 	// handlerInterviews is takes a token and interview preferences, and create new Interview resource.
 	mux.Handle("/api/interviews", middleware.GetContext(http.HandlerFunc(apiCfg.interviewsHandler)))

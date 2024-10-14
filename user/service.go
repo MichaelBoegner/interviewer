@@ -16,6 +16,7 @@ func CreateUser(repo UserRepo, username, email, password string) (*User, error) 
 	passwordHashed, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.MinCost)
 	if err != nil {
 		log.Printf("Error: %v\n", err)
+		return nil, err
 	}
 
 	user := &User{
@@ -54,17 +55,17 @@ func LoginUser(repo UserRepo, username, password string) (string, int, error) {
 	return jwToken, id, nil
 }
 
-func GetUsers(repo UserRepo) (*Users, error) {
-	userMap := make(map[int]User)
-	users := &Users{
-		Users: userMap,
+func GetUser(repo UserRepo, userID int) (*User, error) {
+	user := &User{
+		ID: userID,
 	}
-	usersReturned, err := repo.GetUsers(users)
+
+	userReturned, err := repo.GetUser(user)
 	if err != nil {
-		log.Printf("GetUsers from database failed due to: %v", err)
+		log.Printf("GetUser from database failed due to: %v", err)
 		return nil, err
 	}
-	return usersReturned, nil
+	return userReturned, nil
 }
 
 func createJWT(id, expires int) (string, error) {

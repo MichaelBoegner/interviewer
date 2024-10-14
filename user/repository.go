@@ -2,6 +2,7 @@ package user
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 )
 
@@ -50,15 +51,19 @@ func (repo *Repository) GetPasswordandID(username string) (int, string, error) {
 	return id, hashedPassword, nil
 }
 
-func (repo *Repository) GetUsers(users *Users) (*Users, error) {
-	rows, err := repo.DB.Query("SELECT id, username, email FROM users")
+func (repo *Repository) GetUser(user *User) (*User, error) {
+	err := repo.DB.QueryRow("SELECT id, username, email FROM users WHERE id= $1", user.ID).Scan(&user.Username, &user.Email)
 	if err != nil {
 		return nil, err
 	}
-	for rows.Next() {
-		user := User{}
-		rows.Scan(&user.ID, &user.Username, &user.Email)
-		users.Users[user.ID] = user
+
+	if err == sql.ErrNoRows {
+		log.Printf("UserID invalid: %v", err)
+		return nil, err
+	} else if err != nil {
+		log.Printf("Error querying database: %v\n", err)
+		return nil, err
 	}
-	return users, nil
+	fmt.Printf("user: %v\n", user)
+	return user, nil
 }

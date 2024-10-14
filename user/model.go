@@ -18,5 +18,5 @@ type User struct {
 type UserRepo interface {
 	CreateUser(user *User) error
 	GetPasswordandID(username string) (int, string, error)
-	GetUsers(users *Users) (*Users, error)
+	GetUser(user *User) (*User, error)
 }

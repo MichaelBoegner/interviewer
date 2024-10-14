@@ -17,12 +17,14 @@ func (m *MockRepo) CreateUser(user *User) error {
 	return nil
 }
 
-func (m *MockRepo) GetUsers(users *Users) (*Users, error) {
-	mockUsers := &Users{
-		Users: m.Users,
+func (m *MockRepo) GetUser(user *User) (*User, error) {
+	mockUser := &User{
+		ID:       user.ID,
+		Username: "testuser",
+		Email:    "test@example.com",
 	}
 
-	return mockUsers, nil
+	return mockUser, nil
 }
 
 func (m *MockRepo) GetPasswordandID(username string) (int, string, error) {

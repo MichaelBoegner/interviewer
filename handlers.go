@@ -2,9 +2,10 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
+	"strconv"
+	"strings"
 
 	"github.com/michaelboegner/interviewer/interview"
 	"github.com/michaelboegner/interviewer/middleware"
@@ -33,7 +34,6 @@ func (apiCfg *apiConfig) usersHandler(w http.ResponseWriter, r *http.Request) {
 		params := r.Context().Value("params").(middleware.AcceptedVals)
 
 		if params.Username == "" || params.Email == "" || params.Password == "" {
-			fmt.Printf("Params.Username: %v, Params.Email: %v, Params.Password: %v", params.Username, params.Email, params.Password)
 			respondWithError(w, http.StatusBadRequest, "Username, Email, and Password required")
 		} else {
 			user, err := user.CreateUser(apiCfg.UserRepo, params.Username, params.Email, params.Password)
@@ -49,13 +49,25 @@ func (apiCfg *apiConfig) usersHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 	case http.MethodGet:
-		users, err := user.GetUsers(apiCfg.UserRepo)
+		pathParts := strings.Split(r.URL.Path, "/")
+		if len(pathParts) < 4 || pathParts[3] == "" {
+			respondWithError(w, http.StatusBadRequest, "Missing user ID")
+		}
+
+		userID, err := strconv.Atoi(pathParts[3])
+		if err != nil {
+			respondWithError(w, http.StatusBadRequest, "ID passed is not an int convertable string")
+		}
+
+		user, err := user.GetUser(apiCfg.UserRepo, userID)
 		if err != nil {
 			log.Printf("GetUsers failed due to: %v", err)
 		}
 
 		payload := &returnVals{
-			Users: users.Users,
+			ID:       user.ID,
+			Username: user.Username,
+			Email:    user.Email,
 		}
 
 		respondWithJSON(w, http.StatusOK, payload)
@@ -175,7 +187,6 @@ func respondWithError(w http.ResponseWriter, code int, msg string) {
 		Error: msg,
 	}
 
-	fmt.Printf("RESPBODY: %v\n", respBody)
 	data, err := json.Marshal(respBody)
 	if err != nil {
 		log.Printf("Error marshalling JSON: %s", err)
