@@ -20,6 +20,7 @@ func TestUsersHandler_Post(t *testing.T) {
 		params         middleware.AcceptedVals
 		expectedStatus int
 		expectError    bool
+		respBody       returnVals
 	}{
 		{
 			name:    "CreateUser_Success",
@@ -31,6 +32,10 @@ func TestUsersHandler_Post(t *testing.T) {
 			},
 			expectedStatus: http.StatusOK,
 			expectError:    false,
+			respBody: returnVals{
+				Username: "testuser",
+				Email:    "test@example.com",
+			},
 		},
 		{
 			name:           "MissingParams",
@@ -38,6 +43,7 @@ func TestUsersHandler_Post(t *testing.T) {
 			params:         middleware.AcceptedVals{},
 			expectedStatus: http.StatusBadRequest,
 			expectError:    true,
+			respBody:       returnVals{},
 		},
 	}
 
@@ -60,15 +66,9 @@ func TestUsersHandler_Post(t *testing.T) {
 			}
 
 			// Validate resp
-			var resp returnVals
-
-			err := json.Unmarshal(w.Body.Bytes(), &resp)
+			resp, err := checkResponse(w, tc.respBody, tc.expectError)
 			if err != nil {
-				t.Fatalf("failed to unmarshal response: %v", err)
-			}
-
-			if tc.expectError && resp.Error == "" {
-				t.Errorf("expected error message, got none")
+				t.Fatalf("expected response %v and error %v\ngot response: %v and error %v", tc.respBody, tc.expectError, resp, resp.Error)
 			}
 		})
 	}
