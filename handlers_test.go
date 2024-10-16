@@ -149,6 +149,17 @@ func TestLoginHandler_Post(t *testing.T) {
 				RefreshToken: "",
 			},
 		},
+		{
+			name:    "LoginUser_Missing_Username",
+			reqBody: `{"username":"", "password":"password"}`,
+			params: middleware.AcceptedVals{
+				Username: "",
+				Password: "password",
+			},
+			expectedStatus: http.StatusUnauthorized,
+			expectError:    true,
+			respBody:       returnVals{},
+		},
 	}
 
 	for _, tc := range tests {
@@ -179,7 +190,7 @@ func TestLoginHandler_Post(t *testing.T) {
 				t.Fatalf("expected response %v and error %v\ngot response: %v and error %v", tc.respBody, tc.expectError, resp, resp.Error)
 			}
 
-			if resp.JWToken == "" || resp.RefreshToken == "" {
+			if !tc.expectError && (resp.JWToken == "" || resp.RefreshToken == "") {
 				t.Fatalf("expected non-empty tokens, got empty jwt or refresh token")
 			}
 		})

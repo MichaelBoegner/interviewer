@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -86,27 +85,32 @@ func (apiCfg *apiConfig) loginHandler(w http.ResponseWriter, r *http.Request) {
 		if !ok {
 			respondWithError(w, http.StatusBadRequest, "Invalid request parameters")
 		}
-
-		jwToken, userID, err := user.LoginUser(apiCfg.UserRepo, params.Username, params.Password)
-		if err != nil {
-			fmt.Printf("LoginUser error: %v", err)
+		if params.Username == "" || params.Password == "" {
+			log.Printf("Invalid username or password.")
 			respondWithError(w, http.StatusUnauthorized, "Invalid username or password.")
+		} else {
+			jwToken, userID, err := user.LoginUser(apiCfg.UserRepo, params.Username, params.Password)
+			if err != nil {
+				log.Printf("LoginUser error: %v", err)
+				respondWithError(w, http.StatusUnauthorized, "Invalid username or password.")
+			}
+
+			refreshToken, err := token.CreateRefreshToken(apiCfg.TokenRepo, userID)
+			if err != nil {
+				log.Printf("RefreshToken error: %v", err)
+				respondWithError(w, http.StatusUnauthorized, "")
+			}
+
+			payload := returnVals{
+				UserID:       userID,
+				Username:     params.Username,
+				JWToken:      jwToken,
+				RefreshToken: refreshToken,
+			}
+
+			respondWithJSON(w, http.StatusOK, payload)
 		}
 
-		refreshToken, err := token.CreateRefreshToken(apiCfg.TokenRepo, userID)
-		if err != nil {
-			fmt.Printf("RefreshToken error: %v", err)
-			respondWithError(w, http.StatusUnauthorized, "")
-		}
-
-		payload := returnVals{
-			UserID:       userID,
-			Username:     params.Username,
-			JWToken:      jwToken,
-			RefreshToken: refreshToken,
-		}
-
-		respondWithJSON(w, http.StatusOK, payload)
 	}
 }
 
