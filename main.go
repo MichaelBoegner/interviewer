@@ -30,6 +30,8 @@ func enableCors(next http.Handler) http.Handler {
 }
 
 func main() {
+	log.SetFlags(log.LstdFlags | log.Llongfile)
+
 	const filepathRoot = "."
 	const port = "8080"
 

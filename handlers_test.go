@@ -3,8 +3,10 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"log"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"reflect"
 	"strings"
 	"testing"
@@ -13,6 +15,17 @@ import (
 	"github.com/michaelboegner/interviewer/token"
 	"github.com/michaelboegner/interviewer/user"
 )
+
+func TestMain(m *testing.M) {
+	// Set the logging flags globally for all tests
+	log.SetFlags(log.LstdFlags | log.Llongfile)
+
+	// Run the tests
+	code := m.Run()
+
+	// Exit with the test suite's exit code
+	os.Exit(code)
+}
 
 func TestUsersHandler_Post(t *testing.T) {
 	tests := []struct {
