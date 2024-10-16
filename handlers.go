@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -88,11 +89,13 @@ func (apiCfg *apiConfig) loginHandler(w http.ResponseWriter, r *http.Request) {
 
 		jwToken, userID, err := user.LoginUser(apiCfg.UserRepo, params.Username, params.Password)
 		if err != nil {
+			fmt.Printf("LoginUser error: %v", err)
 			respondWithError(w, http.StatusUnauthorized, "Invalid username or password.")
 		}
 
 		refreshToken, err := token.CreateRefreshToken(apiCfg.TokenRepo, userID)
 		if err != nil {
+			fmt.Printf("RefreshToken error: %v", err)
 			respondWithError(w, http.StatusUnauthorized, "")
 		}
 

@@ -1,5 +1,11 @@
 package user
 
+import (
+	"log"
+
+	"golang.org/x/crypto/bcrypt"
+)
+
 type MockRepo struct {
 	Users map[int]User
 }
@@ -28,5 +34,12 @@ func (m *MockRepo) GetUser(user *User) (*User, error) {
 }
 
 func (m *MockRepo) GetPasswordandID(username string) (int, string, error) {
-	return 1, "password", nil
+	passwordHashed, err := bcrypt.GenerateFromPassword([]byte("password"), bcrypt.MinCost)
+	if err != nil {
+		log.Printf("Error: %v\n", err)
+		return 0, "", err
+	}
+
+	passwordString := string(passwordHashed)
+	return 1, passwordString, nil
 }
