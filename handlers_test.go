@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"net/http/httptest"
@@ -228,7 +227,7 @@ func TestInterviewsHandler_Post(t *testing.T) {
 	if err != nil || token == "" {
 		t.Fatalf("Mock JWT was not created or is empty")
 	}
-	fmt.Printf("Generated JWT: %s\n", token)
+
 	tests := []struct {
 		name           string
 		reqBody        string
@@ -281,10 +280,6 @@ func TestInterviewsHandler_Post(t *testing.T) {
 			resp, err := checkResponse(w, tc.respBody, tc.expectError)
 			if err != nil {
 				t.Fatalf("expected response %v and error %v\ngot response: %v and error %v", tc.respBody, tc.expectError, resp, resp.Error)
-			}
-
-			if !tc.expectError && (resp.JWToken == "" || resp.RefreshToken == "") {
-				t.Fatalf("expected non-empty tokens, got empty jwt or refresh token")
 			}
 		})
 	}

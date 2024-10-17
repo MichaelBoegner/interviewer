@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -29,15 +28,6 @@ type returnVals struct {
 	Questions    map[int]string    `json:"firstQuestion,omitempty"`
 	JWToken      string            `json:"jwtoken,omitempty"`
 	RefreshToken string            `json:"refresh_token,omitempty"`
-}
-
-type CustomClaims struct {
-	UserID string `json:"sub"`
-	jwt.RegisteredClaims
-}
-
-func (c *CustomClaims) GetAudience() (jwt.ClaimStrings, error) {
-	return c.Audience, nil
 }
 
 func (apiCfg *apiConfig) usersHandler(w http.ResponseWriter, r *http.Request) {
@@ -140,7 +130,7 @@ func (apiCfg *apiConfig) interviewsHandler(w http.ResponseWriter, r *http.Reques
 		if !ok {
 			respondWithError(w, http.StatusBadRequest, "Invalid request parameters")
 		}
-		fmt.Printf("token: %v\n", token)
+
 		userID, err := verifyToken(token)
 		if err != nil {
 			log.Printf("Supplied token returns error: %v", err)
@@ -209,27 +199,21 @@ func verifyToken(tokenString string) (int, error) {
 		log.Printf("JWT secret is not set")
 	}
 
-	token, err := jwt.ParseWithClaims(tokenString, &CustomClaims{}, func(token *jwt.Token) (interface{}, error) {
+	token, err := jwt.ParseWithClaims(tokenString, &jwt.RegisteredClaims{}, func(token *jwt.Token) (interface{}, error) {
 		return []byte(jwtSecret), nil
 	})
 	if err != nil {
 		return 0, err
 	}
-	if token == nil {
-		err := errors.New("token parsing resulted in nil token")
-		return 0, err
+	if claims, ok := token.Claims.(*jwt.RegisteredClaims); ok && token.Valid {
+		userID, err := strconv.Atoi(claims.Subject)
+		if err != nil {
+			return 0, err
+		}
+		return userID, nil
+	} else {
+		return 0, errors.New("invalid token")
 	}
-
-	idString, err := token.Claims.GetSubject()
-	if err != nil {
-		return 0, err
-	}
-
-	userID, err := strconv.Atoi(idString)
-	if err != nil {
-		return 0, err
-	}
-	return userID, nil
 }
 
 func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
