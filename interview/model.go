@@ -17,3 +17,7 @@ type Interview struct {
 	CreatedAt       time.Time
 	UpdatedAt       time.Time
 }
+
+type InterviewRepo interface {
+	CreateInterview(interview *Interview) (int, error)
+}

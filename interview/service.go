@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-func StartInterview(repo *Repository, userId, length, numberQuestions int, difficulty string) (*Interview, error) {
+func StartInterview(repo InterviewRepo, userId, length, numberQuestions int, difficulty string) (*Interview, error) {
 	questions := map[int]string{1: "What is the speed of a swallow", 2: "What is your favorite color?"}
 	now := time.Now()
 

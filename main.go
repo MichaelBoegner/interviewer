@@ -14,7 +14,7 @@ import (
 
 type apiConfig struct {
 	DB            *sql.DB
-	InterviewRepo *interview.Repository
+	InterviewRepo interview.InterviewRepo
 	UserRepo      user.UserRepo
 	TokenRepo     token.TokenRepo
 }
@@ -55,7 +55,6 @@ func main() {
 
 	mux.Handle("/api/users/{id}", middleware.GetContext(http.HandlerFunc(apiCfg.usersHandler)))
 	mux.Handle("/api/auth/login", middleware.GetContext(http.HandlerFunc(apiCfg.loginHandler)))
-	// handlerInterviews is takes a token and interview preferences, and create new Interview resource.
 	mux.Handle("/api/interviews", middleware.GetContext(http.HandlerFunc(apiCfg.interviewsHandler)))
 	mux.Handle("/api/auth/token", middleware.GetContext(http.HandlerFunc(apiCfg.refreshTokensHandler)))
 

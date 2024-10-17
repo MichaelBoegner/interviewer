@@ -37,10 +37,12 @@ func (apiCfg *apiConfig) usersHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if params.Username == "" || params.Email == "" || params.Password == "" {
+			log.Printf("Missing params in usersHandler.")
 			respondWithError(w, http.StatusBadRequest, "Username, Email, and Password required")
 		} else {
 			user, err := user.CreateUser(apiCfg.UserRepo, params.Username, params.Email, params.Password)
 			if err != nil {
+				log.Printf("CreateUser error: %v", err)
 				respondWithError(w, http.StatusInternalServerError, "Internal Server Error")
 			}
 
@@ -50,7 +52,7 @@ func (apiCfg *apiConfig) usersHandler(w http.ResponseWriter, r *http.Request) {
 			}
 			respondWithJSON(w, 200, payload)
 		}
-
+	// GET a user by {id}
 	case http.MethodGet:
 		pathParts := strings.Split(r.URL.Path, "/")
 		if len(pathParts) < 4 || pathParts[3] == "" {
@@ -59,12 +61,13 @@ func (apiCfg *apiConfig) usersHandler(w http.ResponseWriter, r *http.Request) {
 
 		userID, err := strconv.Atoi(pathParts[3])
 		if err != nil {
+			log.Printf("Atoi error: %v", err)
 			respondWithError(w, http.StatusBadRequest, "ID passed is not an int convertable string")
 		}
 
 		user, err := user.GetUser(apiCfg.UserRepo, userID)
 		if err != nil {
-			log.Printf("GetUsers failed due to: %v", err)
+			log.Printf("GetUsers error: %v", err)
 		}
 
 		payload := &returnVals{
@@ -85,9 +88,11 @@ func (apiCfg *apiConfig) loginHandler(w http.ResponseWriter, r *http.Request) {
 		if !ok {
 			respondWithError(w, http.StatusBadRequest, "Invalid request parameters")
 		}
+
 		if params.Username == "" || params.Password == "" {
 			log.Printf("Invalid username or password.")
 			respondWithError(w, http.StatusUnauthorized, "Invalid username or password.")
+
 		} else {
 			jwToken, userID, err := user.LoginUser(apiCfg.UserRepo, params.Username, params.Password)
 			if err != nil {
@@ -143,16 +148,19 @@ func (apiCfg *apiConfig) refreshTokensHandler(w http.ResponseWriter, r *http.Req
 
 		storedToken, err := token.GetStoredRefreshToken(apiCfg.TokenRepo, params.UserID)
 		if err != nil {
+			log.Printf("GetStoredRefreshToken error: %v", err)
 			respondWithError(w, http.StatusUnauthorized, "User ID is invalid.")
 		}
 
 		ok = token.VerifyRefreshToken(storedToken, providedToken)
 		if !ok {
+			log.Printf("VerifyRefreshToken error.")
 			respondWithError(w, http.StatusUnauthorized, "Refresh token is invalid.")
 		}
 
 		refreshToken, err := token.CreateRefreshToken(apiCfg.TokenRepo, params.UserID)
 		if err != nil {
+			log.Printf("CreateRefreshToken error: %v", err)
 			respondWithError(w, http.StatusUnauthorized, "")
 		}
 
