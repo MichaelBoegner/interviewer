@@ -3,14 +3,20 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"reflect"
+	"strconv"
 	"strings"
 	"testing"
+	"time"
 
+	"github.com/golang-jwt/jwt/v5"
+	"github.com/joho/godotenv"
+	"github.com/michaelboegner/interviewer/interview"
 	"github.com/michaelboegner/interviewer/middleware"
 	"github.com/michaelboegner/interviewer/token"
 	"github.com/michaelboegner/interviewer/user"
@@ -19,6 +25,12 @@ import (
 func TestMain(m *testing.M) {
 	// Set the logging flags globally for all tests
 	log.SetFlags(log.LstdFlags | log.Llongfile)
+
+	// Load .env
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatalf("Error loading .env file")
+	}
 
 	// Run the tests
 	code := m.Run()
@@ -139,6 +151,7 @@ func TestUsersHandler_Get(t *testing.T) {
 }
 
 func TestLoginHandler_Post(t *testing.T) {
+
 	tests := []struct {
 		name           string
 		reqBody        string
@@ -210,6 +223,73 @@ func TestLoginHandler_Post(t *testing.T) {
 	}
 }
 
+func TestInterviewsHandler_Post(t *testing.T) {
+	token, err := createJWT(1, 0)
+	if err != nil || token == "" {
+		t.Fatalf("Mock JWT was not created or is empty")
+	}
+	fmt.Printf("Generated JWT: %s\n", token)
+	tests := []struct {
+		name           string
+		reqBody        string
+		params         middleware.AcceptedVals
+		expectedStatus int
+		expectError    bool
+		respBody       returnVals
+	}{
+		{
+			name:    "InterviewsHandler_Success",
+			reqBody: `{}`,
+			params: middleware.AcceptedVals{
+				AccessToken: token,
+			},
+			expectedStatus: http.StatusOK,
+			expectError:    false,
+			respBody:       returnVals{},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			// Arrange
+			mockUserRepo := user.NewMockRepo()
+			mockInterviewRepo := interview.NewMockRepo()
+
+			apiCfg := &apiConfig{
+				UserRepo:      mockUserRepo,
+				InterviewRepo: mockInterviewRepo,
+			}
+
+			req := httptest.NewRequest(http.MethodPost, "/api/interviews", strings.NewReader(tc.reqBody))
+			req = req.WithContext(context.WithValue(req.Context(), "params", tc.params))
+			req.Header.Set("Authorization", "Bearer "+token)
+
+			w := httptest.NewRecorder()
+
+			// Apply the middleware to the handler
+			handler := middleware.GetContext(http.HandlerFunc(apiCfg.interviewsHandler))
+
+			// Act
+			handler.ServeHTTP(w, req)
+
+			// Assert
+			if w.Code != tc.expectedStatus {
+				t.Fatalf("expected status %d, got %d", tc.expectedStatus, w.Code)
+			}
+
+			// Validate resp
+			resp, err := checkResponse(w, tc.respBody, tc.expectError)
+			if err != nil {
+				t.Fatalf("expected response %v and error %v\ngot response: %v and error %v", tc.respBody, tc.expectError, resp, resp.Error)
+			}
+
+			if !tc.expectError && (resp.JWToken == "" || resp.RefreshToken == "") {
+				t.Fatalf("expected non-empty tokens, got empty jwt or refresh token")
+			}
+		})
+	}
+}
+
 func checkResponse(w *httptest.ResponseRecorder, respBody returnVals, expectError bool) (returnVals, error) {
 	var resp returnVals
 
@@ -226,4 +306,33 @@ func checkResponse(w *httptest.ResponseRecorder, respBody returnVals, expectErro
 		return resp, err
 	}
 	return resp, nil
+}
+
+func createJWT(id, expires int) (string, error) {
+	var (
+		key []byte
+		t   *jwt.Token
+	)
+
+	jwtSecret := os.Getenv("JWT_SECRET")
+	now := time.Now()
+	if expires == 0 {
+		expires = 3600
+	}
+	expiresAt := time.Now().Add(time.Duration(expires) * time.Second)
+	key = []byte(jwtSecret)
+	claims := jwt.RegisteredClaims{
+		Issuer:    "interviewer",
+		IssuedAt:  jwt.NewNumericDate(now),
+		ExpiresAt: jwt.NewNumericDate(expiresAt),
+		Subject:   strconv.Itoa(id),
+	}
+	t = jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	s, err := t.SignedString(key)
+	if err != nil {
+		log.Fatalf("Bad SignedString: %s", err)
+		return "", err
+	}
+
+	return s, nil
 }

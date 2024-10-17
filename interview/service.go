@@ -1,7 +1,6 @@
 package interview
 
 import (
-	"fmt"
 	"log"
 	"time"
 )
@@ -31,6 +30,5 @@ func StartInterview(repo InterviewRepo, userId, length, numberQuestions int, dif
 
 	interview.Id = id
 
-	fmt.Printf("Interview: %v", interview)
 	return interview, nil
 }

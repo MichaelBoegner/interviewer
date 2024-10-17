@@ -10,6 +10,8 @@ import (
 	"github.com/michaelboegner/interviewer/middleware"
 	"github.com/michaelboegner/interviewer/token"
 	"github.com/michaelboegner/interviewer/user"
+
+	"github.com/joho/godotenv"
 )
 
 type apiConfig struct {
@@ -31,6 +33,11 @@ func enableCors(next http.Handler) http.Handler {
 
 func main() {
 	log.SetFlags(log.LstdFlags | log.Llongfile)
+
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatalf("Error loading .env file")
+	}
 
 	const filepathRoot = "."
 	const port = "8080"
