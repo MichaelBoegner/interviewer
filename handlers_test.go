@@ -21,6 +21,15 @@ import (
 	"github.com/michaelboegner/interviewer/user"
 )
 
+type testCase struct {
+	name           string
+	reqBody        string
+	params         middleware.AcceptedVals
+	expectedStatus int
+	expectError    bool
+	respBody       returnVals
+}
+
 func TestMain(m *testing.M) {
 	log.SetFlags(log.LstdFlags | log.Llongfile)
 
@@ -35,14 +44,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestUsersHandler_Post(t *testing.T) {
-	tests := []struct {
-		name           string
-		reqBody        string
-		params         middleware.AcceptedVals
-		expectedStatus int
-		expectError    bool
-		respBody       returnVals
-	}{
+	tests := []testCase{
 		{
 			name:    "CreateUser_Success",
 			reqBody: `{"username":"testuser", "email":"test@example.com", "password":"password"}`,
@@ -99,14 +101,7 @@ func TestUsersHandler_Post(t *testing.T) {
 }
 
 func TestUsersHandler_Get(t *testing.T) {
-	tests := []struct {
-		name           string
-		reqBody        string
-		params         middleware.AcceptedVals
-		expectedStatus int
-		expectError    bool
-		respBody       returnVals
-	}{
+	tests := []testCase{
 		{
 			name:           "GetUser_Success",
 			reqBody:        `{}`,
@@ -152,14 +147,7 @@ func TestUsersHandler_Get(t *testing.T) {
 }
 
 func TestLoginHandler_Post(t *testing.T) {
-	tests := []struct {
-		name           string
-		reqBody        string
-		params         middleware.AcceptedVals
-		expectedStatus int
-		expectError    bool
-		respBody       returnVals
-	}{
+	tests := []testCase{
 		{
 			name:    "LoginUser_Success",
 			reqBody: `{"username":"testuser", "password":"password"}`,
@@ -232,14 +220,7 @@ func TestInterviewsHandler_Post(t *testing.T) {
 		t.Fatalf("Mock JWT was not created or is empty")
 	}
 
-	tests := []struct {
-		name           string
-		reqBody        string
-		params         middleware.AcceptedVals
-		expectedStatus int
-		expectError    bool
-		respBody       returnVals
-	}{
+	tests := []testCase{
 		{
 			name:    "InterviewsHandler_Success",
 			reqBody: `{}`,
@@ -262,10 +243,11 @@ func TestInterviewsHandler_Post(t *testing.T) {
 				UserRepo:      mockUserRepo,
 				InterviewRepo: mockInterviewRepo,
 			}
-			type contextKey string
-			const paramsKey = contextKey("paramsKey")
 
 			w, req, err := setRequestAndWriter(http.MethodPost, "/api/interviews", tc)
+			if err != nil {
+				t.Fatalf("failed to set request and writer")
+			}
 
 			req.Header.Set("Authorization", "Bearer "+token)
 
@@ -289,7 +271,10 @@ func TestInterviewsHandler_Post(t *testing.T) {
 	}
 }
 
-func setRequestAndWriter(method, endpoint string, tc struct{}) (*httptest.ResponseRecorder, *http.Request, error) {
+func setRequestAndWriter(method, endpoint string, tc testCase) (*httptest.ResponseRecorder, *http.Request, error) {
+	type contextKey string
+	const paramsKey = contextKey("paramsKey")
+
 	req := httptest.NewRequest(method, endpoint, strings.NewReader(tc.reqBody))
 	req = req.WithContext(context.WithValue(req.Context(), paramsKey, tc.params))
 	w := httptest.NewRecorder()
