@@ -76,12 +76,10 @@ func TestUsersHandler_Post(t *testing.T) {
 			mockUserRepo := user.NewMockRepo()
 			apiCfg := &apiConfig{UserRepo: mockUserRepo}
 
-			type contextKey string
-			const paramsKey = contextKey("paramsKey")
-
-			req := httptest.NewRequest(http.MethodPost, "/api/users", strings.NewReader(tc.reqBody))
-			req = req.WithContext(context.WithValue(req.Context(), paramsKey, tc.params))
-			w := httptest.NewRecorder()
+			w, req, err := setRequestAndWriter(http.MethodPost, "/api/users", tc)
+			if err != nil {
+				t.Fatalf("failed to set request and writer")
+			}
 
 			// Act
 			apiCfg.usersHandler(w, req)
@@ -122,12 +120,10 @@ func TestUsersHandler_Get(t *testing.T) {
 			mockUserRepo := user.NewMockRepo()
 			apiCfg := &apiConfig{UserRepo: mockUserRepo}
 
-			type contextKey string
-			const paramsKey = contextKey("paramsKey")
-
-			req := httptest.NewRequest(http.MethodGet, "/api/users/1", strings.NewReader(tc.reqBody))
-			req = req.WithContext(context.WithValue(req.Context(), paramsKey, tc.params))
-			w := httptest.NewRecorder()
+			w, req, err := setRequestAndWriter(http.MethodGet, "/api/users/1", tc)
+			if err != nil {
+				t.Fatalf("failed to set request and writer")
+			}
 
 			// Act
 			apiCfg.usersHandler(w, req)
@@ -186,12 +182,10 @@ func TestLoginHandler_Post(t *testing.T) {
 				UserRepo:  mockUserRepo,
 			}
 
-			type contextKey string
-			const paramsKey = contextKey("paramsKey")
-
-			req := httptest.NewRequest(http.MethodPost, "/api/auth/login", strings.NewReader(tc.reqBody))
-			req = req.WithContext(context.WithValue(req.Context(), paramsKey, tc.params))
-			w := httptest.NewRecorder()
+			w, req, err := setRequestAndWriter(http.MethodPost, "/api/auth/login", tc)
+			if err != nil {
+				t.Fatalf("failed to set request and writer")
+			}
 
 			// Act
 			apiCfg.loginHandler(w, req)
