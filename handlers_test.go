@@ -22,19 +22,15 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	// Set the logging flags globally for all tests
 	log.SetFlags(log.LstdFlags | log.Llongfile)
 
-	// Load .env
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatalf("Error loading .env file")
 	}
 
-	// Run the tests
 	code := m.Run()
 
-	// Exit with the test suite's exit code
 	os.Exit(code)
 }
 
@@ -78,8 +74,11 @@ func TestUsersHandler_Post(t *testing.T) {
 			mockUserRepo := user.NewMockRepo()
 			apiCfg := &apiConfig{UserRepo: mockUserRepo}
 
+			type contextKey string
+			const paramsKey = contextKey("paramsKey")
+
 			req := httptest.NewRequest(http.MethodPost, "/api/users", strings.NewReader(tc.reqBody))
-			req = req.WithContext(context.WithValue(req.Context(), "params", tc.params))
+			req = req.WithContext(context.WithValue(req.Context(), paramsKey, tc.params))
 			w := httptest.NewRecorder()
 
 			// Act
@@ -128,8 +127,11 @@ func TestUsersHandler_Get(t *testing.T) {
 			mockUserRepo := user.NewMockRepo()
 			apiCfg := &apiConfig{UserRepo: mockUserRepo}
 
+			type contextKey string
+			const paramsKey = contextKey("paramsKey")
+
 			req := httptest.NewRequest(http.MethodGet, "/api/users/1", strings.NewReader(tc.reqBody))
-			req = req.WithContext(context.WithValue(req.Context(), "params", tc.params))
+			req = req.WithContext(context.WithValue(req.Context(), paramsKey, tc.params))
 			w := httptest.NewRecorder()
 
 			// Act
@@ -150,7 +152,6 @@ func TestUsersHandler_Get(t *testing.T) {
 }
 
 func TestLoginHandler_Post(t *testing.T) {
-
 	tests := []struct {
 		name           string
 		reqBody        string
@@ -197,8 +198,11 @@ func TestLoginHandler_Post(t *testing.T) {
 				UserRepo:  mockUserRepo,
 			}
 
+			type contextKey string
+			const paramsKey = contextKey("paramsKey")
+
 			req := httptest.NewRequest(http.MethodPost, "/api/auth/login", strings.NewReader(tc.reqBody))
-			req = req.WithContext(context.WithValue(req.Context(), "params", tc.params))
+			req = req.WithContext(context.WithValue(req.Context(), paramsKey, tc.params))
 			w := httptest.NewRecorder()
 
 			// Act
@@ -258,12 +262,12 @@ func TestInterviewsHandler_Post(t *testing.T) {
 				UserRepo:      mockUserRepo,
 				InterviewRepo: mockInterviewRepo,
 			}
+			type contextKey string
+			const paramsKey = contextKey("paramsKey")
 
-			req := httptest.NewRequest(http.MethodPost, "/api/interviews", strings.NewReader(tc.reqBody))
-			req = req.WithContext(context.WithValue(req.Context(), "params", tc.params))
+			w, req, err := setRequestAndWriter(http.MethodPost, "/api/interviews", tc)
+
 			req.Header.Set("Authorization", "Bearer "+token)
-
-			w := httptest.NewRecorder()
 
 			// Apply the middleware to the handler
 			handler := middleware.GetContext(http.HandlerFunc(apiCfg.interviewsHandler))
@@ -283,6 +287,14 @@ func TestInterviewsHandler_Post(t *testing.T) {
 			}
 		})
 	}
+}
+
+func setRequestAndWriter(method, endpoint string, tc struct{}) (*httptest.ResponseRecorder, *http.Request, error) {
+	req := httptest.NewRequest(method, endpoint, strings.NewReader(tc.reqBody))
+	req = req.WithContext(context.WithValue(req.Context(), paramsKey, tc.params))
+	w := httptest.NewRecorder()
+
+	return w, req, nil
 }
 
 func checkResponse(w *httptest.ResponseRecorder, respBody returnVals, expectError bool) (returnVals, error) {
