@@ -302,8 +302,8 @@ func checkResponse(w *httptest.ResponseRecorder, respBody returnVals, expectErro
 
 func createJWT(id, expires int) (string, error) {
 	var (
-		key []byte
-		t   *jwt.Token
+		key   []byte
+		token *jwt.Token
 	)
 
 	jwtSecret := os.Getenv("JWT_SECRET")
@@ -319,12 +319,12 @@ func createJWT(id, expires int) (string, error) {
 		ExpiresAt: jwt.NewNumericDate(expiresAt),
 		Subject:   strconv.Itoa(id),
 	}
-	t = jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	s, err := t.SignedString(key)
+	token = jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	signedToken, err := token.SignedString(key)
 	if err != nil {
 		log.Fatalf("Bad SignedString: %s", err)
 		return "", err
 	}
 
-	return s, nil
+	return signedToken, nil
 }
