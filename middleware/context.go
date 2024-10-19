@@ -51,13 +51,10 @@ func GetContext(next http.Handler) http.Handler {
 		}
 
 		// Set extracted data in context for access by handlers
-		type contextKey string
-		const paramsKey = contextKey("paramsKey")
-		const tokenKey = contextKey("tokenKey")
 
 		ctx := r.Context()
-		ctx = context.WithValue(ctx, tokenKey, tokenPart)
-		ctx = context.WithValue(ctx, paramsKey, params)
+		ctx = context.WithValue(ctx, "tokenKey", tokenPart)
+		ctx = context.WithValue(ctx, "params", params)
 
 		// Pass along the request with the new context to the next handler
 		next.ServeHTTP(w, r.WithContext(ctx))

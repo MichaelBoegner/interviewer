@@ -19,5 +19,5 @@ func (m *MockRepo) AddRefreshToken(token *RefreshToken) error {
 }
 
 func (m *MockRepo) GetStoredRefreshToken(userID int) (string, error) {
-	return "", nil
+	return "9942443a086328dfaa867e0708426f94284d25700fa9df930261e341f0d8c671", nil
 }

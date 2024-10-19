@@ -21,7 +21,7 @@ import (
 	"github.com/michaelboegner/interviewer/user"
 )
 
-type testCase struct {
+type TestCase struct {
 	name           string
 	reqBody        string
 	params         middleware.AcceptedVals
@@ -44,7 +44,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestUsersHandler_Post(t *testing.T) {
-	tests := []testCase{
+	tests := []TestCase{
 		{
 			name:    "CreateUser_Success",
 			reqBody: `{"username":"testuser", "email":"test@example.com", "password":"password"}`,
@@ -76,7 +76,7 @@ func TestUsersHandler_Post(t *testing.T) {
 			mockUserRepo := user.NewMockRepo()
 			apiCfg := &apiConfig{UserRepo: mockUserRepo}
 
-			w, req, err := setRequestAndWriter(http.MethodPost, "/api/users", tc)
+			w, req, tc, err := setRequestAndWriter(http.MethodPost, "/api/users", tc)
 			if err != nil {
 				t.Fatalf("failed to set request and writer")
 			}
@@ -99,7 +99,7 @@ func TestUsersHandler_Post(t *testing.T) {
 }
 
 func TestUsersHandler_Get(t *testing.T) {
-	tests := []testCase{
+	tests := []TestCase{
 		{
 			name:           "GetUser_Success",
 			reqBody:        `{}`,
@@ -120,7 +120,7 @@ func TestUsersHandler_Get(t *testing.T) {
 			mockUserRepo := user.NewMockRepo()
 			apiCfg := &apiConfig{UserRepo: mockUserRepo}
 
-			w, req, err := setRequestAndWriter(http.MethodGet, "/api/users/1", tc)
+			w, req, tc, err := setRequestAndWriter(http.MethodGet, "/api/users/1", tc)
 			if err != nil {
 				t.Fatalf("failed to set request and writer")
 			}
@@ -143,7 +143,7 @@ func TestUsersHandler_Get(t *testing.T) {
 }
 
 func TestLoginHandler_Post(t *testing.T) {
-	tests := []testCase{
+	tests := []TestCase{
 		{
 			name:    "LoginUser_Success",
 			reqBody: `{"username":"testuser", "password":"password"}`,
@@ -182,7 +182,7 @@ func TestLoginHandler_Post(t *testing.T) {
 				UserRepo:  mockUserRepo,
 			}
 
-			w, req, err := setRequestAndWriter(http.MethodPost, "/api/auth/login", tc)
+			w, req, tc, err := setRequestAndWriter(http.MethodPost, "/api/auth/login", tc)
 			if err != nil {
 				t.Fatalf("failed to set request and writer")
 			}
@@ -214,7 +214,7 @@ func TestInterviewsHandler_Post(t *testing.T) {
 		t.Fatalf("Mock JWT was not created or is empty")
 	}
 
-	tests := []testCase{
+	tests := []TestCase{
 		{
 			name:    "InterviewsHandler_Success",
 			reqBody: `{}`,
@@ -238,7 +238,7 @@ func TestInterviewsHandler_Post(t *testing.T) {
 				InterviewRepo: mockInterviewRepo,
 			}
 
-			w, req, err := setRequestAndWriter(http.MethodPost, "/api/interviews", tc)
+			w, req, tc, err := setRequestAndWriter(http.MethodPost, "/api/interviews", tc)
 			if err != nil {
 				t.Fatalf("failed to set request and writer")
 			}
@@ -265,15 +265,68 @@ func TestInterviewsHandler_Post(t *testing.T) {
 	}
 }
 
-func setRequestAndWriter(method, endpoint string, tc testCase) (*httptest.ResponseRecorder, *http.Request, error) {
-	type contextKey string
-	const paramsKey = contextKey("paramsKey")
+func TestRefreshTokensHandler_Post(t *testing.T) {
+	tokenKey := "9942443a086328dfaa867e0708426f94284d25700fa9df930261e341f0d8c671"
 
+	tests := []TestCase{
+		{
+			name:    "RefreshTokensHandler_Success",
+			reqBody: `{"user_id": 1}`,
+			params: middleware.AcceptedVals{
+				AccessToken: tokenKey,
+			},
+			expectedStatus: http.StatusOK,
+			expectError:    false,
+			respBody:       returnVals{},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			// Arrange
+			mockUserRepo := user.NewMockRepo()
+			mockInterviewRepo := interview.NewMockRepo()
+			mockTokenRepo := token.NewMockRepo()
+
+			apiCfg := &apiConfig{
+				UserRepo:      mockUserRepo,
+				InterviewRepo: mockInterviewRepo,
+				TokenRepo:     mockTokenRepo,
+			}
+
+			w, req, tc, err := setRequestAndWriter(http.MethodPost, "/api/auth/token", tc)
+			if err != nil {
+				t.Fatalf("failed to set request and writer")
+			}
+
+			req.Header.Set("Authorization", "Bearer "+tokenKey)
+
+			// Apply the middleware to the handler
+			handler := middleware.GetContext(http.HandlerFunc(apiCfg.refreshTokensHandler))
+
+			// Act
+			handler.ServeHTTP(w, req)
+
+			// Assert
+			if w.Code != tc.expectedStatus {
+				t.Fatalf("expected status %d, got %d", tc.expectedStatus, w.Code)
+			}
+
+			// Validate resp
+			resp, err := checkResponse(w, tc.respBody, tc.expectError)
+			if err != nil {
+				t.Fatalf("expected response %v and error %v\ngot response: %v and error %v", tc.respBody, tc.expectError, resp, resp.Error)
+			}
+		})
+	}
+}
+
+func setRequestAndWriter(method, endpoint string, tc TestCase) (*httptest.ResponseRecorder, *http.Request, TestCase, error) {
 	req := httptest.NewRequest(method, endpoint, strings.NewReader(tc.reqBody))
-	req = req.WithContext(context.WithValue(req.Context(), paramsKey, tc.params))
+	req = req.WithContext(context.WithValue(req.Context(), "params", tc.params))
 	w := httptest.NewRecorder()
 
-	return w, req, nil
+	return w, req, tc, nil
 }
 
 func checkResponse(w *httptest.ResponseRecorder, respBody returnVals, expectError bool) (returnVals, error) {

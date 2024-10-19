@@ -126,7 +126,7 @@ func (apiCfg *apiConfig) interviewsHandler(w http.ResponseWriter, r *http.Reques
 	switch r.Method {
 	// POST start a resource instance of an interview and return the first question
 	case http.MethodPost:
-		token, ok := r.Context().Value("token").(string)
+		token, ok := r.Context().Value("tokenKey").(string)
 		if !ok {
 			respondWithError(w, http.StatusBadRequest, "Invalid request parameters")
 		}
@@ -154,7 +154,7 @@ func (apiCfg *apiConfig) refreshTokensHandler(w http.ResponseWriter, r *http.Req
 	switch r.Method {
 	// POST generate and return userID and a refreshToken
 	case http.MethodPost:
-		providedToken := r.Context().Value("token").(string)
+		providedToken := r.Context().Value("tokenKey").(string)
 		params, ok := r.Context().Value("params").(middleware.AcceptedVals)
 		if !ok {
 			respondWithError(w, http.StatusBadRequest, "Invalid request parameters")
