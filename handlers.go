@@ -189,7 +189,7 @@ func (apiCfg *apiConfig) refreshTokensHandler(w http.ResponseWriter, r *http.Req
 			JWToken:      jwToken,
 			RefreshToken: refreshToken,
 		}
-		respondWithJSON(w, http.StatusAccepted, payload)
+		respondWithJSON(w, http.StatusOK, payload)
 	}
 }
 
