@@ -37,40 +37,47 @@ func (apiCfg *apiConfig) usersHandler(w http.ResponseWriter, r *http.Request) {
 		params, ok := r.Context().Value("params").(middleware.AcceptedVals)
 		if !ok {
 			respondWithError(w, http.StatusBadRequest, "Invalid request parameters")
+			return
 		}
 
 		if params.Username == "" || params.Email == "" || params.Password == "" {
 			log.Printf("Missing params in usersHandler.")
 			respondWithError(w, http.StatusBadRequest, "Username, Email, and Password required")
-		} else {
-			user, err := user.CreateUser(apiCfg.UserRepo, params.Username, params.Email, params.Password)
-			if err != nil {
-				log.Printf("CreateUser error: %v", err)
-				respondWithError(w, http.StatusInternalServerError, "Internal Server Error")
-			}
-
-			payload := &returnVals{
-				Username: user.Username,
-				Email:    user.Email,
-			}
-			respondWithJSON(w, 200, payload)
+			return
 		}
+		user, err := user.CreateUser(apiCfg.UserRepo, params.Username, params.Email, params.Password)
+		if err != nil {
+			log.Printf("CreateUser error: %v", err)
+			respondWithError(w, http.StatusInternalServerError, "Internal Server Error")
+			return
+		}
+
+		payload := &returnVals{
+			Username: user.Username,
+			Email:    user.Email,
+		}
+		respondWithJSON(w, http.StatusOK, payload)
+		return
+
 	// GET a user by {id}
 	case http.MethodGet:
 		pathParts := strings.Split(r.URL.Path, "/")
 		if len(pathParts) < 4 || pathParts[3] == "" {
 			respondWithError(w, http.StatusBadRequest, "Missing user ID")
+			return
 		}
 
 		userID, err := strconv.Atoi(pathParts[3])
 		if err != nil {
 			log.Printf("Atoi error: %v", err)
 			respondWithError(w, http.StatusBadRequest, "ID passed is not an int convertable string")
+			return
 		}
 
 		user, err := user.GetUser(apiCfg.UserRepo, userID)
 		if err != nil {
 			log.Printf("GetUsers error: %v", err)
+			return
 		}
 
 		payload := &returnVals{
@@ -80,6 +87,7 @@ func (apiCfg *apiConfig) usersHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		respondWithJSON(w, http.StatusOK, payload)
+		return
 	}
 }
 
@@ -90,34 +98,39 @@ func (apiCfg *apiConfig) loginHandler(w http.ResponseWriter, r *http.Request) {
 		params, ok := r.Context().Value("params").(middleware.AcceptedVals)
 		if !ok {
 			respondWithError(w, http.StatusBadRequest, "Invalid request parameters")
+			return
 		}
 
 		if params.Username == "" || params.Password == "" {
 			log.Printf("Invalid username or password.")
 			respondWithError(w, http.StatusUnauthorized, "Invalid username or password.")
+			return
 
-		} else {
-			jwToken, userID, err := user.LoginUser(apiCfg.UserRepo, params.Username, params.Password)
-			if err != nil {
-				log.Printf("LoginUser error: %v", err)
-				respondWithError(w, http.StatusUnauthorized, "Invalid username or password.")
-			}
-
-			refreshToken, err := token.CreateRefreshToken(apiCfg.TokenRepo, userID)
-			if err != nil {
-				log.Printf("RefreshToken error: %v", err)
-				respondWithError(w, http.StatusUnauthorized, "")
-			}
-
-			payload := returnVals{
-				UserID:       userID,
-				Username:     params.Username,
-				JWToken:      jwToken,
-				RefreshToken: refreshToken,
-			}
-
-			respondWithJSON(w, http.StatusOK, payload)
 		}
+
+		jwToken, userID, err := user.LoginUser(apiCfg.UserRepo, params.Username, params.Password)
+		if err != nil {
+			log.Printf("LoginUser error: %v", err)
+			respondWithError(w, http.StatusUnauthorized, "Invalid username or password.")
+			return
+		}
+
+		refreshToken, err := token.CreateRefreshToken(apiCfg.TokenRepo, userID)
+		if err != nil {
+			log.Printf("RefreshToken error: %v", err)
+			respondWithError(w, http.StatusUnauthorized, "")
+			return
+		}
+
+		payload := returnVals{
+			UserID:       userID,
+			Username:     params.Username,
+			JWToken:      jwToken,
+			RefreshToken: refreshToken,
+		}
+
+		respondWithJSON(w, http.StatusOK, payload)
+		return
 
 	}
 }
@@ -129,17 +142,20 @@ func (apiCfg *apiConfig) interviewsHandler(w http.ResponseWriter, r *http.Reques
 		token, ok := r.Context().Value("tokenKey").(string)
 		if !ok {
 			respondWithError(w, http.StatusBadRequest, "Invalid request parameters")
+			return
 		}
 
 		userID, err := verifyToken(token)
 		if err != nil {
 			log.Printf("Supplied token returns error: %v", err)
 			respondWithError(w, http.StatusUnauthorized, "Unauthorized.")
+			return
 		}
 
 		interviewStarted, err := interview.StartInterview(apiCfg.InterviewRepo, userID, 30, 3, "easy")
 		if err != nil {
 			log.Printf("Interview failed to start: %v", err)
+			return
 		}
 
 		payload := returnVals{
@@ -147,6 +163,7 @@ func (apiCfg *apiConfig) interviewsHandler(w http.ResponseWriter, r *http.Reques
 		}
 
 		respondWithJSON(w, http.StatusOK, payload)
+		return
 	}
 }
 
@@ -158,30 +175,35 @@ func (apiCfg *apiConfig) refreshTokensHandler(w http.ResponseWriter, r *http.Req
 		params, ok := r.Context().Value("params").(middleware.AcceptedVals)
 		if !ok {
 			respondWithError(w, http.StatusBadRequest, "Invalid request parameters")
+			return
 		}
 
 		storedToken, err := token.GetStoredRefreshToken(apiCfg.TokenRepo, params.UserID)
 		if err != nil {
 			log.Printf("GetStoredRefreshToken error: %v", err)
 			respondWithError(w, http.StatusUnauthorized, "User ID is invalid.")
+			return
 		}
 
 		ok = token.VerifyRefreshToken(storedToken, providedToken)
 		if !ok {
 			log.Printf("VerifyRefreshToken error.")
 			respondWithError(w, http.StatusUnauthorized, "Refresh token is invalid.")
+			return
 		}
 
 		refreshToken, err := token.CreateRefreshToken(apiCfg.TokenRepo, params.UserID)
 		if err != nil {
 			log.Printf("CreateRefreshToken error: %v", err)
 			respondWithError(w, http.StatusUnauthorized, "")
+			return
 		}
 
 		jwToken, err := token.CreateJWT(params.UserID, 0)
 		if err != nil {
 			log.Printf("JWT creation failed: %v", err)
 			respondWithError(w, http.StatusInternalServerError, "")
+			return
 		}
 
 		payload := &returnVals{
@@ -190,6 +212,7 @@ func (apiCfg *apiConfig) refreshTokensHandler(w http.ResponseWriter, r *http.Req
 			RefreshToken: refreshToken,
 		}
 		respondWithJSON(w, http.StatusOK, payload)
+		return
 	}
 }
 
@@ -197,6 +220,8 @@ func verifyToken(tokenString string) (int, error) {
 	jwtSecret := os.Getenv("JWT_SECRET")
 	if jwtSecret == "" {
 		log.Printf("JWT secret is not set")
+		err := errors.New("jwt secret is not set")
+		return 0, err
 	}
 
 	token, err := jwt.ParseWithClaims(tokenString, &jwt.RegisteredClaims{}, func(token *jwt.Token) (interface{}, error) {
@@ -233,6 +258,7 @@ func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
 	}
 
 	w.Write(data)
+
 }
 
 func respondWithError(w http.ResponseWriter, code int, msg string) {
