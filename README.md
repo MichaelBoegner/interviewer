@@ -21,9 +21,9 @@ Welcome to **Interviewerio**, a backend system designed to simulate mock technic
 ## Technologies Used
 
 - **Go**: The main language used to build the backend.
+- **Python**: The language being tested in the interviews.
 - **PostgreSQL**: For relational database management.
 - **JWT (JSON Web Token)**: For secure authentication and session management.
-- **Chi Router**: For efficient and lightweight HTTP routing.
 - **SQL Migrations**: Managed with structured SQL files to handle database versioning.
 
 ---
