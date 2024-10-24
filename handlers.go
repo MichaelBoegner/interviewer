@@ -2,14 +2,11 @@ package main
 
 import (
 	"encoding/json"
-	"errors"
 	"log"
 	"net/http"
-	"os"
 	"strconv"
 	"strings"
 
-	"github.com/golang-jwt/jwt/v5"
 	"github.com/michaelboegner/interviewer/interview"
 	"github.com/michaelboegner/interviewer/middleware"
 	"github.com/michaelboegner/interviewer/token"
@@ -145,7 +142,7 @@ func (apiCfg *apiConfig) interviewsHandler(w http.ResponseWriter, r *http.Reques
 			return
 		}
 
-		userID, err := verifyToken(token)
+		userID, err := middleware.VerifyToken(token)
 		if err != nil {
 			log.Printf("Supplied token returns error: %v", err)
 			respondWithError(w, http.StatusUnauthorized, "Unauthorized.")
@@ -166,6 +163,25 @@ func (apiCfg *apiConfig) interviewsHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 }
+
+// func (apiCfg *apiConfig) conversationsHandler(w http.ResponseWriter, r *http.Request) {
+// 	switch r.Method {
+// 	// POST start a resource instance of an interview and return the first question
+// 	case http.MethodPost:
+// 		token, ok := r.Context().Value("tokenKey").(string)
+// 		if !ok {
+// 			respondWithError(w, http.StatusBadRequest, "Invalid request parameters")
+// 			return
+// 		}
+// 		params, ok := r.Context().Value("params").(middleware.AcceptedVals)
+// 		if !ok {
+// 			respondWithError(w, http.StatusBadRequest, "Invalid request parameters")
+// 			return
+// 		}
+
+// 	conversation, err := CreateConversation()
+
+// }
 
 func (apiCfg *apiConfig) refreshTokensHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
@@ -213,31 +229,6 @@ func (apiCfg *apiConfig) refreshTokensHandler(w http.ResponseWriter, r *http.Req
 		}
 		respondWithJSON(w, http.StatusOK, payload)
 		return
-	}
-}
-
-func verifyToken(tokenString string) (int, error) {
-	jwtSecret := os.Getenv("JWT_SECRET")
-	if jwtSecret == "" {
-		log.Printf("JWT secret is not set")
-		err := errors.New("jwt secret is not set")
-		return 0, err
-	}
-
-	token, err := jwt.ParseWithClaims(tokenString, &jwt.RegisteredClaims{}, func(token *jwt.Token) (interface{}, error) {
-		return []byte(jwtSecret), nil
-	})
-	if err != nil {
-		return 0, err
-	}
-	if claims, ok := token.Claims.(*jwt.RegisteredClaims); ok && token.Valid {
-		userID, err := strconv.Atoi(claims.Subject)
-		if err != nil {
-			return 0, err
-		}
-		return userID, nil
-	} else {
-		return 0, errors.New("invalid token")
 	}
 }
 

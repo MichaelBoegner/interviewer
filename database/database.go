@@ -9,7 +9,7 @@ import (
 )
 
 func StartDB() (*sql.DB, error) {
-	connStr := "user=michaelboegner dbname=interviewerio sslmode=disable"
+	connStr := "user=mboegner dbname=interviewerio sslmode=disable"
 
 	// Open the connection
 	db, err := sql.Open("postgres", connStr)

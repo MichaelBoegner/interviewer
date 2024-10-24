@@ -38,6 +38,5 @@ func (repo *Repository) CreateInterview(interview *Interview) (int, error) {
 		return 0, err
 	}
 
-	// Return the generated id
 	return id, nil
 }

@@ -4,10 +4,15 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"io"
 	"log"
 	"net/http"
+	"os"
+	"strconv"
 	"strings"
+
+	"github.com/golang-jwt/jwt/v5"
 )
 
 type AcceptedVals struct {
@@ -26,11 +31,20 @@ func GetContext(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Extract token from Authorization header
 		tokenParts := strings.Split(r.Header.Get("Authorization"), " ")
-		var tokenPart string
+		var tokenKey string
 		if len(tokenParts) < 2 {
-			tokenPart = ""
+			tokenKey = ""
 		} else {
-			tokenPart = tokenParts[1]
+			tokenKey = tokenParts[1]
+		}
+
+		if isAccessToken(tokenKey) {
+			_, err := VerifyToken(tokenKey)
+			if err != nil {
+				log.Printf("Supplied token returns error: %v", err)
+				respondWithError(w, http.StatusUnauthorized, "Unauthorized.")
+				return
+			}
 		}
 
 		// Read the request body into a byte slice
@@ -53,12 +67,41 @@ func GetContext(next http.Handler) http.Handler {
 		// Set extracted data in context for access by handlers
 
 		ctx := r.Context()
-		ctx = context.WithValue(ctx, "tokenKey", tokenPart)
+		ctx = context.WithValue(ctx, "tokenKey", tokenKey)
 		ctx = context.WithValue(ctx, "params", params)
 
 		// Pass along the request with the new context to the next handler
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
+}
+
+func isAccessToken(tokenString string) bool {
+	return strings.Count(tokenString, ".") == 2
+}
+
+func VerifyToken(tokenString string) (int, error) {
+	jwtSecret := os.Getenv("JWT_SECRET")
+	if jwtSecret == "" {
+		log.Printf("JWT secret is not set")
+		err := errors.New("jwt secret is not set")
+		return 0, err
+	}
+
+	token, err := jwt.ParseWithClaims(tokenString, &jwt.RegisteredClaims{}, func(token *jwt.Token) (interface{}, error) {
+		return []byte(jwtSecret), nil
+	})
+	if err != nil {
+		return 0, err
+	}
+	if claims, ok := token.Claims.(*jwt.RegisteredClaims); ok && token.Valid {
+		userID, err := strconv.Atoi(claims.Subject)
+		if err != nil {
+			return 0, err
+		}
+		return userID, nil
+	} else {
+		return 0, errors.New("invalid token")
+	}
 }
 
 func respondWithError(w http.ResponseWriter, code int, msg string) {
