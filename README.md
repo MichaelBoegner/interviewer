@@ -96,39 +96,39 @@ Welcome to **Interviewerio**, a backend system designed to simulate mock technic
 ### Setup
 
 1. Clone the repository:
-    \`\`\`bash
+    ```
     git clone https://github.com/your-username/interviewer-app.git
     cd interviewer-app
-    \`\`\`
+    ```
 
 2. Install dependencies:
-    \`\`\`bash
+    ```
     go mod download
-    \`\`\`
+    ```
 
 3. Set up your environment:
-    \`\`\`bash
+    ```
     cp .env.example .env
-    \`\`\`
+    ```
 
 4. Run the SQL migrations to set up the database:
-    \`\`\`bash
+    ```
     go run main.go migrate
-    \`\`\`
+    ```
 
 5. Start the application:
-    \`\`\`bash
+    ```
     go run main.go
-    \`\`\`
+    ```
 
 ---
 
 ## Testing
 
 Unit tests are provided for key features of the application. You can run the tests with:
-\`\`\`bash
+```
 go test ./...
-\`\`\`
+```
 
 ---
 
