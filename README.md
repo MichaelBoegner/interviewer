@@ -35,36 +35,39 @@ Welcome to **Interviewerio**, a backend system designed to simulate mock technic
 │   ├── repository.go
 │   └── service.go
 ├── database/
+│   ├── migrations/
+│   │    ├── 000001_create_users_table.up.sql
+│   │    ├── 000001_create_users_table.down.sql
+│   │    ├── 000002_create_interviews_table.up.sql
+│   │    ├── 000002_create_interviews_table.down.sql
+│   │    ├── 000003_create_refresh_tokens_table.up.sql
+│   │    ├── 000003_create_refresh_tokens_table.down.sql
+│   │    ├── 000004_create_conversations_table.up.sql
+│   │    └── 000004_create_conversations_table.down.sql
+│   └── database.go
 ├── interview/
 │   ├── model.go
 │   ├── repository.go
 │   ├── repository_mock.go
 │   └── service.go
 ├── middleware/
+│   └── context.go
 ├── token/
 │   ├── model.go
 │   ├── repository.go
+│   ├── repository_mock.go
 │   └── service.go
 ├── user/
 │   ├── model.go
 │   ├── repository.go
+│   ├── repository_mock.go
 │   └── service.go
-├── .env
 ├── go.mod
 ├── go.sum
 ├── handlers.go
 ├── handlers_test.go
 ├── main.go
 ├── README.md
-└── SQL Migrations
-    ├── 000001_create_users_table.up.sql
-    ├── 000001_create_users_table.down.sql
-    ├── 000002_create_interviews_table.up.sql
-    ├── 000002_create_interviews_table.down.sql
-    ├── 000003_create_refresh_tokens_table.up.sql
-    ├── 000003_create_refresh_tokens_table.down.sql
-    ├── 000004_create_conversations_table.up.sql
-    ├── 000004_create_conversations_table.down.sql
 ```
 
 ### Key Components
