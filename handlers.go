@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"log"
 	"net/http"
 	"strconv"
@@ -61,17 +62,10 @@ func (apiCfg *apiConfig) usersHandler(w http.ResponseWriter, r *http.Request) {
 
 	// GET a user by {id}
 	case http.MethodGet:
-		pathParts := strings.Split(r.URL.Path, "/")
-		if len(pathParts) < 4 || pathParts[3] == "" {
-			respondWithError(w, http.StatusBadRequest, "Missing user ID")
-			return
-		}
-
-		userID, err := strconv.Atoi(pathParts[3])
+		userID, err := getPathID(r)
 		if err != nil {
-			log.Printf("Atoi error: %v", err)
-			respondWithError(w, http.StatusBadRequest, "ID passed is not an int convertable string")
-			return
+			log.Printf("PathID error: %v\n", err)
+			respondWithError(w, http.StatusBadRequest, "Invalid ID.")
 		}
 
 		user, err := user.GetUser(apiCfg.UserRepo, userID)
@@ -169,7 +163,7 @@ func (apiCfg *apiConfig) interviewsHandler(w http.ResponseWriter, r *http.Reques
 
 func (apiCfg *apiConfig) conversationsHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
-	// POST start a resource instance of an interview and return the first question
+	// POST start an instance of conversations and return next question
 	case http.MethodPost:
 		params, ok := r.Context().Value("params").(middleware.AcceptedVals)
 		if !ok {
@@ -177,9 +171,15 @@ func (apiCfg *apiConfig) conversationsHandler(w http.ResponseWriter, r *http.Req
 			return
 		}
 
-		conversation, err := conversation.CreateConversation(apiCfg.ConversationRepo, params.InterviewID, params.Messages)
+		InterviewID, err := getPathID(r)
 		if err != nil {
-			log.Printf("CreateConversation failed due to: %v", err)
+			log.Printf("PathID error: %v\n", err)
+			respondWithError(w, http.StatusBadRequest, "Invalid ID.")
+		}
+
+		conversation, err := conversation.CreateConversation(apiCfg.ConversationRepo, InterviewID, params.Messages)
+		if err != nil {
+			log.Printf("CreateConversation error: %v", err)
 			respondWithError(w, http.StatusBadRequest, "Invalid interview_id")
 			return
 		}
@@ -241,6 +241,20 @@ func (apiCfg *apiConfig) refreshTokensHandler(w http.ResponseWriter, r *http.Req
 	}
 }
 
+func getPathID(r *http.Request) (int, error) {
+	pathParts := strings.Split(r.URL.Path, "/")
+	if len(pathParts) < 4 || pathParts[3] == "" {
+		err := errors.New("missing user ID")
+		return 0, err
+	}
+
+	id, err := strconv.Atoi(pathParts[3])
+	if err != nil {
+		return 0, err
+	}
+
+	return id, nil
+}
 func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
 	if w.Header().Get("Content-Type") == "" {
 		w.Header().Set("Content-Type", "application/json")
