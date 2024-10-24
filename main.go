@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/michaelboegner/interviewer/conversation"
 	"github.com/michaelboegner/interviewer/database"
 	"github.com/michaelboegner/interviewer/interview"
 	"github.com/michaelboegner/interviewer/middleware"
@@ -15,10 +16,11 @@ import (
 )
 
 type apiConfig struct {
-	DB            *sql.DB
-	InterviewRepo interview.InterviewRepo
-	UserRepo      user.UserRepo
-	TokenRepo     token.TokenRepo
+	DB               *sql.DB
+	InterviewRepo    interview.InterviewRepo
+	UserRepo         user.UserRepo
+	TokenRepo        token.TokenRepo
+	ConversationRepo conversation.ConversationRepo
 }
 
 func enableCors(next http.Handler) http.Handler {
@@ -52,18 +54,21 @@ func main() {
 	interviewRepo := interview.NewRepository(db)
 	userRepo := user.NewRepository(db)
 	tokenRepo := token.NewRepository(db)
+	conversationRepo := conversation.NewRepository(db)
 
 	apiCfg := &apiConfig{
-		DB:            db,
-		InterviewRepo: interviewRepo,
-		UserRepo:      userRepo,
-		TokenRepo:     tokenRepo,
+		DB:               db,
+		InterviewRepo:    interviewRepo,
+		UserRepo:         userRepo,
+		TokenRepo:        tokenRepo,
+		ConversationRepo: conversationRepo,
 	}
 
 	mux.Handle("/api/users/{id}", middleware.GetContext(http.HandlerFunc(apiCfg.usersHandler)))
 	mux.Handle("/api/auth/login", middleware.GetContext(http.HandlerFunc(apiCfg.loginHandler)))
 	mux.Handle("/api/interviews", middleware.GetContext(http.HandlerFunc(apiCfg.interviewsHandler)))
 	mux.Handle("/api/auth/token", middleware.GetContext(http.HandlerFunc(apiCfg.refreshTokensHandler)))
+	mux.Handle("/api/conversations/{id}", middleware.GetContext(http.HandlerFunc(apiCfg.conversationsHandler)))
 
 	log.Printf("Serving files from %s on port: %s\n", filepathRoot, port)
 	log.Fatal(http.ListenAndServe(":8080", enableCors(mux)))

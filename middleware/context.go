@@ -16,11 +16,13 @@ import (
 )
 
 type AcceptedVals struct {
-	UserID      int    `json:"user_id"`
-	Username    string `json:"username"`
-	Password    string `json:"password"`
-	Email       string `json:"email"`
-	AccessToken string `json:"access_token"`
+	UserID      int               `json:"user_id"`
+	Username    string            `json:"username"`
+	Password    string            `json:"password"`
+	Email       string            `json:"email"`
+	AccessToken string            `json:"access_token"`
+	InterviewID int               `json:"interview_id"`
+	Messages    map[string]string `json:"messages"`
 }
 
 type returnVals struct {

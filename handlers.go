@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/michaelboegner/interviewer/conversation"
 	"github.com/michaelboegner/interviewer/interview"
 	"github.com/michaelboegner/interviewer/middleware"
 	"github.com/michaelboegner/interviewer/token"
@@ -14,17 +15,19 @@ import (
 )
 
 type returnVals struct {
-	Error        string            `json:"error,omitempty"`
-	ID           int               `json:"id,omitempty"`
-	UserID       int               `json:"user_id,omitempty"`
-	Body         string            `json:"body,omitempty"`
-	Username     string            `json:"username,omitempty"`
-	Email        string            `json:"email,omitempty"`
-	Token        string            `json:"token,omitempty"`
-	Users        map[int]user.User `json:"users,omitempty"`
-	Questions    map[int]string    `json:"firstQuestion,omitempty"`
-	JWToken      string            `json:"jwtoken,omitempty"`
-	RefreshToken string            `json:"refresh_token,omitempty"`
+	Error          string            `json:"error,omitempty"`
+	ID             int               `json:"id,omitempty"`
+	UserID         int               `json:"user_id,omitempty"`
+	ConversationID int               `json:"conversation_id,omitempty"`
+	Body           string            `json:"body,omitempty"`
+	Username       string            `json:"username,omitempty"`
+	Email          string            `json:"email,omitempty"`
+	Token          string            `json:"token,omitempty"`
+	Users          map[int]user.User `json:"users,omitempty"`
+	Questions      map[int]string    `json:"firstQuestion,omitempty"`
+	JWToken        string            `json:"jwtoken,omitempty"`
+	RefreshToken   string            `json:"refresh_token,omitempty"`
+	Messages       map[string]string `json:"messages,omitempty"`
 }
 
 func (apiCfg *apiConfig) usersHandler(w http.ResponseWriter, r *http.Request) {
@@ -164,24 +167,30 @@ func (apiCfg *apiConfig) interviewsHandler(w http.ResponseWriter, r *http.Reques
 	}
 }
 
-// func (apiCfg *apiConfig) conversationsHandler(w http.ResponseWriter, r *http.Request) {
-// 	switch r.Method {
-// 	// POST start a resource instance of an interview and return the first question
-// 	case http.MethodPost:
-// 		token, ok := r.Context().Value("tokenKey").(string)
-// 		if !ok {
-// 			respondWithError(w, http.StatusBadRequest, "Invalid request parameters")
-// 			return
-// 		}
-// 		params, ok := r.Context().Value("params").(middleware.AcceptedVals)
-// 		if !ok {
-// 			respondWithError(w, http.StatusBadRequest, "Invalid request parameters")
-// 			return
-// 		}
+func (apiCfg *apiConfig) conversationsHandler(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	// POST start a resource instance of an interview and return the first question
+	case http.MethodPost:
+		params, ok := r.Context().Value("params").(middleware.AcceptedVals)
+		if !ok {
+			respondWithError(w, http.StatusBadRequest, "Invalid request parameters")
+			return
+		}
 
-// 	conversation, err := CreateConversation()
+		conversation, err := conversation.CreateConversation(apiCfg.ConversationRepo, params.InterviewID, params.Messages)
+		if err != nil {
+			log.Printf("CreateConversation failed due to: %v", err)
+			respondWithError(w, http.StatusBadRequest, "Invalid interview_id")
+			return
+		}
 
-// }
+		payload := &returnVals{
+			ConversationID: conversation.ID,
+			Messages:       conversation.Messages,
+		}
+		respondWithJSON(w, http.StatusOK, payload)
+	}
+}
 
 func (apiCfg *apiConfig) refreshTokensHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {

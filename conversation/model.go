@@ -9,3 +9,7 @@ type Conversation struct {
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 }
+
+type ConversationRepo interface {
+	CreateConversation(conversation *Conversation) (int, error)
+}
