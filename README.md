@@ -30,7 +30,7 @@ Welcome to **Interviewerio**, a backend system designed to simulate mock technic
 
 ## Directory Structure
 
-\`\`\`bash
+
 .
 ├── conversation/
 │   ├── model.go
@@ -67,7 +67,7 @@ Welcome to **Interviewerio**, a backend system designed to simulate mock technic
     ├── 000003_create_refresh_tokens_table.down.sql
     ├── 000004_create_conversations_table.up.sql
     ├── 000004_create_conversations_table.down.sql
-\`\`\`
+
 
 ### Key Components
 
