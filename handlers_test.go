@@ -321,6 +321,67 @@ func TestRefreshTokensHandler_Post(t *testing.T) {
 	}
 }
 
+func TestConversationsHandler_Post(t *testing.T) {
+	tokenKey := "9942443a086328dfaa867e0708426f94284d25700fa9df930261e341f0d8c671"
+	messagesResponse := ["Interviewer: What is a large donkey like?", "User: It's large!", "Interviewer: Yes, yes it is!"]
+	tests := []TestCase{
+		{
+			name: "ConversationsHandler_Success",
+			reqBody: `{"messages": [
+				"Interviewer": "What is a large donkey like?",
+				"User": "It's large!"
+			]}`,
+			params: middleware.AcceptedVals{
+				AccessToken: tokenKey,
+			},
+			expectedStatus: http.StatusOK,
+			expectError:    false,
+			respBody: returnVals{
+				Messages: messagesResponse,
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			// Arrange
+			mockUserRepo := user.NewMockRepo()
+			mockInterviewRepo := interview.NewMockRepo()
+			mockTokenRepo := token.NewMockRepo()
+
+			apiCfg := &apiConfig{
+				UserRepo:      mockUserRepo,
+				InterviewRepo: mockInterviewRepo,
+				TokenRepo:     mockTokenRepo,
+			}
+
+			w, req, tc, err := setRequestAndWriter(http.MethodPost, "/api/auth/token", tc)
+			if err != nil {
+				t.Fatalf("failed to set request and writer")
+			}
+
+			req.Header.Set("Authorization", "Bearer "+tokenKey)
+
+			// Apply the middleware to the handler
+			handler := middleware.GetContext(http.HandlerFunc(apiCfg.refreshTokensHandler))
+
+			// Act
+			handler.ServeHTTP(w, req)
+
+			// Assert
+			if w.Code != tc.expectedStatus {
+				t.Fatalf("expected status %d, got %d", tc.expectedStatus, w.Code)
+			}
+
+			// Validate resp
+			resp, err := checkResponse(w, tc.respBody, tc.expectError)
+			if err != nil {
+				t.Fatalf("expected response %v and error %v\ngot response: %v and error %v", tc.respBody, tc.expectError, resp, resp.Error)
+			}
+		})
+	}
+}
+
 func setRequestAndWriter(method, endpoint string, tc TestCase) (*httptest.ResponseRecorder, *http.Request, TestCase, error) {
 	req := httptest.NewRequest(method, endpoint, strings.NewReader(tc.reqBody))
 	req = req.WithContext(context.WithValue(req.Context(), "params", tc.params))

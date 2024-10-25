@@ -25,10 +25,10 @@ type returnVals struct {
 	Email          string            `json:"email,omitempty"`
 	Token          string            `json:"token,omitempty"`
 	Users          map[int]user.User `json:"users,omitempty"`
-	Questions      map[int]string    `json:"firstQuestion,omitempty"`
+	Questions      map[string]string `json:"first_question,omitempty"`
 	JWToken        string            `json:"jwtoken,omitempty"`
 	RefreshToken   string            `json:"refresh_token,omitempty"`
-	Messages       map[string]string `json:"messages,omitempty"`
+	Messages       []string          `json:"messages,omitempty"`
 }
 
 func (apiCfg *apiConfig) usersHandler(w http.ResponseWriter, r *http.Request) {

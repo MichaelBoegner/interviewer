@@ -13,7 +13,7 @@ type Interview struct {
 	Status          string
 	Score           int
 	Language        string
-	Questions       map[int]string
+	Questions       map[string]string
 	CreatedAt       time.Time
 	UpdatedAt       time.Time
 }

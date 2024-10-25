@@ -3,6 +3,7 @@ package conversation
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
 )
 
 type Repository struct {
@@ -20,6 +21,7 @@ func (repo *Repository) CreateConversation(conversation *Conversation) (int, err
 	if err != nil {
 		return 0, err
 	}
+	fmt.Printf("messagesJSON: %v", messagesJSON)
 
 	var id int
 	query := `

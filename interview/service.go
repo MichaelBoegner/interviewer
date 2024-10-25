@@ -42,7 +42,7 @@ func StartInterview(repo InterviewRepo, userId, length, numberQuestions int, dif
 	return interview, nil
 }
 
-func getFirstQuestion() (map[int]string, error) {
+func getFirstQuestion() (map[string]string, error) {
 	ctx := context.Background()
 	prompt := "You are conducting a technical interview for a backend development position. The candidate is at a junior to mid-level skill level. Start by asking a technical interview question that assesses the candidate's understanding of core backend development concepts such as RESTful APIs, databases, server architecture, or programming best practices. Provide the first question in a clear and concise manner."
 
@@ -95,7 +95,7 @@ func getFirstQuestion() (map[int]string, error) {
 
 		choices := result["choices"].([]interface{})
 		if len(choices) == 0 {
-			errorChan <- fmt.Errorf("No question generated")
+			errorChan <- fmt.Errorf("no question generated")
 			return
 		}
 
@@ -105,8 +105,8 @@ func getFirstQuestion() (map[int]string, error) {
 
 	select {
 	case firstQuestion := <-responseChan:
-		response := map[int]string{
-			1: firstQuestion,
+		response := map[string]string{
+			"Interviewer": firstQuestion,
 		}
 		return response, nil
 
