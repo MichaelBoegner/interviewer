@@ -7,7 +7,6 @@ func CreateConversation(repo ConversationRepo, interviewID int, messages map[str
 
 	conversation := &Conversation{
 		InterviewID: interviewID,
-		Messages:    messages,
 		CreatedAt:   now,
 		UpdatedAt:   now,
 	}

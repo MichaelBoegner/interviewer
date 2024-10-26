@@ -28,7 +28,7 @@ type returnVals struct {
 	Questions      map[string]string `json:"first_question,omitempty"`
 	JWToken        string            `json:"jwtoken,omitempty"`
 	RefreshToken   string            `json:"refresh_token,omitempty"`
-	Messages       []string          `json:"messages,omitempty"`
+	Messages       map[string]string `json:"messages,omitempty"`
 }
 
 func (apiCfg *apiConfig) usersHandler(w http.ResponseWriter, r *http.Request) {
