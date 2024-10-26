@@ -3,7 +3,6 @@ package conversation
 import (
 	"database/sql"
 	"encoding/json"
-	"fmt"
 )
 
 type Repository struct {
@@ -17,22 +16,21 @@ func NewRepository(db *sql.DB) *Repository {
 }
 
 func (repo *Repository) CreateConversation(conversation *Conversation) (int, error) {
-	messagesJSON, err := json.Marshal(conversation.Messages)
+	topicsJSON, err := json.Marshal(conversation.Topics)
 	if err != nil {
 		return 0, err
 	}
-	fmt.Printf("messagesJSON: %v", messagesJSON)
 
 	var id int
 	query := `
-		INSERT INTO conversations (interview_id, messages, created_at, updated_at) 
+		INSERT INTO conversations (interview_id, topics, created_at, updated_at) 
 		VALUES ($1, $2, $3, $4)
 		RETURNING id
 		`
 
 	err = repo.DB.QueryRow(query,
 		conversation.InterviewID,
-		messagesJSON,
+		topicsJSON,
 		conversation.CreatedAt,
 		conversation.UpdatedAt,
 	).Scan(&id)

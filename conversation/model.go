@@ -28,30 +28,30 @@ var PredefinedTopics = map[int]Topic{
 }
 
 type Conversation struct {
-	ID          int
-	InterviewID int
-	Topics      map[int]Topic
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
+	ID          int           `json:"id"`
+	InterviewID int           `json:"interview_id"`
+	Topics      map[int]Topic `json:"topics"`
+	CreatedAt   time.Time     `json:"created_at"`
+	UpdatedAt   time.Time     `json:"updated_at"`
 }
 
 type Topic struct {
-	ID             int
-	ConversationID int
-	Name           string
-	Questions      map[int]string
+	ID             int            `json:"id"`
+	ConversationID int            `json:"conversation_id"`
+	Name           string         `json:"name"`
+	Questions      map[int]string `json:"questions"`
 }
 
 type Question struct {
-	QuestionNumber int
-	Messages       []Message
-	CreatedAt      time.Time
+	QuestionNumber int       `json:"question_number"`
+	Messages       []Message `json:"messages"`
+	CreatedAt      time.Time `json:"created_at"`
 }
 
 type Message struct {
-	Author    Author
-	Content   string
-	CreatedAt time.Time
+	Author    Author    `json:"author"`
+	Content   string    `json:"content"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 type ConversationRepo interface {
