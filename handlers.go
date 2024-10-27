@@ -16,19 +16,19 @@ import (
 )
 
 type returnVals struct {
-	Error          string            `json:"error,omitempty"`
-	ID             int               `json:"id,omitempty"`
-	UserID         int               `json:"user_id,omitempty"`
-	ConversationID int               `json:"conversation_id,omitempty"`
-	Body           string            `json:"body,omitempty"`
-	Username       string            `json:"username,omitempty"`
-	Email          string            `json:"email,omitempty"`
-	Token          string            `json:"token,omitempty"`
-	Users          map[int]user.User `json:"users,omitempty"`
-	Questions      map[string]string `json:"first_question,omitempty"`
-	JWToken        string            `json:"jwtoken,omitempty"`
-	RefreshToken   string            `json:"refresh_token,omitempty"`
-	Messages       map[string]string `json:"messages,omitempty"`
+	Error          string                     `json:"error,omitempty"`
+	ID             int                        `json:"id,omitempty"`
+	UserID         int                        `json:"user_id,omitempty"`
+	ConversationID int                        `json:"conversation_id,omitempty"`
+	Body           string                     `json:"body,omitempty"`
+	Username       string                     `json:"username,omitempty"`
+	Email          string                     `json:"email,omitempty"`
+	Token          string                     `json:"token,omitempty"`
+	Users          map[int]user.User          `json:"users,omitempty"`
+	Questions      map[string]string          `json:"first_question,omitempty"`
+	JWToken        string                     `json:"jwtoken,omitempty"`
+	RefreshToken   string                     `json:"refresh_token,omitempty"`
+	Conversation   *conversation.Conversation `json:"conversation,omitempty"`
 }
 
 func (apiCfg *apiConfig) usersHandler(w http.ResponseWriter, r *http.Request) {
@@ -177,7 +177,8 @@ func (apiCfg *apiConfig) conversationsHandler(w http.ResponseWriter, r *http.Req
 			respondWithError(w, http.StatusBadRequest, "Invalid ID.")
 		}
 
-		conversation, err := conversation.CreateConversation(apiCfg.ConversationRepo, InterviewID, params.Messages)
+		conversation, err := conversation.CreateConversation(apiCfg.ConversationRepo, InterviewID, params.Message)
+
 		if err != nil {
 			log.Printf("CreateConversation error: %v", err)
 			respondWithError(w, http.StatusBadRequest, "Invalid interview_id")
@@ -185,8 +186,7 @@ func (apiCfg *apiConfig) conversationsHandler(w http.ResponseWriter, r *http.Req
 		}
 
 		payload := &returnVals{
-			ConversationID: conversation.ID,
-			Messages:       conversation.Messages,
+			Conversation: conversation,
 		}
 		respondWithJSON(w, http.StatusOK, payload)
 	}

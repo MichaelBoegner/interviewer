@@ -15,6 +15,7 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/joho/godotenv"
+	"github.com/michaelboegner/interviewer/conversation"
 	"github.com/michaelboegner/interviewer/interview"
 	"github.com/michaelboegner/interviewer/middleware"
 	"github.com/michaelboegner/interviewer/token"
@@ -323,21 +324,47 @@ func TestRefreshTokensHandler_Post(t *testing.T) {
 
 func TestConversationsHandler_Post(t *testing.T) {
 	tokenKey := "9942443a086328dfaa867e0708426f94284d25700fa9df930261e341f0d8c671"
-	messagesResponse := ["Interviewer: What is a large donkey like?", "User: It's large!", "Interviewer: Yes, yes it is!"]
+	conversationResponse := &conversation.Conversation{
+		ID:          1,
+		InterviewID: 1,
+		Topics:      conversation.PredefinedTopics,
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
+	}
+
+	topic := conversationResponse.Topics[1]
+	topic.ConversationID = 1
+
+	topic.Questions = make(map[int]conversation.Question, 0)
+	question := topic.Questions[1]
+	question.ID = 1
+
+	message := &conversation.Message{
+		ID:        1,
+		Author:    conversation.AuthorInterviewer,
+		Content:   "Yes. Yes it is. Let's get to the next question.",
+		CreatedAt: time.Now(),
+	}
+	question.Messages = make([]conversation.Message, 0)
+	question.Messages = append(question.Messages, *message)
+
+	conversationResponse.Topics[1] = topic
+	conversationResponse.Topics[1].Questions[1] = question
+
 	tests := []TestCase{
 		{
 			name: "ConversationsHandler_Success",
-			reqBody: `{"messages": [
-				"Interviewer": "What is a large donkey like?",
-				"User": "It's large!"
-			]}`,
+			reqBody: `{"message": {
+				"author": "user",
+				"content": "A donkey is a type of animal."
+			}}`,
 			params: middleware.AcceptedVals{
 				AccessToken: tokenKey,
 			},
 			expectedStatus: http.StatusOK,
 			expectError:    false,
 			respBody: returnVals{
-				Messages: messagesResponse,
+				Conversation: conversationResponse,
 			},
 		},
 	}
@@ -348,14 +375,16 @@ func TestConversationsHandler_Post(t *testing.T) {
 			mockUserRepo := user.NewMockRepo()
 			mockInterviewRepo := interview.NewMockRepo()
 			mockTokenRepo := token.NewMockRepo()
+			mockConversationRepo := conversation.NewMockRepo()
 
 			apiCfg := &apiConfig{
-				UserRepo:      mockUserRepo,
-				InterviewRepo: mockInterviewRepo,
-				TokenRepo:     mockTokenRepo,
+				UserRepo:         mockUserRepo,
+				InterviewRepo:    mockInterviewRepo,
+				TokenRepo:        mockTokenRepo,
+				ConversationRepo: mockConversationRepo,
 			}
 
-			w, req, tc, err := setRequestAndWriter(http.MethodPost, "/api/auth/token", tc)
+			w, req, tc, err := setRequestAndWriter(http.MethodPost, "/api/conversations/1", tc)
 			if err != nil {
 				t.Fatalf("failed to set request and writer")
 			}
@@ -363,7 +392,7 @@ func TestConversationsHandler_Post(t *testing.T) {
 			req.Header.Set("Authorization", "Bearer "+tokenKey)
 
 			// Apply the middleware to the handler
-			handler := middleware.GetContext(http.HandlerFunc(apiCfg.refreshTokensHandler))
+			handler := middleware.GetContext(http.HandlerFunc(apiCfg.conversationsHandler))
 
 			// Act
 			handler.ServeHTTP(w, req)

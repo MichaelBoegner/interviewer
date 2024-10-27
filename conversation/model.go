@@ -5,8 +5,8 @@ import "time"
 type Author string
 
 const (
-	AuthorInterviewer Author = "Interviewer"
-	User              Author = "User"
+	AuthorInterviewer Author = "interviewer"
+	User              Author = "user"
 )
 
 const (
@@ -36,19 +36,22 @@ type Conversation struct {
 }
 
 type Topic struct {
-	ID             int            `json:"id"`
-	ConversationID int            `json:"conversation_id"`
-	Name           string         `json:"name"`
-	Questions      map[int]string `json:"questions"`
+	ID             int              `json:"id"`
+	ConversationID int              `json:"conversation_id"`
+	Name           string           `json:"name"`
+	Questions      map[int]Question `json:"questions"`
 }
 
 type Question struct {
+	ID             int       `json:"id"`
 	QuestionNumber int       `json:"question_number"`
+	Prompt         string    `json:"prompt"`
 	Messages       []Message `json:"messages"`
 	CreatedAt      time.Time `json:"created_at"`
 }
 
 type Message struct {
+	ID        int       `json:"id"`
 	Author    Author    `json:"author"`
 	Content   string    `json:"content"`
 	CreatedAt time.Time `json:"created_at"`
@@ -56,4 +59,7 @@ type Message struct {
 
 type ConversationRepo interface {
 	CreateConversation(conversation *Conversation) (int, error)
+	CreateTopics(Conversation *Conversation) error
+	CreateQuestion(conversation *Conversation) error
+	CreateMessages(author, content string) error
 }

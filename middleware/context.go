@@ -13,16 +13,17 @@ import (
 	"strings"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/michaelboegner/interviewer/conversation"
 )
 
 type AcceptedVals struct {
-	UserID      int               `json:"user_id"`
-	Username    string            `json:"username"`
-	Password    string            `json:"password"`
-	Email       string            `json:"email"`
-	AccessToken string            `json:"access_token"`
-	InterviewID int               `json:"interview_id"`
-	Messages    map[string]string `json:"messages"`
+	UserID      int                   `json:"user_id"`
+	Username    string                `json:"username"`
+	Password    string                `json:"password"`
+	Email       string                `json:"email"`
+	AccessToken string                `json:"access_token"`
+	InterviewID int                   `json:"interview_id"`
+	Message     *conversation.Message `json:"message"`
 }
 
 type returnVals struct {
