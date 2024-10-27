@@ -7,6 +7,10 @@ func NewMockRepo() *MockRepo {
 	return &MockRepo{}
 }
 
+func (repo *MockRepo) CheckForConversation(interviewID int) bool {
+	return true
+}
+
 func (repo *MockRepo) CreateConversation(conversation *Conversation) (int, error) {
 	return 1, nil
 }

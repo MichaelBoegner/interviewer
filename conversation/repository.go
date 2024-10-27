@@ -16,6 +16,21 @@ func NewRepository(db *sql.DB) *Repository {
 	}
 }
 
+func (repo *Repository) CheckForConversation(interviewID int) bool {
+	var id int
+	query := `SELECT interview_id,
+	FROM interviews
+	WHERE interview_id = $1
+	RETURNING interview_id
+	`
+	err := repo.DB.QueryRow(query).Scan(&id)
+	if err != nil {
+		return false
+	}
+
+	return true
+}
+
 func (repo *Repository) CreateConversation(conversation *Conversation) (int, error) {
 	var id int
 	query := `
