@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -176,6 +177,8 @@ func (apiCfg *apiConfig) conversationsHandler(w http.ResponseWriter, r *http.Req
 			log.Printf("PathID error: %v\n", err)
 			respondWithError(w, http.StatusBadRequest, "Invalid ID.")
 		}
+
+		fmt.Printf("InterviewID: %v", InterviewID)
 
 		var conversationReturned *conversation.Conversation
 		exists := conversation.CheckForConversation(apiCfg.ConversationRepo, InterviewID)

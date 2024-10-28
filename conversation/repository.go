@@ -19,7 +19,7 @@ func NewRepository(db *sql.DB) *Repository {
 func (repo *Repository) CheckForConversation(interviewID int) bool {
 	var id int
 	query := `SELECT interview_id,
-	FROM interviews
+	FROM conversations
 	WHERE interview_id = $1
 	RETURNING interview_id
 	`
@@ -29,6 +29,22 @@ func (repo *Repository) CheckForConversation(interviewID int) bool {
 	}
 
 	return true
+}
+
+func (repo *Repository) GetConversation(interviewID int) (*Conversation, error) {
+	conversation := &Conversation{}
+
+	query := `SELECT interview_id,
+	FROM conversations
+	WHERE interview_id = $1
+	RETURNING id, interview_id, created_at, updated_at
+	`
+	err := repo.DB.QueryRow(query).Scan(&conversation)
+	if err != nil {
+		return nil, err
+	}
+
+	return conversation, nil
 }
 
 func (repo *Repository) CreateConversation(conversation *Conversation) (int, error) {

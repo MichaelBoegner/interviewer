@@ -59,9 +59,9 @@ type Message struct {
 
 type ConversationRepo interface {
 	CheckForConversation(interviewID int) bool
+	GetConversation(interviewID int) (*Conversation, error)
 	CreateConversation(conversation *Conversation) (int, error)
 	CreateTopics(Conversation *Conversation) error
 	CreateQuestion(conversation *Conversation) error
 	CreateMessages(author, content string) error
-	AppendConversation(apiCfg.ConversationRepo, InterviewID, params.Message)
 }

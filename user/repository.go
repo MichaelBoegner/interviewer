@@ -52,7 +52,7 @@ func (repo *Repository) GetPasswordandID(username string) (int, string, error) {
 }
 
 func (repo *Repository) GetUser(user *User) (*User, error) {
-	err := repo.DB.QueryRow("SELECT id, username, email FROM users WHERE id= $1", user.ID).Scan(&user.Username, &user.Email)
+	err := repo.DB.QueryRow("SELECT id, username, email FROM users WHERE id= $1", user.ID).Scan(&user.ID, &user.Username, &user.Email)
 	if err != nil {
 		return nil, err
 	}

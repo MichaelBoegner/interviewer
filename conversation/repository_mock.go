@@ -1,6 +1,15 @@
 package conversation
 
+import (
+	"time"
+)
+
 type MockRepo struct {
+	ID          int
+	InterviewID int
+	Topics      map[int]Topic
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
 }
 
 func NewMockRepo() *MockRepo {
@@ -9,6 +18,10 @@ func NewMockRepo() *MockRepo {
 
 func (repo *MockRepo) CheckForConversation(interviewID int) bool {
 	return true
+}
+
+func (repo *MockRepo) GetConversation(interviewID int) (*Conversation, error) {
+	return nil, nil
 }
 
 func (repo *MockRepo) CreateConversation(conversation *Conversation) (int, error) {

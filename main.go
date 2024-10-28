@@ -64,11 +64,11 @@ func main() {
 		ConversationRepo: conversationRepo,
 	}
 
-	mux.Handle("/api/users/{id}", middleware.GetContext(http.HandlerFunc(apiCfg.usersHandler)))
+	mux.Handle("/api/users/", middleware.GetContext(http.HandlerFunc(apiCfg.usersHandler)))
 	mux.Handle("/api/auth/login", middleware.GetContext(http.HandlerFunc(apiCfg.loginHandler)))
 	mux.Handle("/api/interviews", middleware.GetContext(http.HandlerFunc(apiCfg.interviewsHandler)))
 	mux.Handle("/api/auth/token", middleware.GetContext(http.HandlerFunc(apiCfg.refreshTokensHandler)))
-	mux.Handle("/api/conversations/{id}", middleware.GetContext(http.HandlerFunc(apiCfg.conversationsHandler)))
+	mux.Handle("/api/conversations/", middleware.GetContext(http.HandlerFunc(apiCfg.conversationsHandler)))
 
 	log.Printf("Serving files from %s on port: %s\n", filepathRoot, port)
 	log.Fatal(http.ListenAndServe(":8080", enableCors(mux)))

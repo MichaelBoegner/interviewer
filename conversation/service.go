@@ -53,3 +53,21 @@ func CreateConversation(repo ConversationRepo, interviewID int, message *Message
 
 	return conversation, nil
 }
+
+func AppendConversation(repo ConversationRepo, interviewID int, message *Message) (*Conversation, error) {
+	conversation, err := GetConversation(repo, interviewID)
+	if err != nil {
+		return nil, err
+	}
+
+	return conversation, nil
+}
+
+func GetConversation(repo ConversationRepo, interviewID int) (*Conversation, error) {
+	conversation, err := repo.GetConversation(interviewID)
+	if err != nil {
+		return nil, err
+	}
+
+	return conversation, nil
+}
