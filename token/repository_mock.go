@@ -1,14 +1,6 @@
 package token
 
-import "time"
-
-type MockRepo struct {
-	UserID       int
-	RefreshToken string
-	ExpiresAt    time.Time
-	CreatedAt    time.Time
-	UpdatedAt    time.Time
-}
+type MockRepo struct{}
 
 func NewMockRepo() *MockRepo {
 	return &MockRepo{}

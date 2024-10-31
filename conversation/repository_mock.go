@@ -1,16 +1,6 @@
 package conversation
 
-import (
-	"time"
-)
-
-type MockRepo struct {
-	ID          int
-	InterviewID int
-	Topics      map[int]Topic
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
-}
+type MockRepo struct{}
 
 func NewMockRepo() *MockRepo {
 	return &MockRepo{}
