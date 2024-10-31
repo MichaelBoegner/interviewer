@@ -1,8 +1,6 @@
 package interview
 
 import (
-	"encoding/json"
-	"fmt"
 	"time"
 )
 
@@ -25,12 +23,23 @@ func NewMockRepo() *MockRepo {
 }
 
 func (repo *MockRepo) CreateInterview(interview *Interview) (int, error) {
-	_, err := json.Marshal(interview.Questions)
-	if err != nil {
-		return 0, fmt.Errorf("failed to marshal questions: %v", err)
-	}
-
 	id := 1
-	// Return the generated id
 	return id, nil
+}
+
+func (repo *MockRepo) GetInterview(interviewID int) (*Interview, error) {
+	interview := &Interview{
+		Id:              1,
+		UserId:          1,
+		Length:          30,
+		NumberQuestions: 5,
+		Difficulty:      "easy",
+		Status:          "running",
+		Score:           0,
+		Language:        "python",
+		FirstQuestion:   "What is the flight speed of an unladdened swallow?",
+		CreatedAt:       time.Now(),
+		UpdatedAt:       time.Now(),
+	}
+	return interview, nil
 }

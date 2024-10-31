@@ -26,7 +26,7 @@ type returnVals struct {
 	Email          string                     `json:"email,omitempty"`
 	Token          string                     `json:"token,omitempty"`
 	Users          map[int]user.User          `json:"users,omitempty"`
-	Questions      map[string]string          `json:"first_question,omitempty"`
+	FirstQuestion  string                     `json:"first_question,omitempty"`
 	JWToken        string                     `json:"jwtoken,omitempty"`
 	RefreshToken   string                     `json:"refresh_token,omitempty"`
 	Conversation   *conversation.Conversation `json:"conversation,omitempty"`
@@ -154,7 +154,7 @@ func (apiCfg *apiConfig) interviewsHandler(w http.ResponseWriter, r *http.Reques
 		}
 
 		payload := returnVals{
-			Questions: interviewStarted.Questions,
+			FirstQuestion: interviewStarted.FirstQuestion,
 		}
 
 		respondWithJSON(w, http.StatusOK, payload)
@@ -183,7 +183,7 @@ func (apiCfg *apiConfig) conversationsHandler(w http.ResponseWriter, r *http.Req
 		var conversationReturned *conversation.Conversation
 		exists := conversation.CheckForConversation(apiCfg.ConversationRepo, InterviewID)
 		if !exists {
-			interview, err = interview.GetInterview(apiCfg.InterviewRepo, InterviewID)
+			interview, err := interview.GetInterview(apiCfg.InterviewRepo, InterviewID)
 			if err != nil {
 				log.Printf("GetInterview error: %v\n", err)
 				respondWithError(w, http.StatusBadRequest, "Invalid interview_id")

@@ -7,8 +7,7 @@ CREATE TABLE IF NOT EXISTS interviews (
     status VARCHAR(50) NOT NULL,           
     score INT,                             
     language VARCHAR(50) NOT NULL,         
-    questions JSONB,                       
+    first_question VARCHAR(255),                       
     created_at TIMESTAMP, 
     updated_at TIMESTAMP  
-    
 );

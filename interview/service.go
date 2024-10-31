@@ -118,6 +118,6 @@ func getFirstQuestion() (string, error) {
 		return response, nil
 
 	case err := <-errorChan:
-		return nil, err
+		return "", err
 	}
 }
