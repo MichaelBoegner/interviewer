@@ -27,7 +27,7 @@ func StartInterview(repo InterviewRepo, userId, length, numberQuestions int, dif
 		Status:          "Running",
 		Score:           100,
 		Language:        "Python",
-		Questions:       firstQuestion,
+		FirstQuestion:   firstQuestion,
 		CreatedAt:       now,
 		UpdatedAt:       now,
 	}
@@ -42,7 +42,16 @@ func StartInterview(repo InterviewRepo, userId, length, numberQuestions int, dif
 	return interview, nil
 }
 
-func getFirstQuestion() (map[string]string, error) {
+func GetInterview(repo InterviewRepo, interviewID int) (*Interview, error) {
+	interview, err := repo.GetInterview(interviewID)
+	if err != nil {
+		return nil, err
+	}
+
+	return interview, nil
+}
+
+func getFirstQuestion() (string, error) {
 	ctx := context.Background()
 	prompt := "You are conducting a technical interview for a backend development position. The candidate is at a junior to mid-level skill level. Start by asking a technical interview question that assesses the candidate's understanding of core backend development concepts such as RESTful APIs, databases, server architecture, or programming best practices. Provide the first question in a clear and concise manner."
 
@@ -53,13 +62,13 @@ func getFirstQuestion() (map[string]string, error) {
 		"temperature": 0.7,
 	})
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	apiKey := os.Getenv("OPENAI_API_KEY")
 	req, err := http.NewRequestWithContext(ctx, "POST", "https://api.openai.com/v1/chat/completions", bytes.NewBuffer(requestBody))
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	req.Header.Set("Content-Type", "application/json")
@@ -105,9 +114,7 @@ func getFirstQuestion() (map[string]string, error) {
 
 	select {
 	case firstQuestion := <-responseChan:
-		response := map[string]string{
-			"Interviewer": firstQuestion,
-		}
+		response := firstQuestion
 		return response, nil
 
 	case err := <-errorChan:

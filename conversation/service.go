@@ -8,7 +8,7 @@ func CheckForConversation(repo ConversationRepo, interviewID int) bool {
 	return repo.CheckForConversation(interviewID)
 }
 
-func CreateConversation(repo ConversationRepo, interviewID int, message *Message) (*Conversation, error) {
+func CreateConversation(repo ConversationRepo, interviewID int, firstQuestion string, message *Message) (*Conversation, error) {
 	now := time.Now()
 	conversation := &Conversation{
 		InterviewID: interviewID,
