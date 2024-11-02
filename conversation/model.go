@@ -44,6 +44,8 @@ type Topic struct {
 
 type Question struct {
 	ID             int       `json:"id"`
+	TopicID        int       `json:"topic_id"`
+	ConversationID int       `json:"conversation_id"`
 	QuestionNumber int       `json:"question_number"`
 	Prompt         string    `json:"prompt"`
 	Messages       []Message `json:"messages"`
@@ -51,10 +53,12 @@ type Question struct {
 }
 
 type Message struct {
-	ID        int       `json:"id"`
-	Author    Author    `json:"author"`
-	Content   string    `json:"content"`
-	CreatedAt time.Time `json:"created_at"`
+	ID             int       `json:"id"`
+	QuestionID     int       `json:"question_id"`
+	ConversationID int       `json:"conversation_id"`
+	Author         Author    `json:"author"`
+	Content        string    `json:"content"`
+	CreatedAt      time.Time `json:"created_at"`
 }
 
 type ConversationRepo interface {

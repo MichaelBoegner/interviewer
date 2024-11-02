@@ -54,13 +54,9 @@ func CreateConversation(repo ConversationRepo, interviewID int, firstQuestion st
 	return conversation, nil
 }
 
-func AppendConversation(repo ConversationRepo, interviewID int, message *Message) (*Conversation, error) {
-	conversation, err := GetConversation(repo, interviewID)
-	if err != nil {
-		return nil, err
-	}
+func AppendConversation(repo ConversationRepo, conversation *Conversation) (*Conversation, error) {
 
-	return conversation, nil
+	return nil, nil
 }
 
 func GetConversation(repo ConversationRepo, interviewID int) (*Conversation, error) {

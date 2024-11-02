@@ -196,7 +196,11 @@ func (apiCfg *apiConfig) conversationsHandler(w http.ResponseWriter, r *http.Req
 				return
 			}
 		} else {
-			conversationReturned, err = conversation.AppendConversation(apiCfg.ConversationRepo, InterviewID, params.Message)
+			conversation, err := conversation.GetConversation(apiCfg.ConversationRepo, InterviewID)
+			if err != nil {
+				log.Printf("GetConversation error: %v", err)
+			}
+			conversationReturned, err = conversation.AppendConversation(apiCfg.ConversationRepo, conversation, params.Message)
 		}
 
 		payload := &returnVals{

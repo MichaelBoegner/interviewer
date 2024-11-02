@@ -24,11 +24,8 @@ func (repo *Repository) CheckForConversation(interviewID int) bool {
 	RETURNING interview_id
 	`
 	err := repo.DB.QueryRow(query).Scan(&id)
-	if err != nil {
-		return false
-	}
 
-	return true
+	return err != nil
 }
 
 func (repo *Repository) GetConversation(interviewID int) (*Conversation, error) {
@@ -67,11 +64,12 @@ func (repo *Repository) CreateConversation(conversation *Conversation) (int, err
 	return id, nil
 }
 
-func (repo *Repository) CreateTopics(conversation *Conversation) error {
+func (repo *Repository) CreateTopics(conversation *Conversation) (int, error) {
+
 	for _, topic := range conversation.Topics {
 		topicName, err := json.Marshal(topic.Name)
 		if err != nil {
-			return err
+			return 0, err
 		}
 
 		query := `
@@ -83,10 +81,10 @@ func (repo *Repository) CreateTopics(conversation *Conversation) error {
 		repo.DB.QueryRow(query,
 			conversation.ID,
 			topicName,
-		)
+		).Scan(&ID)
 	}
 
-	return nil
+	return ID, nil
 }
 
 func (repo *Repository) CreateQuestion(conversation *Conversation) error {
