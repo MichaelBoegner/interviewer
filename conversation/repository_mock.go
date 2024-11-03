@@ -18,12 +18,10 @@ func (repo *MockRepo) CreateConversation(conversation *Conversation) (int, error
 	return 1, nil
 }
 
-func (repo *MockRepo) CreateTopics(Conversation *Conversation) error {
-
-func (repo *MockRepo) CreateQuestion(conversation *Conversation) error {
-	return nil
+func (repo *MockRepo) CreateQuestion(conversation *Conversation) (int, error) {
+	return 1, nil
 }
 
-func (repo *MockRepo) CreateMessages(conversation *Conversation, author, content string) error {
+func (repo *MockRepo) CreateMessages(conversation *Conversation, messages []Message) error {
 	return nil
 }

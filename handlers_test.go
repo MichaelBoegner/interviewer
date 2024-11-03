@@ -331,22 +331,38 @@ func TestConversationsHandler_Post(t *testing.T) {
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
 	}
-
 	topic := conversationResponse.Topics[1]
 	topic.ConversationID = 1
+	topic.Questions = make(map[int]conversation.Question)
 
-	topic.Questions = make(map[int]conversation.Question, 0)
 	question := topic.Questions[1]
 	question.ID = 1
+	question.QuestionNumber = 1
+	question.Prompt = "What is the flight speed of an unladdened swallow?"
 
-	message := &conversation.Message{
-		ID:        1,
-		Author:    conversation.AuthorInterviewer,
-		Content:   "Yes. Yes it is. Let's get to the next question.",
-		CreatedAt: time.Now(),
+	messageFirst := &conversation.Message{
+		ID:         1,
+		QuestionID: 1,
+		Author:     "interviewer",
+		Content:    "What is the flight speed of an unladdened swallow?",
+		CreatedAt:  time.Now(),
 	}
+
+	messageResponse := &conversation.Message{
+		ID:         2,
+		QuestionID: 1,
+		Author:     "user",
+		Content:    "European or African?",
+		CreatedAt:  time.Now(),
+	}
+
+	messageResponse.ID = 2
+	messageResponse.QuestionID = 1
+	messageResponse.CreatedAt = time.Now()
+
 	question.Messages = make([]conversation.Message, 0)
-	question.Messages = append(question.Messages, *message)
+	question.Messages = append(question.Messages, *messageFirst)
+	question.Messages = append(question.Messages, *messageResponse)
 
 	conversationResponse.Topics[1] = topic
 	conversationResponse.Topics[1].Questions[1] = question
@@ -356,7 +372,7 @@ func TestConversationsHandler_Post(t *testing.T) {
 			name: "ConversationsHandler_Success",
 			reqBody: `{"message": {
 				"author": "user",
-				"content": "A donkey is a type of animal."
+				"content": "European or African?"
 			}}`,
 			params: middleware.AcceptedVals{
 				AccessToken: tokenKey,
