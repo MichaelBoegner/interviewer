@@ -44,28 +44,26 @@ type Topic struct {
 
 type Question struct {
 	ID             int       `json:"id"`
-	TopicID        int       `json:"topic_id"`
-	ConversationID int       `json:"conversation_id"`
 	QuestionNumber int       `json:"question_number"`
+	ConversationID int       `json:"conversation_id"`
+	TopicID        int       `json:"topic_id"`
 	Prompt         string    `json:"prompt"`
 	Messages       []Message `json:"messages"`
 	CreatedAt      time.Time `json:"created_at"`
 }
 
 type Message struct {
-	ID             int       `json:"id"`
-	QuestionID     int       `json:"question_id"`
-	ConversationID int       `json:"conversation_id"`
-	Author         Author    `json:"author"`
-	Content        string    `json:"content"`
-	CreatedAt      time.Time `json:"created_at"`
+	ID         int       `json:"id"`
+	QuestionID int       `json:"question_id"`
+	Author     Author    `json:"author"`
+	Content    string    `json:"content"`
+	CreatedAt  time.Time `json:"created_at"`
 }
 
 type ConversationRepo interface {
 	CheckForConversation(interviewID int) bool
 	GetConversation(interviewID int) (*Conversation, error)
 	CreateConversation(conversation *Conversation) (int, error)
-	CreateTopics(Conversation *Conversation) error
-	CreateQuestion(conversation *Conversation) error
-	CreateMessages(author, content string) error
+	CreateQuestion(conversation *Conversation) (int, error)
+	CreateMessages(conversation *Conversation, messages []Message) error
 }

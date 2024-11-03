@@ -2,7 +2,6 @@ package conversation
 
 import (
 	"database/sql"
-	"encoding/json"
 	"time"
 )
 
@@ -64,56 +63,44 @@ func (repo *Repository) CreateConversation(conversation *Conversation) (int, err
 	return id, nil
 }
 
-func (repo *Repository) CreateTopics(conversation *Conversation) (int, error) {
+func (repo *Repository) CreateQuestion(conversation *Conversation) (int, error) {
+	var id int
 
-	for _, topic := range conversation.Topics {
-		topicName, err := json.Marshal(topic.Name)
-		if err != nil {
-			return 0, err
-		}
+	query := `
+			INSERT INTO questions (conversation_id, topic_id, question_number, created_at) 
+			VALUES ($1, $2, $3, $4)
+			RETURNING id
+			`
 
+	repo.DB.QueryRow(query,
+		conversation.ID,
+		1,
+		1,
+		time.Now(),
+	).Scan(&id)
+
+	return id, nil
+}
+
+func (repo *Repository) CreateMessages(conversation *Conversation, messages []Message) error {
+	var id int
+	for _, message := range messages {
 		query := `
-			INSERT INTO topics (conversation_id, name) 
-			VALUES ($1, $2)
+			INSERT INTO questions (conversation_id, question_id, author, content, create_at) 
+			VALUES ($1, $2, $3, $4, $5) 
 			RETURNING id
 			`
 
 		repo.DB.QueryRow(query,
 			conversation.ID,
-			topicName,
-		).Scan(&ID)
+			id,
+			message.Author,
+			message.Content,
+			time.Now(),
+		)
+
+		id += 1
 	}
-
-	return ID, nil
-}
-
-func (repo *Repository) CreateQuestion(conversation *Conversation) error {
-	query := `
-			INSERT INTO questions (topic_id, question_number, created_at) 
-			VALUES ($1, $2, $3)
-			`
-
-	repo.DB.QueryRow(query,
-		1,
-		1,
-		time.Now(),
-	)
-
-	return nil
-}
-
-func (repo *Repository) CreateMessages(author, content string) error {
-	query := `
-			INSERT INTO questions (question_id, author, content, create_at) 
-			VALUES ($1, $2, $3, $4)
-			`
-
-	repo.DB.QueryRow(query,
-		1,
-		author,
-		content,
-		time.Now(),
-	)
 
 	return nil
 }
