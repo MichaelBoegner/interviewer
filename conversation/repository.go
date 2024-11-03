@@ -2,6 +2,7 @@ package conversation
 
 import (
 	"database/sql"
+	"fmt"
 	"time"
 )
 
@@ -16,26 +17,34 @@ func NewRepository(db *sql.DB) *Repository {
 }
 
 func (repo *Repository) CheckForConversation(interviewID int) bool {
+	fmt.Printf("Checkforconversations firing: %v\n", interviewID)
 	var id int
-	query := `SELECT interview_id,
+	query := `SELECT interview_id
 	FROM conversations
 	WHERE interview_id = $1
-	RETURNING interview_id
 	`
-	err := repo.DB.QueryRow(query).Scan(&id)
+	err := repo.DB.QueryRow(query, interviewID).Scan(&id)
 
-	return err != nil
+	// Check if the error is due to no rows being found
+	if err == sql.ErrNoRows {
+		return false // Conversation does not exist
+	} else if err != nil {
+		// Handle other possible errors (e.g., DB connection issues)
+		fmt.Printf("Error querying conversation: %v\n", err)
+		return false
+	}
+
+	return true // Conversation exists
 }
 
 func (repo *Repository) GetConversation(interviewID int) (*Conversation, error) {
 	conversation := &Conversation{}
 
-	query := `SELECT interview_id,
+	query := `SELECT id, interview_id, created_at, updated_at
 	FROM conversations
 	WHERE interview_id = $1
-	RETURNING id, interview_id, created_at, updated_at
 	`
-	err := repo.DB.QueryRow(query).Scan(&conversation)
+	err := repo.DB.QueryRow(query, interviewID).Scan(&conversation)
 	if err != nil {
 		return nil, err
 	}

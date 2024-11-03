@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -26,6 +25,7 @@ type returnVals struct {
 	Email          string                     `json:"email,omitempty"`
 	Token          string                     `json:"token,omitempty"`
 	Users          map[int]user.User          `json:"users,omitempty"`
+	InterviewID    int                        `json:"interview_id,omitempty"`
 	FirstQuestion  string                     `json:"first_question,omitempty"`
 	JWToken        string                     `json:"jwtoken,omitempty"`
 	RefreshToken   string                     `json:"refresh_token,omitempty"`
@@ -154,6 +154,7 @@ func (apiCfg *apiConfig) interviewsHandler(w http.ResponseWriter, r *http.Reques
 		}
 
 		payload := returnVals{
+			InterviewID:   interviewStarted.Id,
 			FirstQuestion: interviewStarted.FirstQuestion,
 		}
 
@@ -177,8 +178,6 @@ func (apiCfg *apiConfig) conversationsHandler(w http.ResponseWriter, r *http.Req
 			log.Printf("PathID error: %v\n", err)
 			respondWithError(w, http.StatusBadRequest, "Invalid ID.")
 		}
-
-		fmt.Printf("InterviewID: %v", InterviewID)
 
 		var conversationReturned *conversation.Conversation
 		exists := conversation.CheckForConversation(apiCfg.ConversationRepo, InterviewID)
