@@ -186,6 +186,7 @@ func (apiCfg *apiConfig) conversationsHandler(w http.ResponseWriter, r *http.Req
 			if err != nil {
 				log.Printf("GetInterview error: %v\n", err)
 				respondWithError(w, http.StatusBadRequest, "Invalid interview_id")
+				return
 			}
 
 			conversationReturned, err = conversation.CreateConversation(apiCfg.ConversationRepo, InterviewID, interview.FirstQuestion, params.Message)
@@ -195,14 +196,17 @@ func (apiCfg *apiConfig) conversationsHandler(w http.ResponseWriter, r *http.Req
 				return
 			}
 		} else {
-			conversationReturned, err := conversation.GetConversation(apiCfg.ConversationRepo, InterviewID)
+			conversationReturned, err = conversation.GetConversation(apiCfg.ConversationRepo, InterviewID)
 			if err != nil {
 				log.Printf("GetConversation error: %v", err)
 				respondWithError(w, http.StatusBadRequest, "Invalid ID.")
+				return
 			}
 			conversationReturned, err = conversation.AppendConversation(apiCfg.ConversationRepo, conversationReturned, params.Message)
 			if err != nil {
-
+				log.Printf("AppendConversation error: %v", err)
+				respondWithError(w, http.StatusBadRequest, "Invalid ID.")
+				return
 			}
 		}
 
