@@ -167,7 +167,7 @@ func (apiCfg *apiConfig) conversationsHandler(w http.ResponseWriter, r *http.Req
 	switch r.Method {
 	// POST start an instance of conversations and return next question
 	case http.MethodPost:
-		params, ok := r.Context().Value("params").(middleware.AcceptedVals)
+		params, ok := r.Context().Value("params").(middleware.UpdateConversation)
 		if !ok {
 			respondWithError(w, http.StatusBadRequest, "Invalid request parameters")
 			return
@@ -179,7 +179,7 @@ func (apiCfg *apiConfig) conversationsHandler(w http.ResponseWriter, r *http.Req
 			respondWithError(w, http.StatusBadRequest, "Invalid ID.")
 		}
 
-		var conversationReturned *conversation.Conversation
+		var conversationFromDatabase *conversation.Conversation
 		exists := conversation.CheckForConversation(apiCfg.ConversationRepo, InterviewID)
 		if !exists {
 			interview, err := interview.GetInterview(apiCfg.InterviewRepo, InterviewID)
@@ -189,20 +189,20 @@ func (apiCfg *apiConfig) conversationsHandler(w http.ResponseWriter, r *http.Req
 				return
 			}
 
-			conversationReturned, err = conversation.CreateConversation(apiCfg.ConversationRepo, InterviewID, interview.FirstQuestion, params.Message)
+			conversationFromDatabase, err = conversation.CreateConversation(apiCfg.ConversationRepo, InterviewID, interview.FirstQuestion, params.Message)
 			if err != nil {
 				log.Printf("CreateConversation error: %v", err)
 				respondWithError(w, http.StatusBadRequest, "Invalid interview_id")
 				return
 			}
 		} else {
-			conversationReturned, err = conversation.GetConversation(apiCfg.ConversationRepo, InterviewID)
+			conversationFromDatabase, err = conversation.GetConversation(apiCfg.ConversationRepo, InterviewID)
 			if err != nil {
 				log.Printf("GetConversation error: %v", err)
 				respondWithError(w, http.StatusBadRequest, "Invalid ID.")
 				return
 			}
-			conversationReturned, err = conversation.AppendConversation(apiCfg.ConversationRepo, conversationReturned, params.Message)
+			conversationFromDatabase, err = conversation.AppendConversation(apiCfg.ConversationRepo, conversationFromDatabase, params.Message, params.ConversationID, params.TopicID, params.QuestionID)
 			if err != nil {
 				log.Printf("AppendConversation error: %v", err)
 				respondWithError(w, http.StatusBadRequest, "Invalid ID.")
@@ -211,7 +211,7 @@ func (apiCfg *apiConfig) conversationsHandler(w http.ResponseWriter, r *http.Req
 		}
 
 		payload := &returnVals{
-			Conversation: conversationReturned,
+			Conversation: conversationFromDatabase,
 		}
 		respondWithJSON(w, http.StatusOK, payload)
 	}

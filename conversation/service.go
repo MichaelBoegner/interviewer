@@ -65,7 +65,7 @@ func CreateConversation(repo ConversationRepo, interviewID int, firstQuestion st
 	return conversation, nil
 }
 
-func AppendConversation(repo ConversationRepo, conversation *Conversation, message *Message) (*Conversation, error) {
+func AppendConversation(repo ConversationRepo, conversation *Conversation, message *Message, conversationID, topicID, questionID int) (*Conversation, error) {
 
 	return nil, nil
 }

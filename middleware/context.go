@@ -17,17 +17,25 @@ import (
 )
 
 type AcceptedVals struct {
-	UserID      int                   `json:"user_id"`
-	Username    string                `json:"username"`
-	Password    string                `json:"password"`
-	Email       string                `json:"email"`
-	AccessToken string                `json:"access_token"`
-	InterviewID int                   `json:"interview_id"`
-	Message     *conversation.Message `json:"message"`
+	UserID       int                        `json:"user_id"`
+	Username     string                     `json:"username"`
+	Password     string                     `json:"password"`
+	Email        string                     `json:"email"`
+	AccessToken  string                     `json:"access_token"`
+	InterviewID  int                        `json:"interview_id"`
+	Conversation *conversation.Conversation `json:"conversation"`
+	Message      *conversation.Message      `json:"message"`
 }
 
 type returnVals struct {
 	Error string `json:"error,omitempty"`
+}
+
+type UpdateConversation struct {
+	ConversationID int                   `json:"conversation_id"`
+	TopicID        int                   `json:"topic_id"`
+	QuestionID     int                   `json:"question_id"`
+	Message        *conversation.Message `json:"message"`
 }
 
 func GetContext(next http.Handler) http.Handler {
@@ -60,11 +68,26 @@ func GetContext(next http.Handler) http.Handler {
 		// Recreate the request body for the handler (as it is read-only once consumed)
 		r.Body = io.NopCloser(bytes.NewBuffer(body))
 
-		// Decode the body into AcceptedVals struct
-		var params AcceptedVals
-		if err := json.Unmarshal(body, &params); err != nil {
-			respondWithError(w, http.StatusBadRequest, "Error decoding params")
-			return
+		// Decode the body into UpdateConversation or AcceptedVals struct
+		var params interface{}
+		if strings.Contains(r.URL.Path, "/conversations") {
+			var updateParams UpdateConversation
+			err := json.Unmarshal(body, &updateParams)
+			if err != nil {
+				respondWithError(w, http.StatusBadRequest, "Error decoding update conversation params")
+				return
+			}
+
+			params = updateParams
+		} else {
+			var generalParams AcceptedVals
+			err := json.Unmarshal(body, &generalParams)
+			if err != nil {
+				respondWithError(w, http.StatusBadRequest, "Error decoding general params")
+				return
+			}
+
+			params = generalParams
 		}
 
 		// Set extracted data in context for access by handlers
