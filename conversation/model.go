@@ -66,4 +66,5 @@ type ConversationRepo interface {
 	CreateConversation(conversation *Conversation) (int, error)
 	CreateQuestion(conversation *Conversation) (int, error)
 	CreateMessages(conversation *Conversation, messages []Message) error
+	AddMessage(questionID int, message *Message) (int, error)
 }

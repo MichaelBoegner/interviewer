@@ -92,24 +92,42 @@ func (repo *Repository) CreateQuestion(conversation *Conversation) (int, error) 
 }
 
 func (repo *Repository) CreateMessages(conversation *Conversation, messages []Message) error {
-	var id int
 	for _, message := range messages {
 		query := `
-			INSERT INTO questions (conversation_id, question_id, author, content, create_at) 
+			INSERT INTO messages (conversation_id, question_id, author, content, created_at) 
 			VALUES ($1, $2, $3, $4, $5) 
 			RETURNING id
 			`
 
 		repo.DB.QueryRow(query,
 			conversation.ID,
-			id,
+			message.QuestionID,
 			message.Author,
 			message.Content,
 			time.Now(),
 		)
-
-		id += 1
 	}
 
 	return nil
+}
+
+func (repo *Repository) AddMessage(questionID int, message *Message) (int, error) {
+	var id int
+	query := `
+			INSERT INTO questions (question_id, author, content, created_at) 
+			VALUES ($1, $2, $3, $4, $5) 
+			RETURNING id
+			`
+
+	err := repo.DB.QueryRow(query,
+		questionID,
+		message.Author,
+		message.Content,
+		time.Now(),
+	).Scan(&id)
+	if err != nil {
+		return 0, err
+	}
+
+	return id, nil
 }

@@ -400,7 +400,7 @@ func TestConversationsHandler_Post(t *testing.T) {
 				ConversationRepo: mockConversationRepo,
 			}
 
-			w, req, tc, err := setRequestAndWriter(http.MethodPost, "/api/conversations/1/create", tc)
+			w, req, tc, err := setRequestAndWriter(http.MethodPost, "/api/conversations/1", tc)
 			if err != nil {
 				t.Fatalf("failed to set request and writer")
 			}

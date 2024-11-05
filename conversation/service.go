@@ -1,6 +1,7 @@
 package conversation
 
 import (
+	"errors"
 	"time"
 )
 
@@ -39,7 +40,6 @@ func CreateConversation(repo ConversationRepo, interviewID int, firstQuestion st
 	question.Prompt = firstQuestion
 
 	messageFirst := &Message{
-		ID:         1,
 		QuestionID: questionID,
 		Author:     "Interviewer",
 		Content:    firstQuestion,
@@ -66,8 +66,33 @@ func CreateConversation(repo ConversationRepo, interviewID int, firstQuestion st
 }
 
 func AppendConversation(repo ConversationRepo, conversation *Conversation, message *Message, conversationID, topicID, questionID int) (*Conversation, error) {
+	if conversation.ID != conversationID {
+		return nil, errors.New("conversation_id doesn't match with current interview")
+	}
 
-	return nil, nil
+	messageID, err := repo.AddMessage(questionID, message)
+	if err != nil {
+		return nil, err
+	}
+
+	messageToAppend := &Message{
+		ID:         messageID,
+		QuestionID: questionID,
+		Author:     message.Author,
+		Content:    message.Content,
+		CreatedAt:  time.Now(),
+	}
+
+	topic := conversation.Topics[topicID]
+	for _, question := range topic.Questions {
+		if question.ID == questionID {
+			question.Messages = append(question.Messages, *messageToAppend)
+		}
+	}
+
+	conversation.Topics[topicID] = topic
+
+	return conversation, nil
 }
 
 func GetConversation(repo ConversationRepo, interviewID int) (*Conversation, error) {

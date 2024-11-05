@@ -25,3 +25,7 @@ func (repo *MockRepo) CreateQuestion(conversation *Conversation) (int, error) {
 func (repo *MockRepo) CreateMessages(conversation *Conversation, messages []Message) error {
 	return nil
 }
+
+func (repo *MockRepo) AddMessage(questionID int, message *Message) (int, error) {
+	return 3, nil
+}
