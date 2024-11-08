@@ -25,16 +25,14 @@ func (repo *Repository) CheckForConversation(interviewID int) bool {
 	`
 	err := repo.DB.QueryRow(query, interviewID).Scan(&id)
 
-	// Check if the error is due to no rows being found
 	if err == sql.ErrNoRows {
-		return false // Conversation does not exist
+		return false
 	} else if err != nil {
-		// Handle other possible errors (e.g., DB connection issues)
 		fmt.Printf("Error querying conversation: %v\n", err)
 		return false
 	}
 
-	return true // Conversation exists
+	return true
 }
 
 func (repo *Repository) GetConversation(interviewID int) (*Conversation, error) {
