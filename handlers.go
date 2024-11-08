@@ -16,19 +16,20 @@ import (
 )
 
 type returnVals struct {
-	Error          string                     `json:"error,omitempty"`
 	ID             int                        `json:"id,omitempty"`
 	UserID         int                        `json:"user_id,omitempty"`
+	InterviewID    int                        `json:"interview_id,omitempty"`
 	ConversationID int                        `json:"conversation_id,omitempty"`
 	Body           string                     `json:"body,omitempty"`
 	Username       string                     `json:"username,omitempty"`
 	Email          string                     `json:"email,omitempty"`
 	Token          string                     `json:"token,omitempty"`
-	Users          map[int]user.User          `json:"users,omitempty"`
-	InterviewID    int                        `json:"interview_id,omitempty"`
 	FirstQuestion  string                     `json:"first_question,omitempty"`
+	NextQuestion   string                     `json:"next_question,omitempty"`
 	JWToken        string                     `json:"jwtoken,omitempty"`
 	RefreshToken   string                     `json:"refresh_token,omitempty"`
+	Error          string                     `json:"error,omitempty"`
+	Users          map[int]user.User          `json:"users,omitempty"`
 	Conversation   *conversation.Conversation `json:"conversation,omitempty"`
 }
 
@@ -202,6 +203,7 @@ func (apiCfg *apiConfig) conversationsHandler(w http.ResponseWriter, r *http.Req
 				respondWithError(w, http.StatusBadRequest, "Invalid ID.")
 				return
 			}
+
 			conversationFromDatabase, err = conversation.AppendConversation(apiCfg.ConversationRepo, conversationFromDatabase, params.Message, params.ConversationID, params.TopicID, params.QuestionID)
 			if err != nil {
 				log.Printf("AppendConversation error: %v", err)
@@ -280,6 +282,7 @@ func getPathID(r *http.Request) (int, error) {
 
 	return id, nil
 }
+
 func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
 	if w.Header().Get("Content-Type") == "" {
 		w.Header().Set("Content-Type", "application/json")
@@ -297,7 +300,6 @@ func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
 	}
 
 	w.Write(data)
-
 }
 
 func respondWithError(w http.ResponseWriter, code int, msg string) {
