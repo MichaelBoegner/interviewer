@@ -204,7 +204,7 @@ func (apiCfg *apiConfig) conversationsHandler(w http.ResponseWriter, r *http.Req
 				return
 			}
 
-			conversationFromDatabase, err = conversation.AppendConversation(apiCfg.ConversationRepo, conversationFromDatabase, params.Message, params.ConversationID, params.TopicID, params.QuestionID)
+			conversationFromDatabase, err = conversation.AppendConversation(apiCfg.ConversationRepo, conversationFromDatabase, params.Message, params.ConversationID, params.TopicID, params.QuestionID, params.QuestionNumber)
 			if err != nil {
 				log.Printf("AppendConversation error: %v", err)
 				respondWithError(w, http.StatusBadRequest, "Invalid ID.")

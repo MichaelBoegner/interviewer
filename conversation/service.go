@@ -72,7 +72,7 @@ func CreateConversation(repo ConversationRepo, interviewID int, firstQuestion st
 	return conversation, nil
 }
 
-func AppendConversation(repo ConversationRepo, conversation *Conversation, message *Message, conversationID, topicID, questionID int) (*Conversation, error) {
+func AppendConversation(repo ConversationRepo, conversation *Conversation, message *Message, conversationID, topicID, questionID, questionNumber int) (*Conversation, error) {
 	if conversation.ID != conversationID {
 		return nil, errors.New("conversation_id doesn't match with current interview")
 	}
@@ -111,7 +111,7 @@ func GetConversation(repo ConversationRepo, interviewID int) (*Conversation, err
 	return conversation, nil
 }
 
-func getNextQuestion(conversation *Conversation) (string, error) {
+func getNextQuestion(conversation *Conversation, topicID, questionNumber int) (string, error) {
 	ctx := context.Background()
 	apiKey := os.Getenv("OPENAI_API_KEY")
 
@@ -129,7 +129,7 @@ func getNextQuestion(conversation *Conversation) (string, error) {
 
 	requestBody, err := json.Marshal(map[string]interface{}{
 		"model":       "gpt-4",
-		"messages":    []map[string]string{completeConversation},
+		"messages":    completeConversation,
 		"max_tokens":  150,
 		"temperature": 0.7,
 	})

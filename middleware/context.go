@@ -35,6 +35,7 @@ type UpdateConversation struct {
 	ConversationID int                   `json:"conversation_id"`
 	TopicID        int                   `json:"topic_id"`
 	QuestionID     int                   `json:"question_id"`
+	QuestionNumber int                   `json:"question_number"`
 	Message        *conversation.Message `json:"message"`
 }
 

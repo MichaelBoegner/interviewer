@@ -42,7 +42,7 @@ func (repo *Repository) GetConversation(interviewID int) (*Conversation, error) 
 	FROM conversations
 	WHERE interview_id = $1
 	`
-	err := repo.DB.QueryRow(query, interviewID).Scan(&conversation)
+	err := repo.DB.QueryRow(query, interviewID).Scan(&conversation.ID, &conversation.InterviewID, &conversation.CreatedAt, &conversation.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}

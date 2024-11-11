@@ -88,7 +88,7 @@ func CreateJWT(id, expires int) (string, error) {
 	jwtSecret := os.Getenv("JWT_SECRET")
 	now := time.Now()
 	if expires == 0 {
-		expires = 3600
+		expires = 36000
 	}
 	expiresAt := time.Now().Add(time.Duration(expires) * time.Second)
 	key = []byte(jwtSecret)
