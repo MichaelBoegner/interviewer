@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -182,15 +183,16 @@ func (apiCfg *apiConfig) conversationsHandler(w http.ResponseWriter, r *http.Req
 
 		var conversationFromDatabase *conversation.Conversation
 		exists := conversation.CheckForConversation(apiCfg.ConversationRepo, InterviewID)
+		fmt.Printf("exists: %v\n", exists)
 		if !exists {
-			interview, err := interview.GetInterview(apiCfg.InterviewRepo, InterviewID)
+			interviewReturned, err := interview.GetInterview(apiCfg.InterviewRepo, InterviewID)
 			if err != nil {
 				log.Printf("GetInterview error: %v\n", err)
 				respondWithError(w, http.StatusBadRequest, "Invalid interview_id")
 				return
 			}
 
-			conversationFromDatabase, err = conversation.CreateConversation(apiCfg.ConversationRepo, InterviewID, interview.FirstQuestion, params.Message)
+			conversationFromDatabase, err = conversation.CreateConversation(apiCfg.ConversationRepo, InterviewID, interviewReturned.FirstQuestion, params.Message)
 			if err != nil {
 				log.Printf("CreateConversation error: %v", err)
 				respondWithError(w, http.StatusBadRequest, "Invalid interview_id")
