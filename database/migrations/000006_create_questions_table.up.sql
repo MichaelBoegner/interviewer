@@ -1,6 +1,7 @@
 CREATE TABLE IF NOT EXISTS questions (
     id SERIAL PRIMARY KEY,
-    topic_id INT REFERENCES topics(id),
+    conversation_id INT REFERENCES conversations(id),
+    topic_id INT NOT NULL,
     question_number INT NOT NULL,
     created_at TIMESTAMP NOT NULL
 );

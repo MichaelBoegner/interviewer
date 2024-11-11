@@ -43,7 +43,10 @@ func (repo *Repository) GetConversation(interviewID int) (*Conversation, error) 
 	WHERE interview_id = $1
 	`
 	err := repo.DB.QueryRow(query, interviewID).Scan(&conversation.ID, &conversation.InterviewID, &conversation.CreatedAt, &conversation.UpdatedAt)
-	if err != nil {
+	if err == sql.ErrNoRows {
+		return nil, err
+	} else if err != nil {
+		fmt.Printf("Error querying conversation: %v\n", err)
 		return nil, err
 	}
 
@@ -63,7 +66,10 @@ func (repo *Repository) CreateConversation(conversation *Conversation) (int, err
 		conversation.CreatedAt,
 		conversation.UpdatedAt,
 	).Scan(&id)
-	if err != nil {
+	if err == sql.ErrNoRows {
+		return 0, err
+	} else if err != nil {
+		fmt.Printf("Error querying conversation: %v\n", err)
 		return 0, err
 	}
 
@@ -79,14 +85,46 @@ func (repo *Repository) CreateQuestion(conversation *Conversation) (int, error) 
 			RETURNING id
 			`
 
-	repo.DB.QueryRow(query,
+	err := repo.DB.QueryRow(query,
 		conversation.ID,
 		1,
 		1,
 		time.Now(),
 	).Scan(&id)
+	if err == sql.ErrNoRows {
+		return 0, err
+	} else if err != nil {
+		fmt.Printf("Error querying conversation: %v\n", err)
+		return 0, err
+	}
 
 	return id, nil
+}
+
+func (repo *Repository) GetQuestion(conversation *Conversation) (*Question, error) {
+	question := &Question{}
+
+	query := `
+			SELECT (id, question_number, conversation_id, topic_id, prompt, created_at) 
+			FROM questions 
+			WHERE conversation_id = ($1)
+			`
+
+	err := repo.DB.QueryRow(query, conversation.ID).Scan(
+		&question.ID,
+		&question.QuestionNumber,
+		&question.ConversationID,
+		&question.TopicID,
+		&question.Prompt,
+		&question.CreatedAt)
+	if err == sql.ErrNoRows {
+		return nil, err
+	} else if err != nil {
+		fmt.Printf("Error querying conversation: %v\n", err)
+		return nil, err
+	}
+
+	return question, nil
 }
 
 func (repo *Repository) CreateMessages(conversation *Conversation, messages []Message) error {
@@ -112,8 +150,8 @@ func (repo *Repository) CreateMessages(conversation *Conversation, messages []Me
 func (repo *Repository) AddMessage(questionID int, message *Message) (int, error) {
 	var id int
 	query := `
-			INSERT INTO questions (question_id, author, content, created_at) 
-			VALUES ($1, $2, $3, $4, $5) 
+			INSERT INTO messages (question_id, author, content, created_at) 
+			VALUES ($1, $2, $3, $4) 
 			RETURNING id
 			`
 
@@ -123,7 +161,10 @@ func (repo *Repository) AddMessage(questionID int, message *Message) (int, error
 		message.Content,
 		time.Now(),
 	).Scan(&id)
-	if err != nil {
+	if err == sql.ErrNoRows {
+		return 0, err
+	} else if err != nil {
+		fmt.Printf("Error querying conversation: %v\n", err)
 		return 0, err
 	}
 
