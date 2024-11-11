@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"time"
@@ -27,6 +28,7 @@ func CreateConversation(repo ConversationRepo, interviewID int, firstQuestion st
 
 	conversationID, err := repo.CreateConversation(conversation)
 	if err != nil {
+		log.Printf("CreateConversation failing")
 		return nil, err
 	}
 
@@ -34,6 +36,7 @@ func CreateConversation(repo ConversationRepo, interviewID int, firstQuestion st
 
 	questionID, err := repo.CreateQuestion(conversation)
 	if err != nil {
+		log.Printf("CreateQuestion failing")
 		return nil, err
 	}
 
@@ -48,7 +51,7 @@ func CreateConversation(repo ConversationRepo, interviewID int, firstQuestion st
 
 	messageFirst := &Message{
 		QuestionID: questionID,
-		Author:     "Interviewer",
+		Author:     "interviewer",
 		Content:    firstQuestion,
 		CreatedAt:  time.Now(),
 	}
@@ -61,13 +64,34 @@ func CreateConversation(repo ConversationRepo, interviewID int, firstQuestion st
 	question.Messages = append(question.Messages, *messageFirst)
 	question.Messages = append(question.Messages, *messageResponse)
 
-	err = repo.CreateMessages(conversation, question.Messages)
+	conversation.Topics[1] = topic
+	conversation.Topics[1].Questions[1] = question
+
+	nextQuestion, err := getNextQuestion(conversation, 1, 1)
 	if err != nil {
+		log.Printf("getNextQuestion failing")
 		return nil, err
 	}
 
+	messageNext := &Message{
+		ID:         3,
+		QuestionID: questionID,
+		CreatedAt:  time.Now(),
+		Author:     AuthorInterviewer,
+		Content:    nextQuestion,
+	}
+
+	topic = conversation.Topics[1]
+	question = topic.Questions[1]
+	question.Messages = append(question.Messages, *messageNext)
 	conversation.Topics[1] = topic
 	conversation.Topics[1].Questions[1] = question
+
+	err = repo.CreateMessages(conversation, question.Messages)
+	if err != nil {
+		log.Printf("repo.CreateMessages failing")
+		return nil, err
+	}
 
 	return conversation, nil
 }
@@ -139,6 +163,7 @@ func getNextQuestion(conversation *Conversation, topicID, questionNumber int) (s
 
 	req, err := http.NewRequestWithContext(ctx, "POST", "https://api.openai.com/v1/chat/completions", bytes.NewBuffer(requestBody))
 	if err != nil {
+		log.Printf("NewRequestWithContext failing")
 		return "", err
 	}
 
@@ -147,6 +172,9 @@ func getNextQuestion(conversation *Conversation, topicID, questionNumber int) (s
 
 	responseChan := make(chan string)
 	errorChan := make(chan error)
+
+	log.Printf("Request body: %s", requestBody)
+
 	go func() {
 		client := &http.Client{}
 		resp, err := client.Do(req)
@@ -157,6 +185,8 @@ func getNextQuestion(conversation *Conversation, topicID, questionNumber int) (s
 		defer resp.Body.Close()
 
 		if resp.StatusCode != http.StatusOK {
+			body, _ := io.ReadAll(resp.Body)
+			log.Printf("API call failed with status code: %d, response: %s", resp.StatusCode, body)
 			errorChan <- fmt.Errorf("API call failed with status code: %d", resp.StatusCode)
 			return
 		}
@@ -198,9 +228,15 @@ func getConversationHistory(conversation *Conversation, topicID, questionNumber 
 
 	for _, message := range conversation.Topics[topicID].Questions[questionNumber].Messages {
 		conversationMap := make(map[string]string)
-		role := string(message.Author)
+		var role string
+		if message.Author == "interviewer" {
+			role = "assistant"
+		} else {
+			role = string(message.Author)
+		}
+		conversationMap["role"] = role
 		content := message.Content
-		conversationMap[role] = content
+		conversationMap["content"] = content
 
 		chatGPTConversationArray = append(chatGPTConversationArray, conversationMap)
 	}
