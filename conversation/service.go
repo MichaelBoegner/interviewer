@@ -34,12 +34,11 @@ func CreateConversation(repo ConversationRepo, interviewID int, firstQuestion st
 
 	conversation.ID = conversationID
 
-	questionID, err := repo.CreateQuestion(conversation)
+	questionID, err := repo.CreateQuestion(conversation, firstQuestion)
 	if err != nil {
 		log.Printf("CreateQuestion failing")
 		return nil, err
 	}
-	fmt.Printf("questionID service 1: %v\n", questionID)
 
 	topic := conversation.Topics[1]
 	topic.ConversationID = conversationID
@@ -47,7 +46,6 @@ func CreateConversation(repo ConversationRepo, interviewID int, firstQuestion st
 
 	question := topic.Questions[1]
 	question.ID = questionID
-	fmt.Printf("questionID service 2: %v\n", questionID)
 
 	question.QuestionNumber = 1
 	question.Prompt = firstQuestion
@@ -129,7 +127,7 @@ func AppendConversation(repo ConversationRepo, conversation *Conversation, messa
 	return conversation, nil
 }
 
-func GetConversation(repo ConversationRepo, interviewID int) (*Conversation, error) {
+func GetConversation(repo ConversationRepo, interviewID, questionID int) (*Conversation, error) {
 	conversation, err := repo.GetConversation(interviewID)
 	if err != nil {
 		return nil, err
@@ -149,6 +147,16 @@ func GetConversation(repo ConversationRepo, interviewID int) (*Conversation, err
 
 	question := topic.Questions[1]
 	question.Messages = make([]Message, 0)
+
+	messagesReturned, err := repo.GetMessages(questionID)
+	if err != nil {
+		log.Printf("repo.GetMessages failed: %v\n", err)
+		return nil, err
+	}
+
+	question.Messages = append(question.Messages, messagesReturned...)
+	conversation.Topics[1] = topic
+	conversation.Topics[1].Questions[1] = question
 
 	return conversation, nil
 }

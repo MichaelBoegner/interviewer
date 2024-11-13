@@ -3,6 +3,7 @@ package conversation
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"time"
 )
 
@@ -76,12 +77,12 @@ func (repo *Repository) CreateConversation(conversation *Conversation) (int, err
 	return id, nil
 }
 
-func (repo *Repository) CreateQuestion(conversation *Conversation) (int, error) {
+func (repo *Repository) CreateQuestion(conversation *Conversation, prompt string) (int, error) {
 	var id int
 
 	query := `
-			INSERT INTO questions (conversation_id, topic_id, question_number, created_at) 
-			VALUES ($1, $2, $3, $4)
+			INSERT INTO questions (conversation_id, topic_id, question_number, prompt, created_at) 
+			VALUES ($1, $2, $3, $4, $5)
 			RETURNING id
 			`
 
@@ -89,6 +90,7 @@ func (repo *Repository) CreateQuestion(conversation *Conversation) (int, error) 
 		conversation.ID,
 		1,
 		1,
+		prompt,
 		time.Now(),
 	).Scan(&id)
 	if err == sql.ErrNoRows {
@@ -105,22 +107,22 @@ func (repo *Repository) GetQuestion(conversation *Conversation) (*Question, erro
 	question := &Question{}
 
 	query := `
-			SELECT (id, question_number, conversation_id, topic_id, prompt, created_at) 
+			SELECT id, conversation_id, topic_id, question_number, prompt, created_at
 			FROM questions 
 			WHERE conversation_id = ($1)
 			`
 
 	err := repo.DB.QueryRow(query, conversation.ID).Scan(
 		&question.ID,
-		&question.QuestionNumber,
 		&question.ConversationID,
 		&question.TopicID,
+		&question.QuestionNumber,
 		&question.Prompt,
 		&question.CreatedAt)
 	if err == sql.ErrNoRows {
 		return nil, err
 	} else if err != nil {
-		fmt.Printf("Error querying conversation: %v\n", err)
+		log.Printf("Error querying conversation: %v\n", err)
 		return nil, err
 	}
 
@@ -169,4 +171,43 @@ func (repo *Repository) AddMessage(questionID int, message *Message) (int, error
 	}
 
 	return id, nil
+}
+
+func (repo *Repository) GetMessages(questionID int) ([]Message, error) {
+	messages := make([]Message, 0)
+
+	query := `
+			SELECT id, question_id, author, content, created_at
+			FROM messages
+			WHERE question_id = $1
+			`
+
+	rows, err := repo.DB.Query(query, questionID)
+	if err == sql.ErrNoRows {
+		return nil, err
+	} else if err != nil {
+		fmt.Printf("Error querying conversation: %v\n", err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var message Message
+		err := rows.Scan(
+			&message.ID,
+			&message.QuestionID,
+			&message.Author,
+			&message.Content,
+			&message.CreatedAt,
+		)
+		if err != nil {
+			fmt.Printf("Error scanning message: %v\n", err)
+			return nil, err
+		}
+		messages = append(messages, message)
+	}
+
+	fmt.Printf("messages: %v\n", messages)
+
+	return messages, nil
 }
