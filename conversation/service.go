@@ -114,11 +114,53 @@ func AppendConversation(repo ConversationRepo, conversation *Conversation, messa
 		Content:    message.Content,
 		CreatedAt:  time.Now(),
 	}
-	fmt.Printf("conversation in service: %v\n", conversation)
+
 	topic := conversation.Topics[topicID]
 	for _, question := range topic.Questions {
 		if question.ID == questionID {
 			question.Messages = append(question.Messages, *messageToAppend)
+		}
+	}
+
+	conversation.Topics[topicID] = topic
+
+	nextQuestion, err := getNextQuestion(conversation, 1, 1)
+	if err != nil {
+		log.Printf("getNextQuestion failing")
+		return nil, err
+	}
+
+	messageNext := &Message{
+		ID:         3,
+		QuestionID: questionID,
+		CreatedAt:  time.Now(),
+		Author:     AuthorInterviewer,
+		Content:    nextQuestion,
+	}
+
+	topic = conversation.Topics[1]
+	question := topic.Questions[1]
+	question.Messages = append(question.Messages, *messageNext)
+	conversation.Topics[1] = topic
+	conversation.Topics[1].Questions[1] = question
+
+	messageID, err = repo.AddMessage(questionID, message)
+	if err != nil {
+		return nil, err
+	}
+
+	nextMessageToAppend := &Message{
+		ID:         messageID,
+		QuestionID: questionID,
+		Author:     message.Author,
+		Content:    message.Content,
+		CreatedAt:  time.Now(),
+	}
+
+	topic = conversation.Topics[topicID]
+	for _, question := range topic.Questions {
+		if question.ID == questionID {
+			question.Messages = append(question.Messages, *nextMessageToAppend)
 		}
 	}
 

@@ -130,6 +130,7 @@ func (repo *Repository) GetQuestion(conversation *Conversation) (*Question, erro
 }
 
 func (repo *Repository) CreateMessages(conversation *Conversation, messages []Message) error {
+	var id int
 	for _, message := range messages {
 		query := `
 			INSERT INTO messages (conversation_id, question_id, author, content, created_at) 
@@ -137,13 +138,20 @@ func (repo *Repository) CreateMessages(conversation *Conversation, messages []Me
 			RETURNING id
 			`
 
-		repo.DB.QueryRow(query,
+		err := repo.DB.QueryRow(query,
 			conversation.ID,
 			message.QuestionID,
 			message.Author,
 			message.Content,
 			time.Now(),
-		)
+		).Scan(&id)
+
+		if err == sql.ErrNoRows {
+			return err
+		} else if err != nil {
+			fmt.Printf("Error querying conversation: %v\n", err)
+			return err
+		}
 	}
 
 	return nil
