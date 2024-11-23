@@ -22,7 +22,7 @@ func (repo *MockRepo) GetConversation(interviewID int) (*Conversation, error) {
 	}
 	topic := conversationResponse.Topics[1]
 	topic.ConversationID = 1
-	topic.Questions = make(map[int]Question)
+	topic.Questions = make(map[int]*Question)
 
 	question := topic.Questions[1]
 	question.ID = 1

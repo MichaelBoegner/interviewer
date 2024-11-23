@@ -5,8 +5,8 @@ import "time"
 type Author string
 
 const (
-	AuthorInterviewer Author = "interviewer"
-	User              Author = "user"
+	Interviewer Author = "interviewer"
+	User        Author = "user"
 )
 
 const (
@@ -36,10 +36,10 @@ type Conversation struct {
 }
 
 type Topic struct {
-	ID             int              `json:"id"`
-	ConversationID int              `json:"conversation_id"`
-	Name           string           `json:"name"`
-	Questions      map[int]Question `json:"questions"`
+	ID             int               `json:"id"`
+	ConversationID int               `json:"conversation_id"`
+	Name           string            `json:"name"`
+	Questions      map[int]*Question `json:"questions"`
 }
 
 type Question struct {
