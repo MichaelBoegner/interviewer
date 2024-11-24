@@ -18,6 +18,11 @@ func CheckForConversation(repo ConversationRepo, interviewID int) bool {
 }
 
 func CreateConversation(repo ConversationRepo, interviewID int, firstQuestion string, messageUserResponse *Message) (*Conversation, error) {
+	if messageUserResponse == nil {
+		log.Printf("messageUserResponse is nil")
+		return nil, errors.New("messageUserResponse cannot be nil")
+	}
+
 	now := time.Now()
 	conversation := &Conversation{
 		InterviewID: interviewID,
@@ -62,9 +67,8 @@ func CreateConversation(repo ConversationRepo, interviewID int, firstQuestion st
 		CreatedAt: time.Now(),
 	}
 
-	topic.Questions = map[int]*Question{1: question}
-
-	conversation.Topics[1] = topic
+	topic.Questions = make(map[int]*Question)
+	topic.Questions[1] = question
 
 	nextQuestion, err := getNextQuestion(conversation, 1, 1)
 	if err != nil {
@@ -72,19 +76,9 @@ func CreateConversation(repo ConversationRepo, interviewID int, firstQuestion st
 		return nil, err
 	}
 
-	messageNext := &Message{
-		ID:         3,
-		QuestionID: questionID,
-		Author:     Interviewer,
-		Content:    nextQuestion,
-		CreatedAt:  time.Now(),
-	}
+	topic.Questions[1].Messages = append(topic.Questions[1].Messages, *newMessage(3, questionID, User, nextQuestion))
 
-	topic = conversation.Topics[1]
-	question = topic.Questions[1]
-	question.Messages = append(question.Messages, *messageNext)
 	conversation.Topics[1] = topic
-	conversation.Topics[1].Questions[1] = question
 
 	err = repo.CreateMessages(conversation, question.Messages)
 	if err != nil {
@@ -105,64 +99,29 @@ func AppendConversation(repo ConversationRepo, conversation *Conversation, messa
 		return nil, err
 	}
 
-	messageToAppend := &Message{
-		ID:         messageID,
-		QuestionID: questionID,
-		Author:     message.Author,
-		Content:    message.Content,
-		CreatedAt:  time.Now(),
-	}
+	messageUser := newMessage(messageID, questionID, message.Author, message.Content)
 
-	topic := conversation.Topics[topicID]
-	for _, question := range topic.Questions {
-		if question.ID == questionID {
-			question.Messages = append(question.Messages, *messageToAppend)
-		}
-	}
+	messages := conversation.Topics[topicID].Questions[questionNumber].Messages
+	messages = append(messages, *messageUser)
+	conversation.Topics[topicID].Questions[questionNumber].Messages = messages
 
-	conversation.Topics[topicID] = topic
-
-	nextQuestion, err := getNextQuestion(conversation, 1, 1)
+	nextQuestion, err := getNextQuestion(conversation, topicID, questionNumber)
 	if err != nil {
 		log.Printf("getNextQuestion failing")
 		return nil, err
 	}
 
-	messageNext := &Message{
-		ID:         3,
-		QuestionID: questionID,
-		CreatedAt:  time.Now(),
-		Author:     Interviewer,
-		Content:    nextQuestion,
-	}
+	messageNextQuestionID := messageID + 1
+	messageNextQuestion := newMessage(messageNextQuestionID, questionID, Interviewer, nextQuestion)
 
-	topic = conversation.Topics[1]
-	question := topic.Questions[1]
-	question.Messages = append(question.Messages, *messageNext)
-	conversation.Topics[1] = topic
-	conversation.Topics[1].Questions[1] = question
+	messages = conversation.Topics[topicID].Questions[questionNumber].Messages
+	messages = append(messages, *messageNextQuestion)
+	conversation.Topics[topicID].Questions[questionNumber].Messages = messages
 
-	messageID, err = repo.AddMessage(questionID, message)
+	_, err = repo.AddMessage(questionID, messageNextQuestion)
 	if err != nil {
 		return nil, err
 	}
-
-	nextMessageToAppend := &Message{
-		ID:         messageID,
-		QuestionID: questionID,
-		Author:     message.Author,
-		Content:    message.Content,
-		CreatedAt:  time.Now(),
-	}
-
-	topic = conversation.Topics[topicID]
-	for _, question := range topic.Questions {
-		if question.ID == questionID {
-			question.Messages = append(question.Messages, *nextMessageToAppend)
-		}
-	}
-
-	conversation.Topics[topicID] = topic
 
 	return conversation, nil
 }
@@ -310,12 +269,12 @@ func getConversationHistory(conversation *Conversation, topicID, questionNumber 
 	return chatGPTConversationArray, nil
 }
 
-func newMessage(messageID, questionID int, author Author, firstQuestion string) *Message {
+func newMessage(messageID, questionID int, author Author, content string) *Message {
 	message := &Message{
 		ID:         messageID,
 		QuestionID: questionID,
 		Author:     author,
-		Content:    firstQuestion,
+		Content:    content,
 		CreatedAt:  time.Now(),
 	}
 
