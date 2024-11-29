@@ -70,11 +70,15 @@ func CreateConversation(repo ConversationRepo, interviewID int, firstQuestion st
 	topic.Questions = make(map[int]*Question)
 	topic.Questions[1] = question
 
+	conversation.Topics[1] = topic
+
 	nextQuestion, err := getNextQuestion(conversation, 1, 1)
 	if err != nil {
 		log.Printf("getNextQuestion failing")
 		return nil, err
 	}
+
+	topic = conversation.Topics[1]
 
 	topic.Questions[1].Messages = append(topic.Questions[1].Messages, *newMessage(3, questionID, User, nextQuestion))
 
