@@ -168,9 +168,43 @@ func getNextQuestion(conversation *Conversation, topicID, questionNumber int) (s
 	ctx := context.Background()
 	apiKey := os.Getenv("OPENAI_API_KEY")
 
+	prompt := "You are conducting a technical interview for a backend development position. " +
+		"The interview is divided into six main topics:\n\n" +
+		"1. **Introduction**\n" +
+		"2. **Coding**\n" +
+		"3. **System Design**\n" +
+		"4. **Databases and Data Management**\n" +
+		"5. **Behavioral**\n" +
+		"6. **General Backend Knowledge**\n\n" +
+		"Each main topic may contain multiple subtopics. For each subtopic:\n" +
+		"- Ask as many subtopic-specific questions as needed until the candidate has " +
+		"sufficiently or insufficiently proven their understanding of the subtopic.\n" +
+		"- Provide a score (1-10) for their performance on each subtopic question, with feedback " +
+		"explaining the score.\n" +
+		"- When the subtopic is sufficiently assessed, decide if the current topic needs " +
+		"further exploration or if it's time to move to the next topic.\n\n" +
+		"After each question:\n" +
+		"1. Wait for the candidate's response before evaluating their answer.\n" +
+		"2. If the candidate has not yet responded, return blank values for \"score\", \"feedback\", and \"next_question\".\n" +
+		"3. Evaluate the candidate's response and decide if additional questions about the " +
+		"current subtopic are necessary.\n" +
+		"4. If transitioning to a new subtopic or topic, include a flag (move_to_new_subtopic) " +
+		"and/or (move_to_new_topic) in the response. Otherwise, set these flags to false.\n" +
+		"5. Return your response in the following JSON format:\n\n" +
+		"{\n" +
+		"    \"topic\": \"System Design\",\n" +
+		"    \"subtopic\": \"Scalability\",\n" +
+		"    \"question\": \"How would you design a system to handle a high number of concurrent users?\",\n" +
+		"    \"score\": null,\n" +
+		"    \"feedback\": \"\",\n" +
+		"    \"next_question\": \"\",\n" +
+		"    \"move_to_new_subtopic\": false,\n" +
+		"    \"move_to_new_topic\": false\n" +
+		"}"
+
 	systemMessage := map[string]string{
 		"role":    "system",
-		"content": "You are conducting a technical interview for a backend development position. The candidate is at a junior to mid-level skill level. Continue the interview by asking relevant technical questions that assess backend development skills.",
+		"content": prompt,
 	}
 
 	conversationHistory, err := getConversationHistory(conversation, topicID, questionNumber)

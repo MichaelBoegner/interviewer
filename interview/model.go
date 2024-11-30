@@ -13,9 +13,21 @@ type Interview struct {
 	Status          string
 	Score           int
 	Language        string
+	QuestionContext *QuestionContext
 	FirstQuestion   string
 	CreatedAt       time.Time
 	UpdatedAt       time.Time
+}
+
+type QuestionContext struct {
+	Topic             string
+	Subtopic          string
+	Question          string
+	Score             int
+	Feedback          string
+	NextQuestion      string
+	MoveToNewSubtopic bool
+	MoveToNewTopic    bool
 }
 
 type InterviewRepo interface {

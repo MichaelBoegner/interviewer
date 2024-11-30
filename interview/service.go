@@ -12,7 +12,7 @@ import (
 )
 
 func StartInterview(repo InterviewRepo, userId, length, numberQuestions int, difficulty string) (*Interview, error) {
-	firstQuestion, err := getFirstQuestion()
+	questionContext, err := getQuestionContext()
 	if err != nil {
 		return nil, err
 	}
@@ -27,7 +27,8 @@ func StartInterview(repo InterviewRepo, userId, length, numberQuestions int, dif
 		Status:          "Running",
 		Score:           100,
 		Language:        "Python",
-		FirstQuestion:   firstQuestion,
+		QuestionContext: questionContext,
+		FirstQuestion:   questionContext.Question,
 		CreatedAt:       now,
 		UpdatedAt:       now,
 	}
@@ -51,7 +52,7 @@ func GetInterview(repo InterviewRepo, interviewID int) (*Interview, error) {
 	return interview, nil
 }
 
-func getFirstQuestion() (string, error) {
+func getQuestionContext() (*QuestionContext, error) {
 	ctx := context.Background()
 	prompt := "You are conducting a technical interview for a backend development position. " +
 		"The interview is divided into six main topics:\n\n" +
@@ -94,20 +95,21 @@ func getFirstQuestion() (string, error) {
 		"temperature": 0.7,
 	})
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	apiKey := os.Getenv("OPENAI_API_KEY")
 	req, err := http.NewRequestWithContext(ctx, "POST", "https://api.openai.com/v1/chat/completions", bytes.NewBuffer(requestBody))
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", apiKey))
 
-	responseChan := make(chan string)
+	responseChan := make(chan *QuestionContext)
 	errorChan := make(chan error)
+
 	go func() {
 		client := &http.Client{}
 		resp, err := client.Do(req)
@@ -140,16 +142,21 @@ func getFirstQuestion() (string, error) {
 			return
 		}
 
-		firstQuestion := choices[0].(map[string]interface{})["message"].(map[string]interface{})["content"].(string)
-		responseChan <- firstQuestion
+		questionContextResponse := choices[0].(map[string]interface{})["message"].(map[string]interface{})["content"].(string)
+
+		var questionContext QuestionContext
+		if err := json.Unmarshal([]byte(questionContextResponse), &questionContext); err != nil {
+			errorChan <- fmt.Errorf("failed to parse question context: %v", err)
+			return
+		}
+
+		responseChan <- &questionContext
 	}()
 
 	select {
-	case firstQuestion := <-responseChan:
-		response := firstQuestion
-		return response, nil
-
+	case questionContext := <-responseChan:
+		return questionContext, nil
 	case err := <-errorChan:
-		return "", err
+		return nil, err
 	}
 }
