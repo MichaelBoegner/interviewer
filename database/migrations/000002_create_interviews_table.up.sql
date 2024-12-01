@@ -6,7 +6,8 @@ CREATE TABLE IF NOT EXISTS interviews (
     difficulty VARCHAR(50) NOT NULL,       
     status VARCHAR(50) NOT NULL,           
     score INT,                             
-    language VARCHAR(50) NOT NULL,         
+    language VARCHAR(50) NOT NULL,
+    prompt TEXT,         
     first_question TEXT,                       
     created_at TIMESTAMP, 
     updated_at TIMESTAMP  

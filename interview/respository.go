@@ -19,8 +19,8 @@ func (repo *Repository) CreateInterview(interview *Interview) (int, error) {
 	fmt.Printf("CreateInterview firing: %v\n", interview)
 
 	query := `
-    INSERT INTO interviews (user_id, length, number_questions, difficulty, status, score, language, first_question)
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+    INSERT INTO interviews (user_id, length, number_questions, difficulty, status, score, language, prompt, first_question)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
     RETURNING id
     `
 
@@ -33,6 +33,7 @@ func (repo *Repository) CreateInterview(interview *Interview) (int, error) {
 		interview.Status,
 		interview.Score,
 		interview.Language,
+		interview.Prompt,
 		interview.FirstQuestion).Scan(&id)
 
 	if err != nil {

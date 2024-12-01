@@ -12,48 +12,7 @@ import (
 )
 
 func StartInterview(repo InterviewRepo, userId, length, numberQuestions int, difficulty string) (*Interview, error) {
-	questionContext, err := getQuestionContext()
-	if err != nil {
-		return nil, err
-	}
-
 	now := time.Now()
-
-	interview := &Interview{
-		UserId:          userId,
-		Length:          length,
-		NumberQuestions: numberQuestions,
-		Difficulty:      difficulty,
-		Status:          "Running",
-		Score:           100,
-		Language:        "Python",
-		QuestionContext: questionContext,
-		FirstQuestion:   questionContext.Question,
-		CreatedAt:       now,
-		UpdatedAt:       now,
-	}
-
-	id, err := repo.CreateInterview(interview)
-	if err != nil {
-		return nil, err
-	}
-
-	interview.Id = id
-
-	return interview, nil
-}
-
-func GetInterview(repo InterviewRepo, interviewID int) (*Interview, error) {
-	interview, err := repo.GetInterview(interviewID)
-	if err != nil {
-		return nil, err
-	}
-
-	return interview, nil
-}
-
-func getQuestionContext() (*QuestionContext, error) {
-	ctx := context.Background()
 	prompt := "You are conducting a technical interview for a backend development position. " +
 		"The interview is divided into six main topics:\n\n" +
 		"1. **Introduction**\n" +
@@ -74,9 +33,10 @@ func getQuestionContext() (*QuestionContext, error) {
 		"2. If the candidate has not yet responded, return blank values for \"score\", \"feedback\", and \"next_question\".\n" +
 		"3. Evaluate the candidate's response and decide if additional questions about the " +
 		"current subtopic are necessary.\n" +
-		"4. If transitioning to a new subtopic or topic, include a flag (move_to_new_subtopic) " +
-		"and/or (move_to_new_topic) in the response. Otherwise, set these flags to false.\n" +
-		"5. Return your response in the following JSON format:\n\n" +
+		"4. Always include all fields in the JSON response, even if some fields have empty or null values.\n" +
+		"5. If unsure whether to transition to a new subtopic or topic, err on the side of continuing the current subtopic.\n" +
+		"6. Always include both flags (\"move_to_new_subtopic\" and \"move_to_new_topic\") in every response. Set them to `true` or `false` explicitly.\n" +
+		"7. Return your response in the following JSON format:\n\n" +
 		"{\n" +
 		"    \"topic\": \"System Design\",\n" +
 		"    \"subtopic\": \"Scalability\",\n" +
@@ -87,6 +47,48 @@ func getQuestionContext() (*QuestionContext, error) {
 		"    \"move_to_new_subtopic\": false,\n" +
 		"    \"move_to_new_topic\": false\n" +
 		"}"
+
+	questionContext, err := getQuestionContext(prompt)
+	if err != nil {
+		return nil, err
+	}
+	questionContext.CreatedAt = now
+
+	interview := &Interview{
+		UserId:          userId,
+		Length:          length,
+		NumberQuestions: numberQuestions,
+		Difficulty:      difficulty,
+		Status:          "Running",
+		Score:           100,
+		Language:        "Python",
+		Prompt:          prompt,
+		QuestionContext: questionContext,
+		FirstQuestion:   questionContext.Question,
+		CreatedAt:       now,
+		UpdatedAt:       now,
+	}
+
+	id, err := repo.CreateInterview(interview)
+	if err != nil {
+		return nil, err
+	}
+	interview.Id = id
+
+	return interview, nil
+}
+
+func GetInterview(repo InterviewRepo, interviewID int) (*Interview, error) {
+	interview, err := repo.GetInterview(interviewID)
+	if err != nil {
+		return nil, err
+	}
+
+	return interview, nil
+}
+
+func getQuestionContext(prompt string) (*QuestionContext, error) {
+	ctx := context.Background()
 
 	requestBody, err := json.Marshal(map[string]interface{}{
 		"model":       "gpt-4",

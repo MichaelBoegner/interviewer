@@ -11,13 +11,21 @@ import (
 	"net/http"
 	"os"
 	"time"
+
+	"github.com/michaelboegner/interviewer/interview"
 )
 
 func CheckForConversation(repo ConversationRepo, interviewID int) bool {
 	return repo.CheckForConversation(interviewID)
 }
 
-func CreateConversation(repo ConversationRepo, interviewID int, firstQuestion string, messageUserResponse *Message) (*Conversation, error) {
+func CreateConversation(
+	repo ConversationRepo,
+	interviewID int,
+	firstQuestion string,
+	questionContext *interview.QuestionContext,
+	messageUserResponse *Message) (*Conversation, error) {
+
 	if messageUserResponse == nil {
 		log.Printf("messageUserResponse is nil")
 		return nil, errors.New("messageUserResponse cannot be nil")
@@ -48,7 +56,13 @@ func CreateConversation(repo ConversationRepo, interviewID int, firstQuestion st
 	topic := conversation.Topics[1]
 	topic.ConversationID = conversationID
 
-	messageFirst := newMessage(1, questionID, Interviewer, firstQuestion)
+	questionContextString, err := questionContextToString(questionContext)
+	if err != nil {
+		log.Printf("questionContextToString failed: %v", err)
+		return nil, err
+	}
+
+	messageFirst := newMessage(1, questionID, Interviewer, questionContextString)
 
 	messageUserResponse.ID = 2
 	messageUserResponse.QuestionID = questionID
@@ -317,4 +331,14 @@ func newMessage(messageID, questionID int, author Author, content string) *Messa
 	}
 
 	return message
+}
+
+func questionContextToString(questionContext *interview.QuestionContext) (string, error) {
+	questionContextString, err := json.Marshal(questionContext)
+	if err != nil {
+		log.Printf("questionContextToString failed: %v", err)
+		return "", err
+	}
+
+	return string(questionContextString), nil
 }

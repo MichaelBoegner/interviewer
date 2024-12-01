@@ -13,6 +13,7 @@ type Interview struct {
 	Status          string
 	Score           int
 	Language        string
+	Prompt          string
 	QuestionContext *QuestionContext
 	FirstQuestion   string
 	CreatedAt       time.Time
@@ -20,14 +21,15 @@ type Interview struct {
 }
 
 type QuestionContext struct {
-	Topic             string
-	Subtopic          string
-	Question          string
-	Score             int
-	Feedback          string
-	NextQuestion      string
-	MoveToNewSubtopic bool
-	MoveToNewTopic    bool
+	Topic             string    `json:"topic"`
+	Subtopic          string    `json:"subtopic"`
+	Question          string    `json:"question"`
+	Score             int       `json:"score"`
+	Feedback          string    `json:"feedback"`
+	NextQuestion      string    `json:"next_question"`
+	MoveToNewSubtopic bool      `json:"move_to_new_subtopic"`
+	MoveToNewTopic    bool      `json:"move_to_new_topic"`
+	CreatedAt         time.Time `json:"created_at"`
 }
 
 type InterviewRepo interface {
