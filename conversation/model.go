@@ -5,6 +5,7 @@ import "time"
 type Author string
 
 const (
+	System      Author = "system"
 	Interviewer Author = "interviewer"
 	User        Author = "user"
 )

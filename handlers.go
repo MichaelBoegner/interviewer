@@ -183,7 +183,7 @@ func (apiCfg *apiConfig) conversationsHandler(w http.ResponseWriter, r *http.Req
 
 		var conversationFromDatabase *conversation.Conversation
 		exists := conversation.CheckForConversation(apiCfg.ConversationRepo, InterviewID)
-		fmt.Printf("exists: %v\n", exists)
+
 		if !exists {
 			interviewReturned, err := interview.GetInterview(apiCfg.InterviewRepo, InterviewID)
 			if err != nil {
@@ -192,7 +192,15 @@ func (apiCfg *apiConfig) conversationsHandler(w http.ResponseWriter, r *http.Req
 				return
 			}
 
-			conversationFromDatabase, err = conversation.CreateConversation(apiCfg.ConversationRepo, InterviewID, interviewReturned.FirstQuestion, interviewReturned.QuestionContext, params.Message)
+			fmt.Printf("interviewReturned: %v\n", interviewReturned)
+
+			conversationFromDatabase, err = conversation.CreateConversation(
+				apiCfg.ConversationRepo,
+				InterviewID,
+				interviewReturned.Prompt,
+				interviewReturned.FirstQuestion,
+				interviewReturned.QuestionContext,
+				params.Message)
 			if err != nil {
 				log.Printf("CreateConversation error: %v", err)
 				respondWithError(w, http.StatusBadRequest, "Invalid interview_id")

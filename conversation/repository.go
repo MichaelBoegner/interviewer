@@ -2,7 +2,6 @@ package conversation
 
 import (
 	"database/sql"
-	"fmt"
 	"log"
 	"time"
 )
@@ -18,7 +17,7 @@ func NewRepository(db *sql.DB) *Repository {
 }
 
 func (repo *Repository) CheckForConversation(interviewID int) bool {
-	fmt.Printf("Checkforconversations firing: %v\n", interviewID)
+	// ("Checkforconversations firing: %v\n", interviewID)
 	var id int
 	query := `SELECT interview_id
 	FROM conversations
@@ -29,7 +28,7 @@ func (repo *Repository) CheckForConversation(interviewID int) bool {
 	if err == sql.ErrNoRows {
 		return false
 	} else if err != nil {
-		fmt.Printf("Error querying conversation: %v\n", err)
+		// ("Error querying conversation: %v\n", err)
 		return false
 	}
 
@@ -47,7 +46,7 @@ func (repo *Repository) GetConversation(interviewID int) (*Conversation, error) 
 	if err == sql.ErrNoRows {
 		return nil, err
 	} else if err != nil {
-		fmt.Printf("Error querying conversation: %v\n", err)
+		// ("Error querying conversation: %v\n", err)
 		return nil, err
 	}
 
@@ -70,7 +69,7 @@ func (repo *Repository) CreateConversation(conversation *Conversation) (int, err
 	if err == sql.ErrNoRows {
 		return 0, err
 	} else if err != nil {
-		fmt.Printf("Error querying conversation: %v\n", err)
+		// ("Error querying conversation: %v\n", err)
 		return 0, err
 	}
 
@@ -96,7 +95,7 @@ func (repo *Repository) CreateQuestion(conversation *Conversation, prompt string
 	if err == sql.ErrNoRows {
 		return 0, err
 	} else if err != nil {
-		fmt.Printf("Error querying conversation: %v\n", err)
+		// ("Error querying conversation: %v\n", err)
 		return 0, err
 	}
 
@@ -149,7 +148,7 @@ func (repo *Repository) CreateMessages(conversation *Conversation, messages []Me
 		if err == sql.ErrNoRows {
 			return err
 		} else if err != nil {
-			fmt.Printf("Error querying conversation: %v\n", err)
+			// ("Error querying conversation: %v\n", err)
 			return err
 		}
 	}
@@ -174,7 +173,7 @@ func (repo *Repository) AddMessage(questionID int, message *Message) (int, error
 	if err == sql.ErrNoRows {
 		return 0, err
 	} else if err != nil {
-		fmt.Printf("Error querying conversation: %v\n", err)
+		// ("Error querying conversation: %v\n", err)
 		return 0, err
 	}
 
@@ -194,7 +193,7 @@ func (repo *Repository) GetMessages(questionID int) ([]Message, error) {
 	if err == sql.ErrNoRows {
 		return nil, err
 	} else if err != nil {
-		fmt.Printf("Error querying conversation: %v\n", err)
+		// ("Error querying conversation: %v\n", err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -209,13 +208,13 @@ func (repo *Repository) GetMessages(questionID int) ([]Message, error) {
 			&message.CreatedAt,
 		)
 		if err != nil {
-			fmt.Printf("Error scanning message: %v\n", err)
+			// ("Error scanning message: %v\n", err)
 			return nil, err
 		}
 		messages = append(messages, message)
 	}
 
-	fmt.Printf("messages: %v\n", messages)
+	// ("messages: %v\n", messages)
 
 	return messages, nil
 }

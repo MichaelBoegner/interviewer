@@ -16,7 +16,7 @@ func NewRepository(db *sql.DB) *Repository {
 }
 
 func (repo *Repository) CreateInterview(interview *Interview) (int, error) {
-	fmt.Printf("CreateInterview firing: %v\n", interview)
+	// fmt.Printf("CreateInterview firing: %v\n", interview)
 
 	query := `
     INSERT INTO interviews (user_id, length, number_questions, difficulty, status, score, language, prompt, first_question)
@@ -40,13 +40,13 @@ func (repo *Repository) CreateInterview(interview *Interview) (int, error) {
 		return 0, err
 	}
 
-	fmt.Printf("query fired in repo and id is: %v\n", id)
+	// fmt.Printf("query fired in repo and id is: %v\n", id)
 	return id, nil
 }
 
 func (repo *Repository) GetInterview(interviewID int) (*Interview, error) {
 	query := `
-	SELECT user_id, length, number_questions, difficulty, status, score, language, first_question
+	SELECT user_id, length, number_questions, difficulty, status, score, language, prompt, first_question
 	FROM interviews
 	WHERE id = $1
 	`
@@ -61,6 +61,7 @@ func (repo *Repository) GetInterview(interviewID int) (*Interview, error) {
 		&interview.Status,
 		&interview.Score,
 		&interview.Language,
+		&interview.Prompt,
 		&interview.FirstQuestion)
 
 	if err != nil {

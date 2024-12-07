@@ -2,7 +2,6 @@ package user
 
 import (
 	"database/sql"
-	"fmt"
 	"log"
 )
 
@@ -64,6 +63,6 @@ func (repo *Repository) GetUser(user *User) (*User, error) {
 		log.Printf("Error querying database: %v\n", err)
 		return nil, err
 	}
-	fmt.Printf("user: %v\n", user)
+	// fmt.Printf("user: %v\n", user)
 	return user, nil
 }
