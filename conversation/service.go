@@ -57,14 +57,14 @@ func CreateConversation(
 	topic := conversation.Topics[1]
 	topic.ConversationID = conversationID
 
-	questionContextString, err := questionContextToString(questionContext)
-	if err != nil {
-		log.Printf("questionContextToString failed: %v", err)
-		return nil, err
-	}
+	// questionContextString, err := questionContextToString(questionContext)
+	// if err != nil {
+	// 	log.Printf("questionContextToString failed: %v", err)
+	// 	return nil, err
+	// }
 
 	messagePrompt := newMessage(1, questionID, System, prompt)
-	messageFirst := newMessage(2, questionID, Interviewer, questionContextString)
+	messageFirst := newMessage(2, questionID, Interviewer, firstQuestion)
 
 	messageUserResponse.ID = 3
 	messageUserResponse.QuestionID = questionID
@@ -97,7 +97,7 @@ func CreateConversation(
 
 	topic = conversation.Topics[1]
 
-	topic.Questions[1].Messages = append(topic.Questions[1].Messages, *newMessage(3, questionID, User, nextQuestion))
+	topic.Questions[1].Messages = append(topic.Questions[1].Messages, *newMessage(3, questionID, Interviewer, nextQuestion))
 
 	conversation.Topics[1] = topic
 

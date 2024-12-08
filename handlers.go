@@ -192,7 +192,7 @@ func (apiCfg *apiConfig) conversationsHandler(w http.ResponseWriter, r *http.Req
 				return
 			}
 
-			fmt.Printf("interviewReturned: %v\n", interviewReturned)
+			fmt.Printf("interviewReturned: %v\n", interviewReturned.FirstQuestion)
 
 			conversationFromDatabase, err = conversation.CreateConversation(
 				apiCfg.ConversationRepo,
