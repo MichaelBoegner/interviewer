@@ -148,7 +148,7 @@ func (repo *Repository) CreateMessages(conversation *Conversation, messages []Me
 		if err == sql.ErrNoRows {
 			return err
 		} else if err != nil {
-			// ("Error querying conversation: %v\n", err)
+			log.Printf("Error querying conversation: %v\n", err)
 			return err
 		}
 	}
@@ -173,7 +173,7 @@ func (repo *Repository) AddMessage(questionID int, message *Message) (int, error
 	if err == sql.ErrNoRows {
 		return 0, err
 	} else if err != nil {
-		// ("Error querying conversation: %v\n", err)
+		log.Printf("Error querying conversation: %v\n", err)
 		return 0, err
 	}
 
@@ -193,7 +193,7 @@ func (repo *Repository) GetMessages(questionID int) ([]Message, error) {
 	if err == sql.ErrNoRows {
 		return nil, err
 	} else if err != nil {
-		// ("Error querying conversation: %v\n", err)
+		log.Printf("Error querying conversation: %v\n", err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -208,13 +208,11 @@ func (repo *Repository) GetMessages(questionID int) ([]Message, error) {
 			&message.CreatedAt,
 		)
 		if err != nil {
-			// ("Error scanning message: %v\n", err)
+			log.Printf("Error scanning message: %v\n", err)
 			return nil, err
 		}
 		messages = append(messages, message)
 	}
-
-	// ("messages: %v\n", messages)
 
 	return messages, nil
 }

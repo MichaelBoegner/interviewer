@@ -30,20 +30,23 @@ func StartInterview(repo InterviewRepo, userId, length, numberQuestions int, dif
 		"further exploration or if it's time to move to the next topic.\n\n" +
 		"After each question:\n" +
 		"1. Wait for the candidate's response before evaluating their answer.\n" +
-		"2. If the candidate has not yet responded, return blank values for \"score\", \"feedback\", and \"next_question\".\n" +
-		"3. Evaluate the candidate's response and decide if additional questions about the " +
-		"current subtopic are necessary.\n" +
-		"4. Always include all fields in the JSON response, even if some fields have empty or null values.\n" +
-		"5. If unsure whether to transition to a new subtopic or topic, err on the side of continuing the current subtopic.\n" +
-		"6. Always include both flags (\"move_to_new_subtopic\" and \"move_to_new_topic\") in every response. Set them to `true` or `false` explicitly.\n" +
-		"7. Return your response in the following JSON format:\n\n" +
+		"2. Include the next question in the `next_question` field, even if transitioning to a new topic or subtopic.\n" +
+		"3. If the subtopic or topic is complete but the interview is not finished, always populate `next_question` with the first question for the next topic or subtopic.\n" +
+		"4. If the interview has ended, set `next_question` to \"finished\".\n" +
+		"5. Always include a summary of the candidate's performance in the `feedback` field when the interview ends.\n" +
+		"6. Always include all fields in the JSON response, even if some fields have empty or null values.\n\n" +
+		"Flags (`move_to_new_subtopic` and `move_to_new_topic`) must follow these rules:\n" +
+		"1. Set `move_to_new_topic` to `true` only for the **first question** in a new topic.\n" +
+		"2. Set `move_to_new_subtopic` to `true` only for the **first question** in a new subtopic.\n" +
+		"3. For all subsequent questions within the same topic or subtopic, set both flags to `false`.\n\n" +
+		"Your response must always follow this format:\n\n" +
 		"{\n" +
 		"    \"topic\": \"System Design\",\n" +
 		"    \"subtopic\": \"Scalability\",\n" +
 		"    \"question\": \"How would you design a system to handle a high number of concurrent users?\",\n" +
 		"    \"score\": null,\n" +
 		"    \"feedback\": \"\",\n" +
-		"    \"next_question\": \"\",\n" +
+		"    \"next_question\": \"What challenges might arise when scaling such a system?\",\n" +
 		"    \"move_to_new_subtopic\": false,\n" +
 		"    \"move_to_new_topic\": false\n" +
 		"}"
@@ -96,7 +99,7 @@ func getQuestionContext(prompt string) (*QuestionContext, error) {
 		"model":       "gpt-4",
 		"messages":    []map[string]string{{"role": "system", "content": prompt}},
 		"max_tokens":  150,
-		"temperature": 0.7,
+		"temperature": 0.2,
 	})
 	if err != nil {
 		return nil, err
