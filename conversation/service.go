@@ -12,7 +12,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/michaelboegner/interviewer/interview"
+	"github.com/michaelboegner/interviewer/models"
 )
 
 func CheckForConversation(repo ConversationRepo, interviewID int) bool {
@@ -24,7 +24,7 @@ func CreateConversation(
 	interviewID int,
 	prompt string,
 	firstQuestion string,
-	questionContext *interview.QuestionContext,
+	chatGPTResponse *models.ChatGPTResponse,
 	messageUserResponse *Message) (*Conversation, error) {
 
 	if messageUserResponse == nil {
@@ -290,12 +290,12 @@ func newMessage(messageID, questionID int, author Author, content string) *Messa
 	return message
 }
 
-func questionContextToString(questionContext *interview.QuestionContext) (string, error) {
-	questionContextString, err := json.Marshal(questionContext)
+func ChatGPTResponseToString(chatGPTResponse *models.ChatGPTResponse) (string, error) {
+	chatGPTResponseString, err := json.Marshal(chatGPTResponse)
 	if err != nil {
-		log.Printf("questionContextToString failed: %v", err)
+		log.Printf("chatGPTResponseToString failed: %v", err)
 		return "", err
 	}
 
-	return string(questionContextString), nil
+	return string(chatGPTResponseString), nil
 }

@@ -16,7 +16,7 @@ type Interview struct {
 	Score           int
 	Language        string
 	Prompt          string
-	QuestionContext *models.QuestionContext
+	ChatGPTResponse *models.ChatGPTResponse
 	FirstQuestion   string
 	CreatedAt       time.Time
 	UpdatedAt       time.Time

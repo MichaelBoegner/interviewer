@@ -199,7 +199,7 @@ func (apiCfg *apiConfig) conversationsHandler(w http.ResponseWriter, r *http.Req
 				InterviewID,
 				interviewReturned.Prompt,
 				interviewReturned.FirstQuestion,
-				interviewReturned.QuestionContext,
+				interviewReturned.ChatGPTResponse,
 				params.Message)
 			if err != nil {
 				log.Printf("CreateConversation error: %v", err)

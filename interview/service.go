@@ -9,6 +9,8 @@ import (
 	"net/http"
 	"os"
 	"time"
+
+	"github.com/michaelboegner/interviewer/models"
 )
 
 func StartInterview(repo InterviewRepo, userId, length, numberQuestions int, difficulty string) (*Interview, error) {
@@ -51,11 +53,11 @@ func StartInterview(repo InterviewRepo, userId, length, numberQuestions int, dif
 		"    \"move_to_new_topic\": false\n" +
 		"}"
 
-	questionContext, err := getQuestionContext(prompt)
+	chatGPTResponse, err := getChatGPTResponse(prompt)
 	if err != nil {
 		return nil, err
 	}
-	questionContext.CreatedAt = now
+	chatGPTResponse.CreatedAt = now
 
 	interview := &Interview{
 		UserId:          userId,
@@ -66,8 +68,8 @@ func StartInterview(repo InterviewRepo, userId, length, numberQuestions int, dif
 		Score:           100,
 		Language:        "Python",
 		Prompt:          prompt,
-		QuestionContext: questionContext,
-		FirstQuestion:   questionContext.Question,
+		ChatGPTResponse: chatGPTResponse,
+		FirstQuestion:   chatGPTResponse.Question,
 		CreatedAt:       now,
 		UpdatedAt:       now,
 	}
@@ -92,7 +94,7 @@ func GetInterview(repo InterviewRepo, interviewID int) (*Interview, error) {
 	return interview, nil
 }
 
-func getQuestionContext(prompt string) (*QuestionContext, error) {
+func getChatGPTResponse(prompt string) (*models.ChatGPTResponse, error) {
 	ctx := context.Background()
 
 	requestBody, err := json.Marshal(map[string]interface{}{
@@ -114,7 +116,7 @@ func getQuestionContext(prompt string) (*QuestionContext, error) {
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", apiKey))
 
-	responseChan := make(chan *QuestionContext)
+	responseChan := make(chan *models.ChatGPTResponse)
 	errorChan := make(chan error)
 
 	go func() {
@@ -149,20 +151,20 @@ func getQuestionContext(prompt string) (*QuestionContext, error) {
 			return
 		}
 
-		questionContextResponse := choices[0].(map[string]interface{})["message"].(map[string]interface{})["content"].(string)
+		chatGPTResponseResponse := choices[0].(map[string]interface{})["message"].(map[string]interface{})["content"].(string)
 
-		var questionContext QuestionContext
-		if err := json.Unmarshal([]byte(questionContextResponse), &questionContext); err != nil {
+		var chatGPTResponse models.ChatGPTResponse
+		if err := json.Unmarshal([]byte(chatGPTResponseResponse), &chatGPTResponse); err != nil {
 			errorChan <- fmt.Errorf("failed to parse question context: %v", err)
 			return
 		}
 
-		responseChan <- &questionContext
+		responseChan <- &chatGPTResponse
 	}()
 
 	select {
-	case questionContext := <-responseChan:
-		return questionContext, nil
+	case chatGPTResponse := <-responseChan:
+		return chatGPTResponse, nil
 	case err := <-errorChan:
 		return nil, err
 	}

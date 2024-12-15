@@ -2,7 +2,7 @@ package models
 
 import "time"
 
-type QuestionContext struct {
+type ChatGPTResponse struct {
 	Topic             string    `json:"topic"`
 	Subtopic          string    `json:"subtopic"`
 	Question          string    `json:"question"`
