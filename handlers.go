@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -192,14 +191,11 @@ func (apiCfg *apiConfig) conversationsHandler(w http.ResponseWriter, r *http.Req
 				return
 			}
 
-			fmt.Printf("interviewReturned: %v\n", interviewReturned.FirstQuestion)
-
 			conversationFromDatabase, err = conversation.CreateConversation(
 				apiCfg.ConversationRepo,
 				InterviewID,
 				interviewReturned.Prompt,
 				interviewReturned.FirstQuestion,
-				interviewReturned.ChatGPTResponse,
 				params.Message)
 			if err != nil {
 				log.Printf("CreateConversation error: %v", err)

@@ -24,7 +24,6 @@ func CreateConversation(
 	interviewID int,
 	prompt string,
 	firstQuestion string,
-	chatGPTResponse *models.ChatGPTResponse,
 	messageUserResponse *Message) (*Conversation, error) {
 
 	if messageUserResponse == nil {
@@ -83,15 +82,20 @@ func CreateConversation(
 
 	conversation.Topics[1] = topic
 
-	nextQuestion, err := getNextQuestion(conversation, 1, 1)
+	chatGPTResponse, err := getNextQuestion(conversation, 1, 1)
 	if err != nil {
 		log.Printf("getNextQuestion failing")
+		return nil, err
+	}
+	chatGPTResponseString, err := ChatGPTResponseToString(chatGPTResponse)
+	if err != nil {
+		log.Printf("Marshalled response err: %v", err)
 		return nil, err
 	}
 
 	topic = conversation.Topics[1]
 
-	topic.Questions[1].Messages = append(topic.Questions[1].Messages, *newMessage(3, questionID, Interviewer, nextQuestion))
+	topic.Questions[1].Messages = append(topic.Questions[1].Messages, *newMessage(3, questionID, Interviewer, chatGPTResponseString))
 
 	conversation.Topics[1] = topic
 
@@ -120,14 +124,35 @@ func AppendConversation(repo ConversationRepo, conversation *Conversation, messa
 	messages = append(messages, *messageUser)
 	conversation.Topics[topicID].Questions[questionNumber].Messages = messages
 
-	nextQuestion, err := getNextQuestion(conversation, topicID, questionNumber)
+	chatGPTResponse, err := getNextQuestion(conversation, topicID, questionNumber)
 	if err != nil {
 		log.Printf("getNextQuestion failing")
 		return nil, err
 	}
 
+	moveToNewTopic, _, isFinished := getConversationState(chatGPTResponse)
+
+	//Debug printing
+	data, _ := json.MarshalIndent(chatGPTResponse, "", "  ")
+	fmt.Println(string(data))
+	fmt.Printf("movetoNewTopic: %v\n", moveToNewTopic)
+
+	if isFinished {
+		return conversation, nil
+	}
+
+	if moveToNewTopic {
+		topicID += 1
+	}
+
+	chatGPTResponseString, err := ChatGPTResponseToString(chatGPTResponse)
+	if err != nil {
+		log.Printf("Marshalled response err: %v", err)
+		return nil, err
+	}
+
 	messageNextQuestionID := messageID + 1
-	messageNextQuestion := newMessage(messageNextQuestionID, questionID, Interviewer, nextQuestion)
+	messageNextQuestion := newMessage(messageNextQuestionID, questionID, Interviewer, chatGPTResponseString)
 
 	messages = conversation.Topics[topicID].Questions[questionNumber].Messages
 	messages = append(messages, *messageNextQuestion)
@@ -175,16 +200,13 @@ func GetConversation(repo ConversationRepo, interviewID, questionID int) (*Conve
 	return conversation, nil
 }
 
-func getNextQuestion(conversation *Conversation, topicID, questionNumber int) (string, error) {
+func getNextQuestion(conversation *Conversation, topicID, questionNumber int) (*models.ChatGPTResponse, error) {
 	ctx := context.Background()
 	apiKey := os.Getenv("OPENAI_API_KEY")
-	// 	"role":    "system",
-	// 	"content": prompt,
-	// }
 
 	conversationHistory, err := getConversationHistory(conversation, topicID, questionNumber)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	requestBody, err := json.Marshal(map[string]interface{}{
@@ -194,67 +216,58 @@ func getNextQuestion(conversation *Conversation, topicID, questionNumber int) (s
 		"temperature": 0.7,
 	})
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	req, err := http.NewRequestWithContext(ctx, "POST", "https://api.openai.com/v1/chat/completions", bytes.NewBuffer(requestBody))
 	if err != nil {
 		log.Printf("NewRequestWithContext failing")
-		return "", err
+		return nil, err
 	}
 
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", apiKey))
 
-	responseChan := make(chan string)
-	errorChan := make(chan error)
-
-	go func() {
-		client := &http.Client{}
-		resp, err := client.Do(req)
-		if err != nil {
-			errorChan <- err
-			return
-		}
-		defer resp.Body.Close()
-
-		if resp.StatusCode != http.StatusOK {
-			body, _ := io.ReadAll(resp.Body)
-			log.Printf("API call failed with status code: %d, response: %s", resp.StatusCode, body)
-			errorChan <- fmt.Errorf("API call failed with status code: %d", resp.StatusCode)
-			return
-		}
-
-		body, err := io.ReadAll(resp.Body)
-		if err != nil {
-			errorChan <- err
-			return
-		}
-
-		var result map[string]interface{}
-		if err := json.Unmarshal(body, &result); err != nil {
-			errorChan <- err
-			return
-		}
-
-		choices := result["choices"].([]interface{})
-		if len(choices) == 0 {
-			errorChan <- fmt.Errorf("no question generated")
-			return
-		}
-
-		firstQuestion := choices[0].(map[string]interface{})["message"].(map[string]interface{})["content"].(string)
-		responseChan <- firstQuestion
-	}()
-
-	select {
-	case firstQuestion := <-responseChan:
-		response := firstQuestion
-		return response, nil
-
-	case err := <-errorChan:
-		return "", err
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
 	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		log.Printf("API call failed with status code: %d, response: %s", resp.StatusCode, body)
+		return nil, fmt.Errorf("API call failed with status code: %d", resp.StatusCode)
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	var result map[string]interface{}
+	if err := json.Unmarshal(body, &result); err != nil {
+		log.Printf("Unmarshal result err: %v", err)
+		return nil, err
+	}
+
+	choices := result["choices"].([]interface{})
+	if len(choices) == 0 {
+		err := errors.New("no question generated")
+		return nil, err
+	}
+
+	chatGPTResponseResponse := choices[0].(map[string]interface{})["message"].(map[string]interface{})["content"].(string)
+
+	var chatGPTResponse models.ChatGPTResponse
+	if err := json.Unmarshal([]byte(chatGPTResponseResponse), &chatGPTResponse); err != nil {
+		log.Printf("Unmarshal chatGPTResponse err: %v", err)
+		return nil, err
+	}
+
+	return &chatGPTResponse, nil
+
 }
 
 func getConversationHistory(conversation *Conversation, topicID, questionNumber int) ([]map[string]string, error) {
@@ -298,4 +311,13 @@ func ChatGPTResponseToString(chatGPTResponse *models.ChatGPTResponse) (string, e
 	}
 
 	return string(chatGPTResponseString), nil
+}
+
+func getConversationState(chatGPTResponse *models.ChatGPTResponse) (bool, bool, bool) {
+	isFinished := false
+	if chatGPTResponse.NextQuestion == "finished" {
+		isFinished = true
+	}
+
+	return chatGPTResponse.MoveToNewTopic, chatGPTResponse.MoveToNewSubtopic, isFinished
 }

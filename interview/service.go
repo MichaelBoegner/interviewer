@@ -89,8 +89,6 @@ func GetInterview(repo InterviewRepo, interviewID int) (*Interview, error) {
 		return nil, err
 	}
 
-	fmt.Printf("interview in GetInterview: %v\n", interview)
-
 	return interview, nil
 }
 
