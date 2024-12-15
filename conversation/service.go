@@ -178,8 +178,6 @@ func GetConversation(repo ConversationRepo, interviewID, questionID int) (*Conve
 func getNextQuestion(conversation *Conversation, topicID, questionNumber int) (string, error) {
 	ctx := context.Background()
 	apiKey := os.Getenv("OPENAI_API_KEY")
-
-	// systemMessage := map[string]string{
 	// 	"role":    "system",
 	// 	"content": prompt,
 	// }
@@ -188,8 +186,6 @@ func getNextQuestion(conversation *Conversation, topicID, questionNumber int) (s
 	if err != nil {
 		return "", err
 	}
-
-	// completeConversation := append([]map[string]string{systemMessage}, conversationHistory...)
 
 	requestBody, err := json.Marshal(map[string]interface{}{
 		"model":       "gpt-4",
