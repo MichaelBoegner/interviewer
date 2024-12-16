@@ -183,14 +183,14 @@ func (apiCfg *apiConfig) conversationsHandler(w http.ResponseWriter, r *http.Req
 		var conversationFromDatabase *conversation.Conversation
 		exists := conversation.CheckForConversation(apiCfg.ConversationRepo, InterviewID)
 
-		if !exists {
-			interviewReturned, err := interview.GetInterview(apiCfg.InterviewRepo, InterviewID)
-			if err != nil {
-				log.Printf("GetInterview error: %v\n", err)
-				respondWithError(w, http.StatusBadRequest, "Invalid interview_id")
-				return
-			}
+		interviewReturned, err := interview.GetInterview(apiCfg.InterviewRepo, InterviewID)
+		if err != nil {
+			log.Printf("GetInterview error: %v\n", err)
+			respondWithError(w, http.StatusBadRequest, "Invalid interview_id")
+			return
+		}
 
+		if !exists {
 			conversationFromDatabase, err = conversation.CreateConversation(
 				apiCfg.ConversationRepo,
 				InterviewID,
@@ -210,7 +210,15 @@ func (apiCfg *apiConfig) conversationsHandler(w http.ResponseWriter, r *http.Req
 				return
 			}
 
-			conversationFromDatabase, err = conversation.AppendConversation(apiCfg.ConversationRepo, conversationFromDatabase, params.Message, params.ConversationID, params.TopicID, params.QuestionID, params.QuestionNumber)
+			conversationFromDatabase, err = conversation.AppendConversation(
+				apiCfg.ConversationRepo,
+				conversationFromDatabase,
+				params.Message,
+				params.ConversationID,
+				params.TopicID,
+				params.QuestionID,
+				params.QuestionNumber,
+				interviewReturned.Prompt)
 			if err != nil {
 				log.Printf("AppendConversation error: %v", err)
 				respondWithError(w, http.StatusBadRequest, "Invalid ID.")

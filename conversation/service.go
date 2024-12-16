@@ -25,13 +25,13 @@ func CreateConversation(
 	prompt string,
 	firstQuestion string,
 	messageUserResponse *Message) (*Conversation, error) {
+	now := time.Now()
 
 	if messageUserResponse == nil {
 		log.Printf("messageUserResponse is nil")
 		return nil, errors.New("messageUserResponse cannot be nil")
 	}
 
-	now := time.Now()
 	conversation := &Conversation{
 		InterviewID: interviewID,
 		Topics:      PredefinedTopics,
@@ -44,7 +44,6 @@ func CreateConversation(
 		log.Printf("CreateConversation failing")
 		return nil, err
 	}
-
 	conversation.ID = conversationID
 
 	questionID, err := repo.CreateQuestion(conversation, firstQuestion)
@@ -57,7 +56,7 @@ func CreateConversation(
 	topic.ConversationID = conversationID
 
 	messagePrompt := newMessage(1, questionID, System, prompt)
-	messageFirst := newMessage(2, questionID, Interviewer, firstQuestion)
+	messageFirstQuestion := newMessage(2, questionID, Interviewer, firstQuestion)
 
 	messageUserResponse.ID = 3
 	messageUserResponse.QuestionID = questionID
@@ -71,7 +70,7 @@ func CreateConversation(
 		Prompt:         firstQuestion,
 		Messages: []Message{
 			*messagePrompt,
-			*messageFirst,
+			*messageFirstQuestion,
 			*messageUserResponse,
 		},
 		CreatedAt: time.Now(),
@@ -87,6 +86,7 @@ func CreateConversation(
 		log.Printf("getNextQuestion failing")
 		return nil, err
 	}
+
 	chatGPTResponseString, err := ChatGPTResponseToString(chatGPTResponse)
 	if err != nil {
 		log.Printf("Marshalled response err: %v", err)
@@ -94,9 +94,7 @@ func CreateConversation(
 	}
 
 	topic = conversation.Topics[1]
-
 	topic.Questions[1].Messages = append(topic.Questions[1].Messages, *newMessage(3, questionID, Interviewer, chatGPTResponseString))
-
 	conversation.Topics[1] = topic
 
 	err = repo.CreateMessages(conversation, question.Messages)
@@ -108,7 +106,12 @@ func CreateConversation(
 	return conversation, nil
 }
 
-func AppendConversation(repo ConversationRepo, conversation *Conversation, message *Message, conversationID, topicID, questionID, questionNumber int) (*Conversation, error) {
+func AppendConversation(
+	repo ConversationRepo,
+	conversation *Conversation,
+	message *Message,
+	conversationID, topicID, questionID, questionNumber int,
+	prompt string) (*Conversation, error) {
 	if conversation.ID != conversationID {
 		return nil, errors.New("conversation_id doesn't match with current interview")
 	}
@@ -132,6 +135,12 @@ func AppendConversation(repo ConversationRepo, conversation *Conversation, messa
 
 	moveToNewTopic, _, isFinished := getConversationState(chatGPTResponse)
 
+	chatGPTResponseString, err := ChatGPTResponseToString(chatGPTResponse)
+	if err != nil {
+		log.Printf("Marshalled response err: %v", err)
+		return nil, err
+	}
+
 	//Debug printing
 	data, _ := json.MarshalIndent(chatGPTResponse, "", "  ")
 	fmt.Println(string(data))
@@ -142,13 +151,40 @@ func AppendConversation(repo ConversationRepo, conversation *Conversation, messa
 	}
 
 	if moveToNewTopic {
+		fmt.Printf("moveToNewTopic: %v\n", moveToNewTopic)
 		topicID += 1
-	}
 
-	chatGPTResponseString, err := ChatGPTResponseToString(chatGPTResponse)
-	if err != nil {
-		log.Printf("Marshalled response err: %v", err)
-		return nil, err
+		topic := conversation.Topics[topicID]
+		topic.ConversationID = conversationID
+
+		messagePrompt := newMessage(1, questionID, System, prompt)
+		messageFirstQuestion := newMessage(2, questionID, Interviewer, chatGPTResponseString)
+
+		question := &Question{
+			ID:             questionID,
+			QuestionNumber: 1,
+			ConversationID: conversationID,
+			TopicID:        topicID,
+			Prompt:         chatGPTResponse.NextQuestion,
+			Messages: []Message{
+				*messagePrompt,
+				*messageFirstQuestion,
+			},
+			CreatedAt: time.Now(),
+		}
+
+		topic.Questions = make(map[int]*Question)
+		topic.Questions[1] = question
+
+		conversation.Topics[topicID] = topic
+
+		_, err = repo.AddMessage(questionID, messagePrompt)
+		if err != nil {
+			return nil, err
+		}
+
+		return conversation, nil
+
 	}
 
 	messageNextQuestionID := messageID + 1
@@ -259,7 +295,7 @@ func getNextQuestion(conversation *Conversation, topicID, questionNumber int) (*
 	}
 
 	chatGPTResponseResponse := choices[0].(map[string]interface{})["message"].(map[string]interface{})["content"].(string)
-
+	fmt.Printf("chatGPTResponseResponse: %v", chatGPTResponseResponse)
 	var chatGPTResponse models.ChatGPTResponse
 	if err := json.Unmarshal([]byte(chatGPTResponseResponse), &chatGPTResponse); err != nil {
 		log.Printf("Unmarshal chatGPTResponse err: %v", err)
