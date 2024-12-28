@@ -33,10 +33,11 @@ func CreateConversation(
 	}
 
 	conversation := &Conversation{
-		InterviewID: interviewID,
-		Topics:      PredefinedTopics,
-		CreatedAt:   now,
-		UpdatedAt:   now,
+		InterviewID:  interviewID,
+		Topics:       PredefinedTopics,
+		CurrentTopic: 1,
+		CreatedAt:    now,
+		UpdatedAt:    now,
 	}
 
 	conversationID, err := repo.CreateConversation(conversation)
@@ -153,18 +154,24 @@ func AppendConversation(
 	if moveToNewTopic {
 		fmt.Printf("moveToNewTopic: %v\n", moveToNewTopic)
 		topicID += 1
+		nextTopicID, err := repo.UpdateConversationTopic(topicID, conversationID)
+		if err != nil {
+			log.Printf("UpdateConversationTopic error: %v", err)
+			return nil, err
+		}
 
-		topic := conversation.Topics[topicID]
+		topic := conversation.Topics[nextTopicID]
 		topic.ConversationID = conversationID
 
-		messagePrompt := newMessage(1, questionID, System, prompt)
+		promptCurrentTopic := prompt + "You are currently on **Topic:" + string(nextTopicID) + ": " + PredefinedTopics[nextTopicID].Name + "**. I will pass only the message history for this topic. Use this context to evaluate the candidate and generate the next question for this topic. Do not skip this topic or move to the next topic until explicitly instructed."
+		messagePrompt := newMessage(1, questionID, System, promptCurrentTopic)
 		messageFirstQuestion := newMessage(2, questionID, Interviewer, chatGPTResponseString)
 
 		question := &Question{
 			ID:             questionID,
 			QuestionNumber: 1,
 			ConversationID: conversationID,
-			TopicID:        topicID,
+			TopicID:        nextTopicID,
 			Prompt:         chatGPTResponse.NextQuestion,
 			Messages: []Message{
 				*messagePrompt,
@@ -176,7 +183,7 @@ func AppendConversation(
 		topic.Questions = make(map[int]*Question)
 		topic.Questions[1] = question
 
-		conversation.Topics[topicID] = topic
+		conversation.Topics[nextTopicID] = topic
 
 		_, err = repo.AddMessage(questionID, messagePrompt)
 		if err != nil {

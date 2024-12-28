@@ -23,6 +23,10 @@ func StartInterview(repo InterviewRepo, userId, length, numberQuestions int, dif
 		"4. **Databases and Data Management**\n" +
 		"5. **Behavioral**\n" +
 		"6. **General Backend Knowledge**\n\n" +
+		"The interview must follow the topics in the exact order specified above (1 to 6). " +
+		"Do not skip any topic, even if the candidate's performance suggests otherwise. " +
+		"Ensure the next question is always relevant to the current topic or subtopic until it is fully assessed, " +
+		"then proceed to the next topic in the order.\n\n" +
 		"Each main topic may contain multiple subtopics. For each subtopic:\n" +
 		"- Ask as many subtopic-specific questions as needed until the candidate has " +
 		"sufficiently or insufficiently proven their understanding of the subtopic.\n" +

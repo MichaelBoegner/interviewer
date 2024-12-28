@@ -215,7 +215,7 @@ func (apiCfg *apiConfig) conversationsHandler(w http.ResponseWriter, r *http.Req
 				conversationFromDatabase,
 				params.Message,
 				params.ConversationID,
-				params.TopicID,
+				conversationFromDatabase.CurrentTopic,
 				params.QuestionID,
 				params.QuestionNumber,
 				interviewReturned.Prompt)
