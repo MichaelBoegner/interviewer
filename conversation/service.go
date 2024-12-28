@@ -116,6 +116,7 @@ func AppendConversation(
 	if conversation.ID != conversationID {
 		return nil, errors.New("conversation_id doesn't match with current interview")
 	}
+	fmt.Printf("AppendConversation params, topicID: %d\n", topicID)
 
 	messageID, err := repo.AddMessage(questionID, message)
 	if err != nil {
@@ -145,7 +146,6 @@ func AppendConversation(
 	//Debug printing
 	data, _ := json.MarshalIndent(chatGPTResponse, "", "  ")
 	fmt.Println(string(data))
-	fmt.Printf("movetoNewTopic: %v\n", moveToNewTopic)
 
 	if isFinished {
 		return conversation, nil
@@ -189,6 +189,11 @@ func AppendConversation(
 		if err != nil {
 			return nil, err
 		}
+
+		fmt.Println("conversation at end of new topic build")
+		//Debug printing
+		data, _ := json.MarshalIndent(conversation, "", "  ")
+		fmt.Println(string(data))
 
 		return conversation, nil
 

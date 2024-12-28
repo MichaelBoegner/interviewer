@@ -62,7 +62,7 @@ func (repo *Repository) CreateConversation(conversation *Conversation) (int, err
 	var id int
 	query := `
 		INSERT INTO conversations (interview_id, current_topic, created_at, updated_at) 
-		VALUES ($1, $2, $3)
+		VALUES ($1, $2, $3, $4)
 		RETURNING id
 		`
 
@@ -228,8 +228,9 @@ func (repo *Repository) UpdateConversationTopic(topicID, conversationID int) (in
 
 	query := `
 			UPDATE conversations
-			SET topic_id = $1, updated_at = $2
-			WHERE id = $3;
+			SET current_topic = $1, updated_at = $2
+			WHERE id = $3
+			RETURNING id;
 			`
 
 	err := repo.DB.QueryRow(query,

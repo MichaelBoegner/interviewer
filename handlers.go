@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -209,7 +210,7 @@ func (apiCfg *apiConfig) conversationsHandler(w http.ResponseWriter, r *http.Req
 				respondWithError(w, http.StatusBadRequest, "Invalid ID.")
 				return
 			}
-
+			fmt.Printf("handlers AppendConversation CurrentTopic: %d\n", conversationFromDatabase.CurrentTopic)
 			conversationFromDatabase, err = conversation.AppendConversation(
 				apiCfg.ConversationRepo,
 				conversationFromDatabase,
@@ -224,6 +225,7 @@ func (apiCfg *apiConfig) conversationsHandler(w http.ResponseWriter, r *http.Req
 				respondWithError(w, http.StatusBadRequest, "Invalid ID.")
 				return
 			}
+
 		}
 
 		payload := &returnVals{
