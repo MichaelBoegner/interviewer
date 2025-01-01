@@ -17,7 +17,6 @@ func NewRepository(db *sql.DB) *Repository {
 }
 
 func (repo *Repository) CheckForConversation(interviewID int) bool {
-	// ("Checkforconversations firing: %v\n", interviewID)
 	var id int
 	query := `SELECT interview_id
 	FROM conversations
@@ -28,7 +27,7 @@ func (repo *Repository) CheckForConversation(interviewID int) bool {
 	if err == sql.ErrNoRows {
 		return false
 	} else if err != nil {
-		// ("Error querying conversation: %v\n", err)
+		log.Printf("Error querying conversation: %v\n", err)
 		return false
 	}
 
@@ -38,7 +37,7 @@ func (repo *Repository) CheckForConversation(interviewID int) bool {
 func (repo *Repository) GetConversation(interviewID int) (*Conversation, error) {
 	conversation := &Conversation{}
 
-	query := `SELECT id, interview_id, current_topic, created_at, updated_at
+	query := `SELECT id, interview_id, current_topic, current_question_number, created_at, updated_at
 	FROM conversations
 	WHERE interview_id = $1
 	`
@@ -46,6 +45,7 @@ func (repo *Repository) GetConversation(interviewID int) (*Conversation, error) 
 		&conversation.ID,
 		&conversation.InterviewID,
 		&conversation.CurrentTopic,
+		&conversation.CurrentQuestionNumber,
 		&conversation.CreatedAt,
 		&conversation.UpdatedAt)
 	if err == sql.ErrNoRows {
@@ -61,21 +61,22 @@ func (repo *Repository) GetConversation(interviewID int) (*Conversation, error) 
 func (repo *Repository) CreateConversation(conversation *Conversation) (int, error) {
 	var id int
 	query := `
-		INSERT INTO conversations (interview_id, current_topic, created_at, updated_at) 
-		VALUES ($1, $2, $3, $4)
+		INSERT INTO conversations (interview_id, current_topic, current_question_number, created_at, updated_at) 
+		VALUES ($1, $2, $3, $4, $5)
 		RETURNING id
 		`
 
 	err := repo.DB.QueryRow(query,
 		conversation.InterviewID,
 		conversation.CurrentTopic,
+		conversation.CurrentQuestionNumber,
 		conversation.CreatedAt,
 		conversation.UpdatedAt,
 	).Scan(&id)
 	if err == sql.ErrNoRows {
 		return 0, err
 	} else if err != nil {
-		// ("Error querying conversation: %v\n", err)
+		log.Printf("Error querying conversation: %v\n", err)
 		return 0, err
 	}
 
@@ -88,7 +89,7 @@ func (repo *Repository) CreateQuestion(conversation *Conversation, prompt string
 	query := `
 			INSERT INTO questions (conversation_id, topic_id, question_number, prompt, created_at) 
 			VALUES ($1, $2, $3, $4, $5)
-			RETURNING id
+			RETURNING question_number
 			`
 
 	err := repo.DB.QueryRow(query,
@@ -101,51 +102,64 @@ func (repo *Repository) CreateQuestion(conversation *Conversation, prompt string
 	if err == sql.ErrNoRows {
 		return 0, err
 	} else if err != nil {
-		// ("Error querying conversation: %v\n", err)
+		log.Printf("Error querying conversation: %v\n", err)
 		return 0, err
 	}
 
 	return id, nil
 }
 
-func (repo *Repository) GetQuestion(conversation *Conversation) (*Question, error) {
-	question := &Question{}
+func (repo *Repository) GetQuestions(conversation *Conversation) ([]*Question, error) {
+	var questions []*Question
 
 	query := `
-			SELECT id, conversation_id, topic_id, question_number, prompt, created_at
+			SELECT conversation_id, topic_id, question_number, prompt, created_at
 			FROM questions 
 			WHERE conversation_id = ($1)
 			`
 
-	err := repo.DB.QueryRow(query, conversation.ID).Scan(
-		&question.ID,
-		&question.ConversationID,
-		&question.TopicID,
-		&question.QuestionNumber,
-		&question.Prompt,
-		&question.CreatedAt)
-	if err == sql.ErrNoRows {
-		return nil, err
-	} else if err != nil {
+	rows, err := repo.DB.Query(query, conversation.ID)
+	if err != nil {
 		log.Printf("Error querying conversation: %v\n", err)
 		return nil, err
 	}
+	defer rows.Close()
 
-	return question, nil
+	for rows.Next() {
+		question := &Question{}
+		err := rows.Scan(
+			&question.ConversationID,
+			&question.TopicID,
+			&question.QuestionNumber,
+			&question.Prompt,
+			&question.CreatedAt)
+		if err != nil {
+			log.Printf("Error scanning row: %v\n", err)
+			return nil, err
+		}
+		questions = append(questions, question)
+	}
+
+	if err = rows.Err(); err != nil {
+		log.Printf("Error after iterating rows: %v\n", err)
+		return nil, err
+	}
+
+	return questions, nil
 }
 
 func (repo *Repository) CreateMessages(conversation *Conversation, messages []Message) error {
 	var id int
 	for _, message := range messages {
 		query := `
-			INSERT INTO messages (conversation_id, question_id, author, content, created_at) 
+			INSERT INTO messages (conversation_id, question_number, author, content, created_at) 
 			VALUES ($1, $2, $3, $4, $5) 
 			RETURNING id
 			`
 
 		err := repo.DB.QueryRow(query,
 			conversation.ID,
-			message.QuestionID,
+			message.QuestionNumber,
 			message.Author,
 			message.Content,
 			time.Now(),
@@ -162,20 +176,20 @@ func (repo *Repository) CreateMessages(conversation *Conversation, messages []Me
 	return nil
 }
 
-func (repo *Repository) AddMessage(questionID int, message *Message) (int, error) {
-	var id int
+func (repo *Repository) AddMessage(conversationID, questionNumber int, message *Message) (int, error) {
 	query := `
-			INSERT INTO messages (question_id, author, content, created_at) 
+			INSERT INTO messages (conversation_id, question_number, author, content, created_at) 
 			VALUES ($1, $2, $3, $4) 
-			RETURNING id
+			RETURNING question_number
 			`
 
 	err := repo.DB.QueryRow(query,
-		questionID,
+		conversationID,
+		questionNumber,
 		message.Author,
 		message.Content,
 		time.Now(),
-	).Scan(&id)
+	).Scan(&questionNumber)
 	if err == sql.ErrNoRows {
 		return 0, err
 	} else if err != nil {
@@ -183,19 +197,19 @@ func (repo *Repository) AddMessage(questionID int, message *Message) (int, error
 		return 0, err
 	}
 
-	return id, nil
+	return questionNumber, nil
 }
 
-func (repo *Repository) GetMessages(questionID int) ([]Message, error) {
+func (repo *Repository) GetMessages(conversationID, questionNumber int) ([]Message, error) {
 	messages := make([]Message, 0)
 
 	query := `
-			SELECT id, question_id, author, content, created_at
+			SELECT conversation_id, question_number, author, content, created_at
 			FROM messages
-			WHERE question_id = $1
+			WHERE conversation_id = $1 and question_number = $2
 			`
 
-	rows, err := repo.DB.Query(query, questionID)
+	rows, err := repo.DB.Query(query, conversationID, questionNumber)
 	if err == sql.ErrNoRows {
 		return nil, err
 	} else if err != nil {
@@ -207,8 +221,7 @@ func (repo *Repository) GetMessages(questionID int) ([]Message, error) {
 	for rows.Next() {
 		var message Message
 		err := rows.Scan(
-			&message.ID,
-			&message.QuestionID,
+			&message.QuestionNumber,
 			&message.Author,
 			&message.Content,
 			&message.CreatedAt,
@@ -223,18 +236,19 @@ func (repo *Repository) GetMessages(questionID int) ([]Message, error) {
 	return messages, nil
 }
 
-func (repo *Repository) UpdateConversationTopic(topicID, conversationID int) (int, error) {
+func (repo *Repository) UpdateConversationCurrents(topicID, questionNumber, conversationID int) (int, error) {
 	var id int
 
 	query := `
 			UPDATE conversations
-			SET current_topic = $1, updated_at = $2
-			WHERE id = $3
+			SET current_topic = $1, current_question_number = $2, updated_at = $3
+			WHERE id = $4
 			RETURNING id;
 			`
 
 	err := repo.DB.QueryRow(query,
 		topicID,
+		questionNumber,
 		time.Now(),
 		conversationID,
 	).Scan(&id)

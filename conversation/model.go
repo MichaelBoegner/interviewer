@@ -29,12 +29,13 @@ var PredefinedTopics = map[int]Topic{
 }
 
 type Conversation struct {
-	ID           int           `json:"id"`
-	InterviewID  int           `json:"interview_id"`
-	Topics       map[int]Topic `json:"topics"`
-	CurrentTopic int           `json:"current_topic"`
-	CreatedAt    time.Time     `json:"created_at"`
-	UpdatedAt    time.Time     `json:"updated_at"`
+	ID                    int           `json:"id"`
+	InterviewID           int           `json:"interview_id"`
+	Topics                map[int]Topic `json:"topics"`
+	CurrentTopic          int           `json:"current_topic"`
+	CurrentQuestionNumber int           `json:"current_question_number"`
+	CreatedAt             time.Time     `json:"created_at"`
+	UpdatedAt             time.Time     `json:"updated_at"`
 }
 
 type Topic struct {
@@ -45,31 +46,30 @@ type Topic struct {
 }
 
 type Question struct {
-	ID             int       `json:"id"`
-	QuestionNumber int       `json:"question_number"`
 	ConversationID int       `json:"conversation_id"`
 	TopicID        int       `json:"topic_id"`
+	QuestionNumber int       `json:"question_number"`
 	Prompt         string    `json:"prompt"`
 	Messages       []Message `json:"messages"`
 	CreatedAt      time.Time `json:"created_at"`
 }
 
 type Message struct {
-	ID         int       `json:"id"`
-	QuestionID int       `json:"question_id"`
-	Author     Author    `json:"author"`
-	Content    string    `json:"content"`
-	CreatedAt  time.Time `json:"created_at"`
+	ConversationID int       `json:"conversation_id"`
+	QuestionNumber int       `json:"question_id"`
+	Author         Author    `json:"author"`
+	Content        string    `json:"content"`
+	CreatedAt      time.Time `json:"created_at"`
 }
 
 type ConversationRepo interface {
 	CheckForConversation(interviewID int) bool
 	GetConversation(interviewID int) (*Conversation, error)
 	CreateConversation(conversation *Conversation) (int, error)
-	UpdateConversationTopic(topicID, conversationID int) (int, error)
+	UpdateConversationCurrents(topicID, qeustionNumber, conversationID int) (int, error)
 	CreateQuestion(conversation *Conversation, prompt string) (int, error)
-	GetQuestion(Conversation *Conversation) (*Question, error)
+	GetQuestions(Conversation *Conversation) ([]*Question, error)
 	CreateMessages(conversation *Conversation, messages []Message) error
-	AddMessage(questionID int, message *Message) (int, error)
-	GetMessages(questionID int) ([]Message, error)
+	AddMessage(conversationID, questionNumber int, message *Message) (int, error)
+	GetMessages(conversationID, questionNumber int) ([]Message, error)
 }
