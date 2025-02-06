@@ -113,6 +113,7 @@ func AppendConversation(
 	message *Message,
 	conversationID, topicID, questionID, questionNumber int,
 	prompt string) (*Conversation, error) {
+
 	if conversation.ID != conversationID {
 		return nil, errors.New("conversation_id doesn't match with current interview")
 	}
@@ -228,7 +229,7 @@ func GetConversation(repo ConversationRepo, interviewID int) (*Conversation, err
 		topic.Questions = make(map[int]*Question)
 
 		for questionNumber := 1; questionNumber <= conversation.CurrentQuestionNumber; questionNumber++ {
-			topic.Questions[questionNumber] = questionsReturned[questionNumber]
+			topic.Questions[questionNumber] = questionsReturned[questionNumber-1]
 
 			question := topic.Questions[questionNumber]
 			question.Messages = make([]Message, 0)

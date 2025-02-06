@@ -9,6 +9,7 @@ import (
 )
 
 func StartDB() (*sql.DB, error) {
+	fmt.Printf("StartDB firing\n")
 	connStr := "user=michaelboegner dbname=interviewerio sslmode=disable"
 
 	// Open the connection

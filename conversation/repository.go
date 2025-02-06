@@ -179,7 +179,7 @@ func (repo *Repository) CreateMessages(conversation *Conversation, messages []Me
 func (repo *Repository) AddMessage(conversationID, questionNumber int, message *Message) (int, error) {
 	query := `
 			INSERT INTO messages (conversation_id, question_number, author, content, created_at) 
-			VALUES ($1, $2, $3, $4) 
+			VALUES ($1, $2, $3, $4, $5) 
 			RETURNING question_number
 			`
 
@@ -221,6 +221,7 @@ func (repo *Repository) GetMessages(conversationID, questionNumber int) ([]Messa
 	for rows.Next() {
 		var message Message
 		err := rows.Scan(
+			&message.ConversationID,
 			&message.QuestionNumber,
 			&message.Author,
 			&message.Content,
