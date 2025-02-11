@@ -321,11 +321,11 @@ func getNextQuestion(conversation *Conversation, topicID, questionNumber int) (*
 		return nil, err
 	}
 
-	chatGPTResponseResponse := choices[0].(map[string]interface{})["message"].(map[string]interface{})["content"].(string)
-	fmt.Printf("\n\nchatGPTResponseResponse: %v\n\n", chatGPTResponseResponse)
+	chatGPTResponseRaw := choices[0].(map[string]interface{})["message"].(map[string]interface{})["content"].(string)
+	fmt.Printf("\n\nchatGPTResponseRaw: %v\n\n", chatGPTResponseRaw)
 
 	var chatGPTResponse models.ChatGPTResponse
-	if err := json.Unmarshal([]byte(chatGPTResponseResponse), &chatGPTResponse); err != nil {
+	if err := json.Unmarshal([]byte(chatGPTResponseRaw), &chatGPTResponse); err != nil {
 		log.Printf("Unmarshal chatGPTResponse err: %v", err)
 		return nil, err
 	}
