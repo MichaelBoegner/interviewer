@@ -187,10 +187,10 @@ func AppendConversation(
 			return nil, err
 		}
 
-		fmt.Println("conversation at end of new topic build")
-		//Debug printing
-		data, _ := json.MarshalIndent(conversation, "", "  ")
-		fmt.Println(string(data))
+		// fmt.Println("conversation at end of new topic build")
+		// //Debug printing
+		// data, _ := json.MarshalIndent(conversation, "", "  ")
+		// fmt.Println(string(data))
 
 		return conversation, nil
 
@@ -217,18 +217,27 @@ func GetConversation(repo ConversationRepo, interviewID int) (*Conversation, err
 	}
 
 	conversation.Topics = PredefinedTopics
+	fmt.Printf("\nconversation.Topics set: \n%v\n", conversation.Topics)
 
 	questionsReturned, err := repo.GetQuestions(conversation)
 	if err != nil {
 		return nil, err
 	}
 
+	//PRINT QUESTIONS RETURNED
+	for i, q := range questionsReturned {
+		fmt.Printf("\nquestionsReturned[%d]: %+v\n", i, *q)
+	}
+
+	fmt.Printf("\nconversation.CurrentTopic: \n%v\n", conversation.CurrentTopic)
 	for topicID := 1; topicID <= conversation.CurrentTopic; topicID++ {
+		fmt.Printf("\nfor Topic ID firing: \n%v\n", topicID)
 		topic := conversation.Topics[topicID]
 		topic.ConversationID = conversation.ID
 		topic.Questions = make(map[int]*Question)
 
 		for questionNumber := 1; questionNumber <= conversation.CurrentQuestionNumber; questionNumber++ {
+			fmt.Printf("\nfor questionNumber firing: \n%v\n", questionNumber)
 			topic.Questions[questionNumber] = questionsReturned[questionNumber-1]
 
 			question := topic.Questions[questionNumber]
