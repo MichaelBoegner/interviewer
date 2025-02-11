@@ -164,7 +164,7 @@ func AppendConversation(
 		promptCurrentTopic := prompt + "You are currently on **Topic:" + string(nextTopicID) + ": " + PredefinedTopics[nextTopicID].Name + "**. I will pass only the message history for this topic. Use this context to evaluate the candidate and generate the next question for this topic. Do not skip this topic or move to the next topic until explicitly instructed."
 		messagePrompt := newMessage(conversationID, nextQuestionNumber, System, promptCurrentTopic)
 		messageFirstQuestion := newMessage(conversationID, nextQuestionNumber, Interviewer, chatGPTResponseString)
-
+		//YOU ARE NOT ADDING MESSAGEFIRSTQUESTION TO THE MESSAGES TABLE WHICH MEANS CHATGPT IS ONLY GETTING THE PROMPTCURRENTTOPIC MESSAGE WITH NO CONTEXT. NEED TO ADD TRANSACTIONS AND BATCHING TO DB.
 		question := &Question{
 			ConversationID: conversationID,
 			TopicID:        nextTopicID,
