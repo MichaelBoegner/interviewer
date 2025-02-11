@@ -132,7 +132,7 @@ func AppendConversation(
 
 	chatGPTResponse, err := getNextQuestion(conversation, topicID, questionNumber)
 	if err != nil {
-		log.Printf("getNextQuestion failing")
+		log.Printf("getNextQuestion failing: %v", err)
 		return nil, err
 	}
 
@@ -182,6 +182,11 @@ func AppendConversation(
 
 		conversation.Topics[nextTopicID] = topic
 
+		_, err = repo.AddQuestion(conversation, questionNumber, question.Prompt)
+		if err != nil {
+			log.Printf("AddQuestion in AppendConversation err: %v", err)
+		}
+
 		_, err = repo.AddMessage(conversationID, questionNumber, messagePrompt)
 		if err != nil {
 			return nil, err
@@ -226,7 +231,7 @@ func GetConversation(repo ConversationRepo, interviewID int) (*Conversation, err
 
 	//PRINT QUESTIONS RETURNED
 	for i, q := range questionsReturned {
-		fmt.Printf("\nquestionsReturned[%d]: %+v\n", i, *q)
+		fmt.Printf("\nquestionsReturned[%d]: \n%+v\n", i, *q)
 	}
 
 	fmt.Printf("\nconversation.CurrentTopic: \n%v\n", conversation.CurrentTopic)
@@ -317,7 +322,8 @@ func getNextQuestion(conversation *Conversation, topicID, questionNumber int) (*
 	}
 
 	chatGPTResponseResponse := choices[0].(map[string]interface{})["message"].(map[string]interface{})["content"].(string)
-	// fmt.Printf("chatGPTResponseResponse: %v", chatGPTResponseResponse)
+	fmt.Printf("\n\nchatGPTResponseResponse: %v\n\n", chatGPTResponseResponse)
+
 	var chatGPTResponse models.ChatGPTResponse
 	if err := json.Unmarshal([]byte(chatGPTResponseResponse), &chatGPTResponse); err != nil {
 		log.Printf("Unmarshal chatGPTResponse err: %v", err)

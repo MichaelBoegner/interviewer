@@ -109,6 +109,32 @@ func (repo *Repository) CreateQuestion(conversation *Conversation, prompt string
 	return id, nil
 }
 
+func (repo *Repository) AddQuestion(conversation *Conversation, questionNumber int, prompt string) (int, error) {
+	var id int
+
+	query := `
+			INSERT INTO questions (conversation_id, topic_id, question_number, prompt, created_at) 
+			VALUES ($1, $2, $3, $4, $5)
+			RETURNING question_number
+			`
+
+	err := repo.DB.QueryRow(query,
+		conversation.ID,
+		conversation.CurrentTopic,
+		questionNumber,
+		prompt,
+		time.Now(),
+	).Scan(&id)
+	if err == sql.ErrNoRows {
+		return 0, err
+	} else if err != nil {
+		log.Printf("Error querying conversation: %v\n", err)
+		return 0, err
+	}
+
+	return id, nil
+}
+
 func (repo *Repository) GetQuestions(conversation *Conversation) ([]*Question, error) {
 	var questions []*Question
 
