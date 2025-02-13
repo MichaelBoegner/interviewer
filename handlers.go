@@ -155,6 +155,8 @@ func (apiCfg *apiConfig) interviewsHandler(w http.ResponseWriter, r *http.Reques
 			return
 		}
 
+		fmt.Printf("\n**************INTERVIEW STARTED*******\n", interviewStarted)
+
 		payload := returnVals{
 			InterviewID:   interviewStarted.Id,
 			FirstQuestion: interviewStarted.FirstQuestion,

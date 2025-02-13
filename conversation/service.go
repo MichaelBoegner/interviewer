@@ -132,7 +132,7 @@ func AppendConversation(
 
 	chatGPTResponse, err := getNextQuestion(conversation, topicID, questionNumber)
 	if err != nil {
-		log.Printf("getNextQuestion failing: %v", err)
+		log.Printf("getNextQuestion err: %v", err)
 		return nil, err
 	}
 
@@ -188,6 +188,11 @@ func AppendConversation(
 		}
 
 		_, err = repo.AddMessage(conversationID, questionNumber, messagePrompt)
+		if err != nil {
+			return nil, err
+		}
+
+		_, err = repo.AddMessage(conversationID, questionNumber, messageFirstQuestion)
 		if err != nil {
 			return nil, err
 		}

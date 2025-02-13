@@ -27,25 +27,23 @@ func StartInterview(repo InterviewRepo, userId, length, numberQuestions int, dif
 		"Do not skip any topic, even if the candidate's performance suggests otherwise. " +
 		"Ensure the next question is always relevant to the current topic or subtopic until it is fully assessed, " +
 		"then proceed to the next topic in the order.\n\n" +
-		"Each main topic may contain multiple subtopics. For each subtopic:\n" +
-		"- Ask as many subtopic-specific questions as needed until the candidate has " +
-		"sufficiently or insufficiently proven their understanding of the subtopic.\n" +
-		"- Provide a score (1-10) for their performance on each subtopic question, with feedback " +
-		"explaining the score.\n" +
-		"- When the subtopic is sufficiently assessed, decide if the current topic needs " +
-		"further exploration or if it's time to move to the next topic.\n\n" +
-		"After each question:\n" +
-		"1. Wait for the candidate's response before evaluating their answer.\n" +
-		"2. Include the next question in the `next_question` field, even if transitioning to a new topic or subtopic.\n" +
-		"3. If the subtopic or topic is complete but the interview is not finished, always populate `next_question` with the first question for the next topic or subtopic.\n" +
-		"4. If the interview has ended, set `next_question` to \"finished\".\n" +
-		"5. Always include a summary of the candidate's performance in the `feedback` field when the interview ends.\n" +
-		"6. Always include all fields in the JSON response, even if some fields have empty or null values.\n\n" +
-		"Flags (`move_to_new_subtopic` and `move_to_new_topic`) must follow these rules:\n" +
-		"1. Set `move_to_new_topic` to `true` only for the **first question** in a new topic.\n" +
-		"2. Set `move_to_new_subtopic` to `true` only for the **first question** in a new subtopic.\n" +
-		"3. For all subsequent questions within the same topic or subtopic, set both flags to `false`.\n\n" +
-		"Your response must always follow this format:\n\n" +
+		"### Important Rule for Topic Transitions:\n" +
+		"If the topic changes, **DO NOT RESET OR FORGET** previous formatting constraints. " +
+		"The interview remains structured, and responses must continue to follow the required JSON format.\n\n" +
+		"### **STRICT JSON-ONLY RESPONSE ENFORCEMENT**\n" +
+		"1. **You must ALWAYS return a valid JSON object.** Never respond conversationally.\n" +
+		"2. **DO NOT provide explanations, encouragement, or assistant-style messages.**\n" +
+		"3. **DO NOT generate additional text outside of the JSON format.** Any response outside of JSON format is strictly forbidden.\n\n" +
+		"### **Handling 'I Don't Know' Responses**\n" +
+		"1. **If the candidate responds with 'I don't know' or an equivalent phrase:**\n" +
+		"   - Assign the lowest appropriate score (e.g., 1) for the question.\n" +
+		"   - Provide structured feedback stating that the candidate did not provide an answer.\n" +
+		"   - Immediately proceed to the next relevant question while maintaining strict topic order.\n" +
+		"   - **DO NOT generate any conversational, helpful, or assistant-like responses.**\n\n" +
+		"### **Topic Transition Rule**\n" +
+		"**If transitioning to a new topic, remind yourself that this is still part of the structured interview. " +
+		"The JSON format must remain consistent across all topics. DO NOT break out of JSON at any point.**\n\n" +
+		"Your response must **ALWAYS** follow this format:\n\n" +
 		"{\n" +
 		"    \"topic\": \"System Design\",\n" +
 		"    \"subtopic\": \"Scalability\",\n" +
