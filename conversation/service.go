@@ -117,7 +117,6 @@ func AppendConversation(
 	if conversation.ID != conversationID {
 		return nil, errors.New("conversation_id doesn't match with current interview")
 	}
-	fmt.Printf("AppendConversation params, topicID and message: \n%d\n%v", topicID, message)
 
 	_, err := repo.AddMessage(conversationID, questionNumber, message)
 	if err != nil {
@@ -161,17 +160,14 @@ func AppendConversation(
 		topic := conversation.Topics[nextTopicID]
 		topic.ConversationID = conversationID
 
-		promptCurrentTopic := prompt + "You are currently on **Topic:" + string(nextTopicID) + ": " + PredefinedTopics[nextTopicID].Name + "**. I will pass only the message history for this topic. Use this context to evaluate the candidate and generate the next question for this topic. Move to the next topic as needed based on candidate's response."
-		messagePrompt := newMessage(conversationID, nextQuestionNumber, System, promptCurrentTopic)
 		messageFirstQuestion := newMessage(conversationID, nextQuestionNumber, Interviewer, chatGPTResponseString)
-		//NEED TO ADD BATCHING FOR BELOW TWO MESSAGES TO BE INGESTED BY REPO
+
 		question := &Question{
 			ConversationID: conversationID,
 			TopicID:        nextTopicID,
 			QuestionNumber: nextQuestionNumber,
 			Prompt:         chatGPTResponse.NextQuestion,
 			Messages: []Message{
-				*messagePrompt,
 				*messageFirstQuestion,
 			},
 			CreatedAt: time.Now(),
@@ -187,23 +183,12 @@ func AppendConversation(
 			log.Printf("AddQuestion in AppendConversation err: %v", err)
 		}
 
-		_, err = repo.AddMessage(conversationID, questionNumber, messagePrompt)
-		if err != nil {
-			return nil, err
-		}
-
 		_, err = repo.AddMessage(conversationID, questionNumber, messageFirstQuestion)
 		if err != nil {
 			return nil, err
 		}
 
-		// fmt.Println("conversation at end of new topic build")
-		// //Debug printing
-		// data, _ := json.MarshalIndent(conversation, "", "  ")
-		// fmt.Println(string(data))
-
 		return conversation, nil
-
 	}
 
 	messageNextQuestion := newMessage(conversationID, questionNumber, Interviewer, chatGPTResponseString)
@@ -227,7 +212,6 @@ func GetConversation(repo ConversationRepo, interviewID int) (*Conversation, err
 	}
 
 	conversation.Topics = PredefinedTopics
-	fmt.Printf("\nconversation.Topics set: \n%v\n", conversation.Topics)
 
 	questionsReturned, err := repo.GetQuestions(conversation)
 	if err != nil {
@@ -239,15 +223,12 @@ func GetConversation(repo ConversationRepo, interviewID int) (*Conversation, err
 		fmt.Printf("\nquestionsReturned[%d]: \n%+v\n", i, *q)
 	}
 
-	fmt.Printf("\nconversation.CurrentTopic: \n%v\n", conversation.CurrentTopic)
 	for topicID := 1; topicID <= conversation.CurrentTopic; topicID++ {
-		fmt.Printf("\nfor Topic ID firing: \n%v\n", topicID)
 		topic := conversation.Topics[topicID]
 		topic.ConversationID = conversation.ID
 		topic.Questions = make(map[int]*Question)
 
 		for questionNumber := 1; questionNumber <= conversation.CurrentQuestionNumber; questionNumber++ {
-			fmt.Printf("\nfor questionNumber firing: \n%v\n", questionNumber)
 			topic.Questions[questionNumber] = questionsReturned[questionNumber-1]
 
 			question := topic.Questions[questionNumber]
@@ -342,19 +323,23 @@ func getNextQuestion(conversation *Conversation, topicID, questionNumber int) (*
 func getConversationHistory(conversation *Conversation, topicID, questionID int) ([]map[string]string, error) {
 	chatGPTConversationArray := make([]map[string]string, 0)
 
-	for _, message := range conversation.Topics[topicID].Questions[questionID].Messages {
-		conversationMap := make(map[string]string)
-		var role string
-		if message.Author == "interviewer" {
-			role = "assistant"
-		} else {
-			role = string(message.Author)
-		}
-		conversationMap["role"] = role
-		content := message.Content
-		conversationMap["content"] = content
+	for _, topic := range conversation.Topics {
+		for _, question := range topic.Questions {
+			for _, message := range question.Messages {
+				conversationMap := make(map[string]string)
+				var role string
+				if message.Author == "interviewer" {
+					role = "assistant"
+				} else {
+					role = string(message.Author)
+				}
+				conversationMap["role"] = role
+				content := message.Content
+				conversationMap["content"] = content
 
-		chatGPTConversationArray = append(chatGPTConversationArray, conversationMap)
+				chatGPTConversationArray = append(chatGPTConversationArray, conversationMap)
+			}
+		}
 	}
 
 	return chatGPTConversationArray, nil
