@@ -109,7 +109,7 @@ func (repo *Repository) CreateQuestion(conversation *Conversation, prompt string
 	return id, nil
 }
 
-func (repo *Repository) AddQuestion(conversation *Conversation, questionNumber int, prompt string) (int, error) {
+func (repo *Repository) AddQuestion(question *Question) (int, error) {
 	var id int
 
 	query := `
@@ -119,10 +119,10 @@ func (repo *Repository) AddQuestion(conversation *Conversation, questionNumber i
 			`
 
 	err := repo.DB.QueryRow(query,
-		conversation.ID,
-		conversation.CurrentTopic,
-		questionNumber,
-		prompt,
+		question.ConversationID,
+		question.TopicID,
+		question.QuestionNumber,
+		question.Prompt,
 		time.Now(),
 	).Scan(&id)
 	if err == sql.ErrNoRows {

@@ -82,7 +82,7 @@ func CreateConversation(
 
 	conversation.Topics[1] = topic
 
-	chatGPTResponse, err := getNextQuestion(conversation, 1, 1)
+	chatGPTResponse, err := getNextQuestion(conversation)
 	if err != nil {
 		log.Printf("getNextQuestion failing")
 		return nil, err
@@ -129,7 +129,7 @@ func AppendConversation(
 	messages = append(messages, *messageUser)
 	conversation.Topics[topicID].Questions[questionNumber].Messages = messages
 
-	chatGPTResponse, err := getNextQuestion(conversation, topicID, questionNumber)
+	chatGPTResponse, err := getNextQuestion(conversation)
 	if err != nil {
 		log.Printf("getNextQuestion err: %v", err)
 		return nil, err
@@ -150,7 +150,7 @@ func AppendConversation(
 	if moveToNewTopic {
 		fmt.Printf("\n\n\nmoveToNewTopic: %v\n\n\n", moveToNewTopic)
 		nextTopicID := topicID + 1
-		nextQuestionNumber := questionNumber + 1
+		nextQuestionNumber := 1
 		_, err := repo.UpdateConversationCurrents(nextTopicID, nextQuestionNumber, conversationID)
 		if err != nil {
 			log.Printf("UpdateConversationTopic error: %v", err)
@@ -178,7 +178,7 @@ func AppendConversation(
 
 		conversation.Topics[nextTopicID] = topic
 
-		_, err = repo.AddQuestion(conversation, questionNumber, question.Prompt)
+		_, err = repo.AddQuestion(question)
 		if err != nil {
 			log.Printf("AddQuestion in AppendConversation err: %v", err)
 		}
@@ -229,6 +229,11 @@ func GetConversation(repo ConversationRepo, interviewID int) (*Conversation, err
 		topic.Questions = make(map[int]*Question)
 
 		for questionNumber := 1; questionNumber <= conversation.CurrentQuestionNumber; questionNumber++ {
+			fmt.Printf("questionsReturned.TopicID changes: ", questionsReturned[questionNumber-1].TopicID)
+			if questionsReturned[questionNumber-1].TopicID != topicID {
+				break
+			}
+
 			topic.Questions[questionNumber] = questionsReturned[questionNumber-1]
 
 			question := topic.Questions[questionNumber]
@@ -249,11 +254,11 @@ func GetConversation(repo ConversationRepo, interviewID int) (*Conversation, err
 	return conversation, nil
 }
 
-func getNextQuestion(conversation *Conversation, topicID, questionNumber int) (*models.ChatGPTResponse, error) {
+func getNextQuestion(conversation *Conversation) (*models.ChatGPTResponse, error) {
 	ctx := context.Background()
 	apiKey := os.Getenv("OPENAI_API_KEY")
 
-	conversationHistory, err := getConversationHistory(conversation, topicID, questionNumber)
+	conversationHistory, err := getConversationHistory(conversation)
 	if err != nil {
 		return nil, err
 	}
@@ -320,7 +325,7 @@ func getNextQuestion(conversation *Conversation, topicID, questionNumber int) (*
 
 }
 
-func getConversationHistory(conversation *Conversation, topicID, questionID int) ([]map[string]string, error) {
+func getConversationHistory(conversation *Conversation) ([]map[string]string, error) {
 	chatGPTConversationArray := make([]map[string]string, 0)
 
 	for _, topic := range conversation.Topics {

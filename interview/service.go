@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"time"
@@ -57,6 +58,7 @@ func StartInterview(repo InterviewRepo, userId, length, numberQuestions int, dif
 
 	chatGPTResponse, err := getChatGPTResponse(prompt)
 	if err != nil {
+		log.Printf("getChatGPTResponse err: %v\n", err)
 		return nil, err
 	}
 	chatGPTResponse.CreatedAt = now
@@ -127,9 +129,9 @@ func getChatGPTResponse(prompt string) (*models.ChatGPTResponse, error) {
 			return
 		}
 		defer resp.Body.Close()
-
 		if resp.StatusCode != http.StatusOK {
-			errorChan <- fmt.Errorf("API call failed with status code: %d", resp.StatusCode)
+			body, _ := io.ReadAll(resp.Body)
+			errorChan <- fmt.Errorf("API call failed with status code: %d, response: %s", resp.StatusCode, string(body))
 			return
 		}
 
