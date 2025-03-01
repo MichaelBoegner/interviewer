@@ -148,7 +148,8 @@ func AppendConversation(
 	}
 
 	if moveToNewTopic {
-		fmt.Printf("\n\n\nmoveToNewTopic: %v\n\n\n", moveToNewTopic)
+		fmt.Printf("\n\n\nmoveToNewTopic: %v\n", moveToNewTopic)
+		fmt.Printf("conversation.CurrentTopic: %v\n\n\n", conversation.CurrentTopic)
 		nextTopicID := topicID + 1
 		nextQuestionNumber := 1
 		_, err := repo.UpdateConversationCurrents(nextTopicID, nextQuestionNumber, conversationID)
@@ -380,7 +381,7 @@ func getConversationState(chatGPTResponse *models.ChatGPTResponse, conversation 
 		isFinished = true
 	}
 
-	if chatGPTResponse.Topic == PredefinedTopics[conversation.CurrentTopic].Name {
+	if chatGPTResponse.Topic != PredefinedTopics[conversation.CurrentTopic].Name {
 		moveToNewTopic = true
 	}
 
