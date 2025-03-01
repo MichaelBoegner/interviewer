@@ -135,7 +135,7 @@ func AppendConversation(
 		return nil, err
 	}
 
-	moveToNewTopic, _, isFinished := getConversationState(chatGPTResponse)
+	moveToNewTopic, _, isFinished := getConversationState(chatGPTResponse, conversation)
 
 	chatGPTResponseString, err := ChatGPTResponseToString(chatGPTResponse)
 	if err != nil {
@@ -372,11 +372,17 @@ func ChatGPTResponseToString(chatGPTResponse *models.ChatGPTResponse) (string, e
 	return string(chatGPTResponseString), nil
 }
 
-func getConversationState(chatGPTResponse *models.ChatGPTResponse) (bool, bool, bool) {
+func getConversationState(chatGPTResponse *models.ChatGPTResponse, conversation *Conversation) (bool, bool, bool) {
 	isFinished := false
+	moveToNewTopic := false
+
 	if chatGPTResponse.NextQuestion == "finished" {
 		isFinished = true
 	}
 
-	return chatGPTResponse.MoveToNewTopic, chatGPTResponse.MoveToNewSubtopic, isFinished
+	if chatGPTResponse.Topic == PredefinedTopics[conversation.CurrentTopic].Name {
+		moveToNewTopic = true
+	}
+
+	return moveToNewTopic, chatGPTResponse.MoveToNewSubtopic, isFinished
 }
