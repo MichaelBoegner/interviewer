@@ -213,7 +213,8 @@ func (apiCfg *apiConfig) conversationsHandler(w http.ResponseWriter, r *http.Req
 				respondWithError(w, http.StatusBadRequest, "Invalid ID.")
 				return
 			}
-
+			// TODO: looks like the question number passed here is currently always 1 due to it never being incremented in the questions table.
+			// need to find why it's not being incremented and ensure that happens so that retrieval from questions includes true question number
 			conversationFromDatabase, err = conversation.AppendConversation(
 				apiCfg.ConversationRepo,
 				conversationFromDatabase,

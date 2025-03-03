@@ -327,7 +327,7 @@ func getNextQuestion(conversation *Conversation) (*models.ChatGPTResponse, error
 
 func getConversationHistory(conversation *Conversation) ([]map[string]string, error) {
 	chatGPTConversationArray := make([]map[string]string, 0)
-	fmt.Printf("\n\nCONVERSATIONHISTORY PARAM: %v\n\nENDCONVERSATION HISTORY PARAM\n\n", conversation)
+
 	for _, topic := range conversation.Topics {
 		for _, question := range topic.Questions {
 			for _, message := range question.Messages {
