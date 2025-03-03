@@ -56,6 +56,7 @@ type Question struct {
 
 type Message struct {
 	ConversationID int       `json:"conversation_id"`
+	TopicID        int       `json:"topic_id"`
 	QuestionNumber int       `json:"question_id"`
 	Author         Author    `json:"author"`
 	Content        string    `json:"content"`
