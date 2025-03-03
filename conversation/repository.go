@@ -178,13 +178,14 @@ func (repo *Repository) CreateMessages(conversation *Conversation, messages []Me
 	var id int
 	for _, message := range messages {
 		query := `
-			INSERT INTO messages (conversation_id, question_number, author, content, created_at) 
-			VALUES ($1, $2, $3, $4, $5) 
+			INSERT INTO messages (conversation_id, topic_id, question_number, author, content, created_at) 
+			VALUES ($1, $2, $3, $4, $5, $6) 
 			RETURNING id
 			`
 
 		err := repo.DB.QueryRow(query,
 			conversation.ID,
+			conversation.CurrentTopic,
 			message.QuestionNumber,
 			message.Author,
 			message.Content,
@@ -202,15 +203,16 @@ func (repo *Repository) CreateMessages(conversation *Conversation, messages []Me
 	return nil
 }
 
-func (repo *Repository) AddMessage(conversationID, questionNumber int, message *Message) (int, error) {
+func (repo *Repository) AddMessage(conversationID, topic_id, questionNumber int, message *Message) (int, error) {
 	query := `
-			INSERT INTO messages (conversation_id, question_number, author, content, created_at) 
-			VALUES ($1, $2, $3, $4, $5) 
+			INSERT INTO messages (conversation_id, topic_id, question_number, author, content, created_at) 
+			VALUES ($1, $2, $3, $4, $5, $6) 
 			RETURNING question_number
 			`
 
 	err := repo.DB.QueryRow(query,
 		conversationID,
+		topic_id,
 		questionNumber,
 		message.Author,
 		message.Content,
@@ -226,16 +228,20 @@ func (repo *Repository) AddMessage(conversationID, questionNumber int, message *
 	return questionNumber, nil
 }
 
-func (repo *Repository) GetMessages(conversationID, questionNumber int) ([]Message, error) {
+func (repo *Repository) GetMessages(conversationID, topic_id, questionNumber int) ([]Message, error) {
 	messages := make([]Message, 0)
 
 	query := `
-			SELECT conversation_id, question_number, author, content, created_at
+			SELECT conversation_id, topic_id, question_number, author, content, created_at
 			FROM messages
-			WHERE conversation_id = $1 and question_number = $2
+			WHERE conversation_id = $1 and topic_id = $2 and question_number = $3
 			`
 
-	rows, err := repo.DB.Query(query, conversationID, questionNumber)
+	rows, err := repo.DB.Query(
+		query,
+		conversationID,
+		topic_id,
+		questionNumber)
 	if err == sql.ErrNoRows {
 		return nil, err
 	} else if err != nil {
@@ -248,6 +254,7 @@ func (repo *Repository) GetMessages(conversationID, questionNumber int) ([]Messa
 		var message Message
 		err := rows.Scan(
 			&message.ConversationID,
+			&message.TopicID,
 			&message.QuestionNumber,
 			&message.Author,
 			&message.Content,

@@ -118,7 +118,7 @@ func AppendConversation(
 		return nil, errors.New("conversation_id doesn't match with current interview")
 	}
 
-	_, err := repo.AddMessage(conversationID, questionNumber, message)
+	_, err := repo.AddMessage(conversationID, conversation.CurrentTopic, questionNumber, message)
 	if err != nil {
 		return nil, err
 	}
@@ -184,7 +184,7 @@ func AppendConversation(
 			log.Printf("AddQuestion in AppendConversation err: %v", err)
 		}
 
-		_, err = repo.AddMessage(conversationID, questionNumber, messageFirstQuestion)
+		_, err = repo.AddMessage(conversationID, conversation.CurrentTopic, questionNumber, messageFirstQuestion)
 		if err != nil {
 			return nil, err
 		}
@@ -198,7 +198,7 @@ func AppendConversation(
 	messages = append(messages, *messageNextQuestion)
 	conversation.Topics[topicID].Questions[questionNumber].Messages = messages
 
-	_, err = repo.AddMessage(conversationID, questionNumber, messageNextQuestion)
+	_, err = repo.AddMessage(conversationID, conversation.CurrentTopic, questionNumber, messageNextQuestion)
 	if err != nil {
 		return nil, err
 	}
@@ -230,7 +230,6 @@ func GetConversation(repo ConversationRepo, interviewID int) (*Conversation, err
 		topic.Questions = make(map[int]*Question)
 
 		for questionNumber := 1; questionNumber <= conversation.CurrentQuestionNumber; questionNumber++ {
-			fmt.Printf("questionsReturned.TopicID changes: ", questionsReturned[questionNumber-1].TopicID)
 			if questionsReturned[questionNumber-1].TopicID != topicID {
 				break
 			}
@@ -240,7 +239,7 @@ func GetConversation(repo ConversationRepo, interviewID int) (*Conversation, err
 			question := topic.Questions[questionNumber]
 			question.Messages = make([]Message, 0)
 
-			messagesReturned, err := repo.GetMessages(conversation.ID, questionNumber)
+			messagesReturned, err := repo.GetMessages(conversation.ID, conversation.CurrentTopic, questionNumber)
 			if err != nil {
 				log.Printf("repo.GetMessages failed: %v\n", err)
 				return nil, err
@@ -347,7 +346,7 @@ func getConversationHistory(conversation *Conversation) ([]map[string]string, er
 			}
 		}
 	}
-
+	fmt.Printf("\n\nCONVERSATIONHISTORY BEING SENT: %v\n\nENDCONVERSATION HISTORY BEING SENT\n\n", chatGPTConversationArray)
 	return chatGPTConversationArray, nil
 }
 
