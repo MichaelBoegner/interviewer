@@ -155,10 +155,12 @@ func AppendConversation(
 		return nil, err
 	}
 
+	// if isFinished, then raise flags to close conversation and begin closing sequence
 	if isFinished {
 		return conversation, nil
 	}
 
+	// if moveToNewTopic, adjust topicID and questionNumber accordingly
 	if moveToNewTopic {
 		fmt.Printf("\n\n\nmoveToNewTopic: %v\n", moveToNewTopic)
 		fmt.Printf("conversation.CurrentTopic: %v\n\n\n", conversation.CurrentTopic)
@@ -285,6 +287,13 @@ func GetConversation(repo ConversationRepo, interviewID int) (*Conversation, err
 			conversation.Topics[topicID] = topic
 			conversation.Topics[topicID].Questions[question.QuestionNumber] = question
 		}
+	}
+
+	conversationJSON, err := json.MarshalIndent(conversation, "", "  ")
+	if err != nil {
+		log.Printf("Error marshalling conversation to JSON: %v", err)
+	} else {
+		fmt.Printf("\nConversation Struct Before Return:\n%s\n", conversationJSON)
 	}
 
 	return conversation, nil
