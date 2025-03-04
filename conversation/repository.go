@@ -34,35 +34,11 @@ func (repo *Repository) CheckForConversation(interviewID int) bool {
 	return true
 }
 
-func (repo *Repository) GetConversation(interviewID int) (*Conversation, error) {
-	conversation := &Conversation{}
-
-	query := `SELECT id, interview_id, current_topic, current_subtopic, created_at, updated_at
-	FROM conversations
-	WHERE interview_id = $1
-	`
-	err := repo.DB.QueryRow(query, interviewID).Scan(
-		&conversation.ID,
-		&conversation.InterviewID,
-		&conversation.CurrentTopic,
-		&conversation.CurrentSubtopic,
-		&conversation.CreatedAt,
-		&conversation.UpdatedAt)
-	if err == sql.ErrNoRows {
-		return nil, err
-	} else if err != nil {
-		log.Printf("Error querying conversation: %v\n", err)
-		return nil, err
-	}
-
-	return conversation, nil
-}
-
 func (repo *Repository) CreateConversation(conversation *Conversation) (int, error) {
 	var id int
 	query := `
-		INSERT INTO conversations (interview_id, current_topic, current_subtopic, created_at, updated_at) 
-		VALUES ($1, $2, $3, $4, $5)
+		INSERT INTO conversations (interview_id, current_topic, current_subtopic, current_question_number, created_at, updated_at) 
+		VALUES ($1, $2, $3, $4, $5, $6)
 		RETURNING id
 		`
 
@@ -70,6 +46,7 @@ func (repo *Repository) CreateConversation(conversation *Conversation) (int, err
 		conversation.InterviewID,
 		conversation.CurrentTopic,
 		conversation.CurrentSubtopic,
+		conversation.CurrentQuestionNumber,
 		conversation.CreatedAt,
 		conversation.UpdatedAt,
 	).Scan(&id)
@@ -83,19 +60,45 @@ func (repo *Repository) CreateConversation(conversation *Conversation) (int, err
 	return id, nil
 }
 
-func (repo *Repository) UpdateConversationCurrents(conversationID, topicID int, subtopic string) (int, error) {
+func (repo *Repository) GetConversation(interviewID int) (*Conversation, error) {
+	conversation := &Conversation{}
+
+	query := `SELECT id, interview_id, current_topic, current_subtopic, current_question_number, created_at, updated_at
+	FROM conversations
+	WHERE interview_id = $1
+	`
+	err := repo.DB.QueryRow(query, interviewID).Scan(
+		&conversation.ID,
+		&conversation.InterviewID,
+		&conversation.CurrentTopic,
+		&conversation.CurrentSubtopic,
+		&conversation.CurrentQuestionNumber,
+		&conversation.CreatedAt,
+		&conversation.UpdatedAt)
+	if err == sql.ErrNoRows {
+		return nil, err
+	} else if err != nil {
+		log.Printf("Error querying conversation: %v\n", err)
+		return nil, err
+	}
+
+	return conversation, nil
+}
+
+func (repo *Repository) UpdateConversationCurrents(conversationID, topicID, currentQuestionNumber int, subtopic string) (int, error) {
 	var id int
 
 	query := `
 			UPDATE conversations
-			SET current_topic = $1, current_subtopic = $2, updated_at = $3
-			WHERE id = $4
+			SET current_topic = $1, current_subtopic = $2, current_question_number = $3, updated_at = $4
+			WHERE id = $5
 			RETURNING id;
 			`
 
 	err := repo.DB.QueryRow(query,
 		topicID,
 		subtopic,
+		currentQuestionNumber,
 		time.Now(),
 		conversationID,
 	).Scan(&id)

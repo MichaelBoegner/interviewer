@@ -81,6 +81,7 @@ func StartInterview(repo InterviewRepo, userId, length, numberQuestions int, dif
 
 	id, err := repo.CreateInterview(interview)
 	if err != nil {
+		log.Printf("CreateInterview err: %v", err)
 		return nil, err
 	}
 	interview.Id = id

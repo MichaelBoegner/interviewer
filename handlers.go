@@ -197,6 +197,7 @@ func (apiCfg *apiConfig) conversationsHandler(w http.ResponseWriter, r *http.Req
 			conversationFromDatabase, err = conversation.CreateConversation(
 				apiCfg.ConversationRepo,
 				InterviewID,
+				1,
 				interviewReturned.Prompt,
 				interviewReturned.FirstQuestion,
 				interviewReturned.Subtopic,
