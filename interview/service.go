@@ -74,6 +74,7 @@ func StartInterview(repo InterviewRepo, userId, length, numberQuestions int, dif
 		Prompt:          prompt,
 		ChatGPTResponse: chatGPTResponse,
 		FirstQuestion:   chatGPTResponse.Question,
+		Subtopic:        chatGPTResponse.Subtopic,
 		CreatedAt:       now,
 		UpdatedAt:       now,
 	}

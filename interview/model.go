@@ -18,6 +18,7 @@ type Interview struct {
 	Prompt          string
 	ChatGPTResponse *models.ChatGPTResponse
 	FirstQuestion   string
+	Subtopic        string
 	CreatedAt       time.Time
 	UpdatedAt       time.Time
 }

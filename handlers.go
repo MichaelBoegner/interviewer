@@ -199,6 +199,7 @@ func (apiCfg *apiConfig) conversationsHandler(w http.ResponseWriter, r *http.Req
 				InterviewID,
 				interviewReturned.Prompt,
 				interviewReturned.FirstQuestion,
+				interviewReturned.Subtopic,
 				params.Message)
 			if err != nil {
 				log.Printf("CreateConversation error: %v", err)
@@ -213,8 +214,9 @@ func (apiCfg *apiConfig) conversationsHandler(w http.ResponseWriter, r *http.Req
 				respondWithError(w, http.StatusBadRequest, "Invalid ID.")
 				return
 			}
-			// TODO: looks like the question number passed here is currently always 1 due to it never being incremented in the questions table.
-			// need to find why it's not being incremented and ensure that happens so that retrieval from questions includes true question number
+			// TODO: Question numbering has been broken for some time. The question struct is really representative of the subtopic that ChatGPT returns.
+			// Therefore, I should maintain currSubtopic in the campaign struct and then check for that along with the topic to see if it's changed.
+			// If subtopic changes, increment the question number.
 			conversationFromDatabase, err = conversation.AppendConversation(
 				apiCfg.ConversationRepo,
 				conversationFromDatabase,

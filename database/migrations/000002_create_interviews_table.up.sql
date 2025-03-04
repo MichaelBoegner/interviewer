@@ -8,7 +8,8 @@ CREATE TABLE IF NOT EXISTS interviews (
     score INT,                             
     language VARCHAR(50) NOT NULL,
     prompt TEXT,         
-    first_question TEXT,                       
+    first_question TEXT, 
+    subtopic VARCHAR(255) NOT NULL,                       
     created_at TIMESTAMP, 
     updated_at TIMESTAMP  
 );
