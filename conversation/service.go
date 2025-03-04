@@ -226,8 +226,15 @@ func AppendConversation(
 	messages = append(messages, *messageNextQuestion)
 	conversation.Topics[topicID].Questions[questionNumber].Messages = messages
 
+	_, err = repo.AddQuestion(conversation.Topics[topicID].Questions[questionNumber])
+	if err != nil {
+		log.Printf("AddQuestion in AppendConversation err: %v", err)
+		return nil, err
+	}
+
 	_, err = repo.AddMessage(conversationID, conversation.CurrentTopic, questionNumber, messageNextQuestion)
 	if err != nil {
+		log.Printf("AddMessage in AppendConversation err: %v", err)
 		return nil, err
 	}
 
@@ -412,6 +419,7 @@ func checkConversationState(chatGPTResponse *models.ChatGPTResponse, conversatio
 
 	if chatGPTResponse.Subtopic != conversation.CurrentSubtopic {
 		incrementQuestion = true
+		conversation.CurrentQuestionNumber++
 		_, err := repo.UpdateConversationCurrents(conversation.ID, conversation.CurrentTopic, conversation.CurrentQuestionNumber, chatGPTResponse.Subtopic)
 		if err != nil {
 			log.Printf("UpdateConversationTopic error: %v", err)
