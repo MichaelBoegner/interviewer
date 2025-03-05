@@ -160,14 +160,14 @@ func AppendConversation(
 		return conversation, nil
 	}
 
-	// if moveToNewTopic, adjust topicID and questionNumber accordingly
+	// if moveToNewTopic, increment topicID and reset questionNumber
 	if moveToNewTopic {
 		fmt.Printf("\n\n\nmoveToNewTopic: %v\n", moveToNewTopic)
 		fmt.Printf("conversation.CurrentTopic: %v\n\n\n", conversation.CurrentTopic)
 
 		nextTopicID := topicID + 1
-		nextQuestionNumber := 1
-		_, err := repo.UpdateConversationCurrents(conversationID, nextTopicID, nextQuestionNumber, chatGPTResponse.Subtopic)
+		resetQuestionNumber := 1
+		_, err := repo.UpdateConversationCurrents(conversationID, nextTopicID, resetQuestionNumber, chatGPTResponse.Subtopic)
 		if err != nil {
 			log.Printf("UpdateConversationTopic error: %v", err)
 			return nil, err
@@ -176,12 +176,12 @@ func AppendConversation(
 		topic := conversation.Topics[nextTopicID]
 		topic.ConversationID = conversationID
 
-		messageFirstQuestion := newMessage(conversationID, nextQuestionNumber, Interviewer, chatGPTResponseString)
+		messageFirstQuestion := newMessage(conversationID, resetQuestionNumber, Interviewer, chatGPTResponseString)
 
 		question := &Question{
 			ConversationID: conversationID,
 			TopicID:        nextTopicID,
-			QuestionNumber: nextQuestionNumber,
+			QuestionNumber: resetQuestionNumber,
 			Prompt:         chatGPTResponse.NextQuestion,
 			Messages: []Message{
 				*messageFirstQuestion,
@@ -190,7 +190,7 @@ func AppendConversation(
 		}
 
 		topic.Questions = make(map[int]*Question)
-		topic.Questions[nextQuestionNumber] = question
+		topic.Questions[resetQuestionNumber] = question
 
 		conversation.Topics[nextTopicID] = topic
 
@@ -266,6 +266,8 @@ func GetConversation(repo ConversationRepo, interviewID int) (*Conversation, err
 
 	// Apply returned questions to respective Topic structs
 	for topicID := 1; topicID <= conversation.CurrentTopic; topicID++ {
+		fmt.Printf("topicID: %v\n", topicID)
+
 		topic := conversation.Topics[topicID]
 		topic.ConversationID = conversation.ID
 		topic.Questions = make(map[int]*Question)
@@ -277,23 +279,17 @@ func GetConversation(repo ConversationRepo, interviewID int) (*Conversation, err
 
 			topic.Questions[question.QuestionNumber] = question
 
-			messagesReturned, err := repo.GetMessages(conversation.ID, conversation.CurrentTopic, question.QuestionNumber)
+			messagesReturned, err := repo.GetMessages(conversation.ID, topicID, question.QuestionNumber)
 			if err != nil {
 				log.Printf("repo.GetMessages failed: %v\n", err)
 				return nil, err
 			}
 
 			question.Messages = append(question.Messages, messagesReturned...)
+
 			conversation.Topics[topicID] = topic
 			conversation.Topics[topicID].Questions[question.QuestionNumber] = question
 		}
-	}
-
-	conversationJSON, err := json.MarshalIndent(conversation, "", "  ")
-	if err != nil {
-		log.Printf("Error marshalling conversation to JSON: %v", err)
-	} else {
-		fmt.Printf("\nConversation Struct Before Return:\n%s\n", conversationJSON)
 	}
 
 	return conversation, nil
