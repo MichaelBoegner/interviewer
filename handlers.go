@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -154,8 +153,6 @@ func (apiCfg *apiConfig) interviewsHandler(w http.ResponseWriter, r *http.Reques
 			log.Printf("Interview failed to start: %v", err)
 			return
 		}
-
-		fmt.Printf("\n**************INTERVIEW STARTED*******\n", interviewStarted)
 
 		payload := returnVals{
 			InterviewID:   interviewStarted.Id,

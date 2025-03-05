@@ -52,8 +52,6 @@ func StartInterview(repo InterviewRepo, userId, length, numberQuestions int, dif
 		"    \"score\": null,\n" +
 		"    \"feedback\": \"\",\n" +
 		"    \"next_question\": \"What challenges might arise when scaling such a system?\",\n" +
-		"    \"move_to_new_subtopic\": false,\n" +
-		"    \"move_to_new_topic\": false\n" +
 		"}"
 
 	chatGPTResponse, err := getChatGPTResponse(prompt)
