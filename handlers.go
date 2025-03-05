@@ -214,9 +214,7 @@ func (apiCfg *apiConfig) conversationsHandler(w http.ResponseWriter, r *http.Req
 				respondWithError(w, http.StatusBadRequest, "Invalid ID.")
 				return
 			}
-			// TODO: Question numbering has been broken for some time. The question struct is really representative of the subtopic that ChatGPT returns.
-			// Therefore, I should maintain currSubtopic in the campaign struct and then check for that along with the topic to see if it's changed.
-			// If subtopic changes, increment the question number.
+
 			conversationFromDatabase, err = conversation.AppendConversation(
 				apiCfg.ConversationRepo,
 				conversationFromDatabase,
