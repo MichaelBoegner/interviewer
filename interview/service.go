@@ -17,7 +17,7 @@ import (
 func StartInterview(repo InterviewRepo, userId, length, numberQuestions int, difficulty string) (*Interview, error) {
 	now := time.Now()
 	prompt := "You are conducting a technical interview for a backend development position. " +
-		"The interview is divided into six main topics:\n\n" +
+		"There are **six topics**, which **must be followed in this order**:\n\n" +
 		"1. **Introduction**\n" +
 		"2. **Coding**\n" +
 		"3. **System Design**\n" +
@@ -28,9 +28,15 @@ func StartInterview(repo InterviewRepo, userId, length, numberQuestions int, dif
 		"Do not skip any topic, even if the candidate's performance suggests otherwise. " +
 		"Ensure the next question is always relevant to the current topic or subtopic until it is fully assessed, " +
 		"then proceed to the next topic in the order.\n\n" +
-		"### Important Rule for Topic Transitions:\n" +
-		"If the topic changes, **DO NOT RESET OR FORGET** previous formatting constraints. " +
-		"The interview remains structured, and responses must continue to follow the required JSON format.\n\n" +
+		"### **CONVERSATION HISTORY LIMITATIONS**\n" +
+		"You are only being provided with the **entire conversation history for the current topic**. " +
+		"You do **NOT** have access to previous topics. " +
+		"Based on this, infer the next **subtopic and question** while strictly maintaining topic order.\n\n" +
+		"### **STRICT TOPIC ADHERENCE**\n" +
+		"You must never jump ahead, skip, or alter the sequence of topics. " +
+		"If the candidate completes the current topic, move **only to the next topic in order**. " +
+		"If you are uncertain of the context due to missing history, assume normal topic progression and " +
+		"generate the next most logical question.\n\n" +
 		"### **STRICT JSON-ONLY RESPONSE ENFORCEMENT**\n" +
 		"1. **You must ALWAYS return a valid JSON object.** Never respond conversationally.\n" +
 		"2. **DO NOT provide explanations, encouragement, or assistant-style messages.**\n" +
@@ -46,12 +52,12 @@ func StartInterview(repo InterviewRepo, userId, length, numberQuestions int, dif
 		"The JSON format must remain consistent across all topics. DO NOT break out of JSON at any point.**\n\n" +
 		"Your response must **ALWAYS** follow this format:\n\n" +
 		"{\n" +
-		"    \"topic\": \"System Design\",\n" +
-		"    \"subtopic\": \"Scalability\",\n" +
-		"    \"question\": \"How would you design a system to handle a high number of concurrent users?\",\n" +
-		"    \"score\": null,\n" +
-		"    \"feedback\": \"\",\n" +
-		"    \"next_question\": \"What challenges might arise when scaling such a system?\",\n" +
+		"    \"topic\": \"the current topic\",\n" +
+		"    \"subtopic\": \"the current subtopic\",\n" +
+		"    \"question\": \"the previous question\",\n" +
+		"    \"score\": the score (1-10) you think the previous answer deserves,\n" +
+		"    \"feedback\": \"your feedback about the quality of the previous answer\",\n" +
+		"    \"next_question\": \"the next question\",\n" +
 		"}"
 
 	chatGPTResponse, err := getChatGPTResponse(prompt)

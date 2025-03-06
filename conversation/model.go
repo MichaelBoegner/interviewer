@@ -34,7 +34,7 @@ type Conversation struct {
 	Topics                map[int]Topic `json:"topics"`
 	CurrentTopic          int           `json:"current_topic"`
 	CurrentSubtopic       string        `json:"current_subtopic"`
-	CurrentQuestionNumber int           `json: "current_question_number"`
+	CurrentQuestionNumber int           `json:"current_question_number"`
 	CreatedAt             time.Time     `json:"created_at"`
 	UpdatedAt             time.Time     `json:"updated_at"`
 }
