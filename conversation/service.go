@@ -186,7 +186,11 @@ func AppendConversation(
 
 		nextTopicID := topicID + 1
 		resetQuestionNumber := 1
-		_, err := repo.UpdateConversationCurrents(conversationID, nextTopicID, resetQuestionNumber, chatGPTResponse.Subtopic)
+		conversation.CurrentTopic = nextTopicID
+		conversation.CurrentSubtopic = chatGPTResponse.NextSubtopic
+		conversation.CurrentQuestionNumber = 1
+
+		_, err := repo.UpdateConversationCurrents(conversationID, nextTopicID, resetQuestionNumber, chatGPTResponse.NextSubtopic)
 		if err != nil {
 			log.Printf("UpdateConversationTopic error: %v", err)
 			return nil, err
