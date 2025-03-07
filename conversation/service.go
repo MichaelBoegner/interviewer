@@ -150,6 +150,8 @@ func AppendConversation(
 	//DEBUG PRINT CONVERSATION TOPIC AND SUBTOPIC STATES
 	fmt.Printf("conversation.CurrentTopic state being checked: %v\n", conversation.CurrentTopic)
 	fmt.Printf("conversation.CurrentSubtopic state being checked: %v\n", conversation.CurrentSubtopic)
+	fmt.Printf("chatGPTResponse.Topic state being checked: %v\n", chatGPTResponse.NextTopic)
+	fmt.Printf("chatGPTResponse.Subtopic state being checked: %v\n", chatGPTResponse.NextSubtopic)
 
 	// Check the current states of the Conversation
 	moveToNewTopic, incrementQuestion, isFinished, err := checkConversationState(chatGPTResponse, conversation, repo)
@@ -178,7 +180,9 @@ func AppendConversation(
 		//DEBUG PRINT MOVETONEWTOPIC AND CONVERSATION TOPIC AND CHATGPT NEXT TOPIC
 		fmt.Printf("\n\n\nmoveToNewTopic: %v\n", moveToNewTopic)
 		fmt.Printf("conversation.CurrentTopic: %v\n", conversation.CurrentTopic)
-		fmt.Printf("chatGPTResponse.NextTopic: %v\n\n\n", chatGPTResponse.NextTopic)
+		fmt.Printf("chatGPTResponse.NextTopic: %v\n", chatGPTResponse.NextTopic)
+		fmt.Printf("conversation.CurrentQuestionNumber: %v\n", conversation.CurrentQuestionNumber)
+		fmt.Printf("questionNumber: %v\n\n\n", questionNumber)
 
 		nextTopicID := topicID + 1
 		resetQuestionNumber := 1
@@ -224,6 +228,13 @@ func AppendConversation(
 
 	// If not new Topic, then continue building under current topic and return conversation
 	if incrementQuestion {
+		conversation.CurrentQuestionNumber++
+		_, err := repo.UpdateConversationCurrents(conversation.ID, conversation.CurrentTopic, conversation.CurrentQuestionNumber, chatGPTResponse.NextSubtopic)
+		if err != nil {
+			log.Printf("UpdateConversationTopic error: %v", err)
+			return nil, err
+		}
+
 		questionNumber += 1
 
 		if conversation.Topics[topicID].Questions[questionNumber] == nil {
@@ -236,6 +247,10 @@ func AppendConversation(
 			}
 		}
 	}
+	//DEBUG CHECK INCREMENTQUESTION, CURRENTQUESTIONUMBER, AND QUESTIONNUMBER
+	fmt.Printf("\n\n\nincrementQuestion: %v\n", incrementQuestion)
+	fmt.Printf("conversation.CurrentQuestionNumber: %v\n", conversation.CurrentQuestionNumber)
+	fmt.Printf("questionNumber: %v\n\n\n", questionNumber)
 
 	messageNextQuestion := newMessage(conversationID, questionNumber, Interviewer, chatGPTResponseString)
 
@@ -513,12 +528,6 @@ func checkConversationState(chatGPTResponse *models.ChatGPTResponse, conversatio
 
 	if chatGPTResponse.NextSubtopic != conversation.CurrentSubtopic {
 		incrementQuestion = true
-		conversation.CurrentQuestionNumber++
-		_, err := repo.UpdateConversationCurrents(conversation.ID, conversation.CurrentTopic, conversation.CurrentQuestionNumber, chatGPTResponse.Subtopic)
-		if err != nil {
-			log.Printf("UpdateConversationTopic error: %v", err)
-			return false, false, false, err
-		}
 	}
 
 	if chatGPTResponse.Topic == "General Backend Knowledge" {
