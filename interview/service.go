@@ -24,10 +24,12 @@ func StartInterview(repo InterviewRepo, userId, length, numberQuestions int, dif
 		"4. **Databases and Data Management**\n" +
 		"5. **Behavioral**\n" +
 		"6. **General Backend Knowledge**\n\n" +
-		"The interview must follow the topics in the exact order specified above (1 to 6). " +
+		"The interview must follow the topics in the exact order specified above (1 to 6).\n\n" +
+		"You have already covered the following topics: [].\n" +
+		"You are currently on the topic: Introduction. \n\n" +
 		"Do not skip any topic, even if the candidate's performance suggests otherwise. " +
 		"Ensure the next question is always relevant to the current topic or subtopic until it is fully assessed, " +
-		"then proceed to the next topic in the order.\n\n" +
+		"then proceed to the next topic in the order. Do not ask more than 2 questions per topic.\n\n" +
 		"### **CONVERSATION HISTORY LIMITATIONS**\n" +
 		"You are only being provided with the **entire conversation history for the current topic**. " +
 		"You do **NOT** have access to previous topics. " +

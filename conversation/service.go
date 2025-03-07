@@ -379,112 +379,92 @@ func getNextQuestion(conversation *Conversation) (*models.ChatGPTResponse, error
 func getConversationHistory(conversation *Conversation) ([]map[string]string, error) {
 	chatGPTConversationArray := make([]map[string]string, 0)
 
+	var arrayOfTopics []string
+	var currentTopic string
+
+	currentTopic = PredefinedTopics[conversation.CurrentTopic].Name
+
+	for topic := 1; topic < conversation.CurrentTopic; topic++ {
+		arrayOfTopics = append(arrayOfTopics, PredefinedTopics[topic].Name)
+	}
+
 	systemPrompt := map[string]string{
 		"role": "system",
-		"content": "You are conducting a technical interview for a backend development position. " +
-			"There are **six topics**, which **must be followed in this order**:\n\n" +
-			"1. **Introduction**\n" +
-			"2. **Coding**\n" +
-			"3. **System Design**\n" +
-			"4. **Databases and Data Management**\n" +
-			"5. **Behavioral**\n" +
-			"6. **General Backend Knowledge**\n\n" +
-			"The interview must follow the topics in the exact order specified above (1 to 6). " +
-			"Do not skip any topic, even if the candidate's performance suggests otherwise. " +
-			"Ensure the next question is always relevant to the current topic or subtopic until it is fully assessed, " +
-			"then proceed to the next topic in the order.\n\n" +
-			"### **CONVERSATION HISTORY LIMITATIONS**\n" +
-			"You are only being provided with the **entire conversation history for the current topic**. " +
-			"You do **NOT** have access to previous topics. " +
-			"Based on this, infer the next **subtopic and question** while strictly maintaining topic order.\n\n" +
-			"### **STRICT TOPIC ADHERENCE**\n" +
-			"You must never jump ahead, skip, or alter the sequence of topics. " +
-			"If the candidate completes the current topic, move **only to the next topic in order**. " +
-			"If you are uncertain of the context due to missing history, assume normal topic progression and " +
-			"generate the next most logical question.\n\n" +
-			"### **STRICT JSON-ONLY RESPONSE ENFORCEMENT**\n" +
-			"1. **You must ALWAYS return a valid JSON object.** Never respond conversationally.\n" +
-			"2. **DO NOT provide explanations, encouragement, or assistant-style messages.**\n" +
-			"3. **DO NOT generate additional text outside of the JSON format.** Any response outside of JSON format is strictly forbidden.\n\n" +
-			"### **Handling 'I Don't Know' Responses**\n" +
-			"1. **If the candidate responds with 'I don't know' or an equivalent phrase:**\n" +
-			"   - Assign the lowest appropriate score (e.g., 1) for the question.\n" +
-			"   - Provide structured feedback stating that the candidate did not provide an answer.\n" +
-			"   - Immediately proceed to the next relevant question while maintaining strict topic order.\n" +
-			"   - **DO NOT generate any conversational, helpful, or assistant-like responses.**\n\n" +
-			"### **Topic Transition Rule**\n" +
-			"**If transitioning to a new topic, remind yourself that this is still part of the structured interview. " +
-			"The JSON format must remain consistent across all topics. DO NOT break out of JSON at any point.**\n\n" +
-			"Your response must **ALWAYS** follow this format:\n\n" +
-			"{\n" +
-			"    \"topic\": \"the current topic\",\n" +
-			"    \"subtopic\": \"the current subtopic\",\n" +
-			"    \"question\": \"the previous question\",\n" +
-			"    \"score\": the score (1-10) you think the previous answer deserves,\n" +
-			"    \"feedback\": \"your feedback about the quality of the previous answer\",\n" +
-			"    \"next_question\": \"the next question\",\n" +
-			"}",
+		"content": fmt.Sprintf("You are conducting a technical interview for a backend development position. "+
+			"There are **six topics**, which **must be followed in this order**:\n\n"+
+			"1. **Introduction**\n"+
+			"2. **Coding**\n"+
+			"3. **System Design**\n"+
+			"4. **Databases and Data Management**\n"+
+			"5. **Behavioral**\n"+
+			"6. **General Backend Knowledge**\n\n"+
+			"The interview must follow the topics in the exact order specified above (1 to 6).\n\n"+
+			"You have already covered the following topics: %s.\n"+
+			"You are currently on the topic: %s. \n\n"+
+			"Do not skip any topic, even if the candidate's performance suggests otherwise. "+
+			"Ensure the next question is always relevant to the current topic or subtopic until it is fully assessed, "+
+			"then proceed to the next topic in the order. Do not ask more than 2 questions per topic.\n\n"+
+			"### **CONVERSATION HISTORY LIMITATIONS**\n"+
+			"You are only being provided with the **entire conversation history for the current topic**. "+
+			"You do **NOT** have access to previous topics. "+
+			"Based on this, infer the next **subtopic and question** while strictly maintaining topic order.\n\n"+
+			"### **STRICT TOPIC ADHERENCE**\n"+
+			"You must never jump ahead, skip, or alter the sequence of topics. "+
+			"If the candidate completes the current topic, move **only to the next topic in order**. "+
+			"If you are uncertain of the context due to missing history, assume normal topic progression and "+
+			"generate the next most logical question.\n\n"+
+			"### **STRICT JSON-ONLY RESPONSE ENFORCEMENT**\n"+
+			"1. **You must ALWAYS return a valid JSON object.** Never respond conversationally.\n"+
+			"2. **DO NOT provide explanations, encouragement, or assistant-style messages.**\n"+
+			"3. **DO NOT generate additional text outside of the JSON format.** Any response outside of JSON format is strictly forbidden.\n\n"+
+			"### **Handling 'I Don't Know' Responses**\n"+
+			"1. **If the candidate responds with 'I don't know' or an equivalent phrase:**\n"+
+			"   - Assign the lowest appropriate score (e.g., 1) for the question.\n"+
+			"   - Provide structured feedback stating that the candidate did not provide an answer.\n"+
+			"   - Immediately proceed to the next relevant question while maintaining strict topic order.\n"+
+			"   - **DO NOT generate any conversational, helpful, or assistant-like responses.**\n\n"+
+			"### **Topic Transition Rule**\n"+
+			"**If transitioning to a new topic, remind yourself that this is still part of the structured interview. "+
+			"The JSON format must remain consistent across all topics. DO NOT break out of JSON at any point.**\n\n"+
+			"Your response must **ALWAYS** follow this format:\n\n"+
+			"{\n"+
+			"    \"topic\": \"the current topic\",\n"+
+			"    \"subtopic\": \"the current subtopic\",\n"+
+			"    \"question\": \"the previous question\",\n"+
+			"    \"score\": the score (1-10) you think the previous answer deserves,\n"+
+			"    \"feedback\": \"your feedback about the quality of the previous answer\",\n"+
+			"    \"next_question\": \"the next question\",\n"+
+			"}", arrayOfTopics, currentTopic),
 	}
-	chatGPTConversationArray = append(chatGPTConversationArray, systemPrompt)
 
-	var lastAssistantMessage map[string]string
-	var lastUserMessage map[string]string
+	topic := conversation.Topics[conversation.CurrentTopic]
 
-	if conversation.CurrentQuestionNumber == 1 && conversation.CurrentTopic > 1 {
-		prevTopic := conversation.Topics[conversation.CurrentTopic-1]
-		lastQuestion := prevTopic.Questions[len(prevTopic.Questions)]
+	if len(topic.Questions) == 0 {
+		return nil, errors.New("no questions found in conversation")
+	}
 
-		for i := len(lastQuestion.Messages) - 1; i >= 0; i-- {
-			if lastQuestion.Messages[i].Author == "interviewer" {
-				lastAssistantMessage = map[string]string{
-					"role":    "assistant",
-					"content": lastQuestion.Messages[i].Content,
-				}
-				break
+	// Iterate through all questions within the current topic
+	for _, question := range topic.Questions {
+		for i, message := range question.Messages {
+			// Skip the system prompt message (only if it's the very first message in the first question)
+			if conversation.CurrentTopic == 1 && conversation.CurrentQuestionNumber == 1 && i == 0 {
+				chatGPTConversationArray = append(chatGPTConversationArray, systemPrompt)
+				continue
 			}
-		}
 
-		for i := len(lastQuestion.Messages) - 1; i >= 0; i-- {
-			if lastQuestion.Messages[i].Author == "user" {
-				lastUserMessage = map[string]string{
-					"role":    "user",
-					"content": lastQuestion.Messages[i].Content,
-				}
-				break
+			role := "user"
+			if message.Author == "interviewer" {
+				role = "assistant"
 			}
-		}
-	} else {
-		topic := conversation.Topics[conversation.CurrentTopic]
-		question := topic.Questions[conversation.CurrentQuestionNumber]
 
-		for i := len(question.Messages) - 1; i >= 0; i-- {
-			if question.Messages[i].Author == "interviewer" {
-				lastAssistantMessage = map[string]string{
-					"role":    "assistant",
-					"content": question.Messages[i].Content,
-				}
-				break
-			}
-		}
-
-		for i := len(question.Messages) - 1; i >= 0; i-- {
-			if question.Messages[i].Author == "user" {
-				lastUserMessage = map[string]string{
-					"role":    "user",
-					"content": question.Messages[i].Content,
-				}
-				break
-			}
+			chatGPTConversationArray = append(chatGPTConversationArray, map[string]string{
+				"role":    role,
+				"content": message.Content,
+			})
 		}
 	}
 
-	if lastAssistantMessage != nil {
-		chatGPTConversationArray = append(chatGPTConversationArray, lastAssistantMessage)
-	}
-	if lastUserMessage != nil {
-		chatGPTConversationArray = append(chatGPTConversationArray, lastUserMessage)
-	}
-
+	// Debugging output
 	prettyJSON, _ := json.MarshalIndent(chatGPTConversationArray, "", "  ")
 	fmt.Println("THIS IS WHAT YOU'RE SENDING TO CHATGPT TO GET THE NEXT QUESTION:")
 	fmt.Println(string(prettyJSON))
