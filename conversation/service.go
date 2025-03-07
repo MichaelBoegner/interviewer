@@ -147,6 +147,9 @@ func AppendConversation(
 		log.Printf("Marshalled response err: %v", err)
 		return nil, err
 	}
+	//DEBUG PRINT CONVERSATION TOPIC AND SUBTOPIC STATES
+	fmt.Printf("conversation.CurrentTopic state being checked: %v\n", conversation.CurrentTopic)
+	fmt.Printf("conversation.CurrentSubtopic state being checked: %v\n", conversation.CurrentSubtopic)
 
 	// Check the current states of the Conversation
 	moveToNewTopic, incrementQuestion, isFinished, err := checkConversationState(chatGPTResponse, conversation, repo)
@@ -172,8 +175,10 @@ func AppendConversation(
 
 	// if moveToNewTopic, increment topicID and reset questionNumber
 	if moveToNewTopic {
+		//DEBUG PRINT MOVETONEWTOPIC AND CONVERSATION TOPIC AND CHATGPT NEXT TOPIC
 		fmt.Printf("\n\n\nmoveToNewTopic: %v\n", moveToNewTopic)
-		fmt.Printf("conversation.CurrentTopic: %v\n\n\n", conversation.CurrentTopic)
+		fmt.Printf("conversation.CurrentTopic: %v\n", conversation.CurrentTopic)
+		fmt.Printf("chatGPTResponse.NextTopic: %v\n\n\n", chatGPTResponse.NextTopic)
 
 		nextTopicID := topicID + 1
 		resetQuestionNumber := 1
@@ -209,7 +214,7 @@ func AppendConversation(
 			log.Printf("AddQuestion in AppendConversation err: %v", err)
 		}
 
-		_, err = repo.AddMessage(conversationID, conversation.CurrentTopic, questionNumber, messageFirstQuestion)
+		_, err = repo.AddMessage(conversationID, nextTopicID, questionNumber, messageFirstQuestion)
 		if err != nil {
 			return nil, err
 		}
@@ -269,7 +274,7 @@ func GetConversation(repo ConversationRepo, interviewID int) (*Conversation, err
 		return nil, err
 	}
 
-	//PRINT QUESTIONS RETURNED
+	//DEBUG PRINT QUESTIONS RETURNED
 	for i, q := range questionsReturned {
 		fmt.Printf("\nquestionsReturned[%d]: \n%+v\n", i, *q)
 	}
@@ -434,8 +439,12 @@ func getConversationHistory(conversation *Conversation) ([]map[string]string, er
 			"    \"score\": the score (1-10) you think the previous answer deserves,\n"+
 			"    \"feedback\": \"your feedback about the quality of the previous answer\",\n"+
 			"    \"next_question\": \"the next question\",\n"+
+			"    \"next_topic\": \"the topic of the next question\",\n"+
+			"    \"next_subtopic\": \"the subtopic of the next question\",\n"+
 			"}", arrayOfTopics, currentTopic),
 	}
+
+	chatGPTConversationArray = append(chatGPTConversationArray, systemPrompt)
 
 	topic := conversation.Topics[conversation.CurrentTopic]
 
@@ -448,7 +457,6 @@ func getConversationHistory(conversation *Conversation) ([]map[string]string, er
 		for i, message := range question.Messages {
 			// Skip the system prompt message (only if it's the very first message in the first question)
 			if conversation.CurrentTopic == 1 && conversation.CurrentQuestionNumber == 1 && i == 0 {
-				chatGPTConversationArray = append(chatGPTConversationArray, systemPrompt)
 				continue
 			}
 
@@ -499,11 +507,11 @@ func checkConversationState(chatGPTResponse *models.ChatGPTResponse, conversatio
 	moveToNewTopic := false
 	incrementQuestion := false
 
-	if chatGPTResponse.Topic != PredefinedTopics[conversation.CurrentTopic].Name {
+	if chatGPTResponse.NextTopic != PredefinedTopics[conversation.CurrentTopic].Name {
 		moveToNewTopic = true
 	}
 
-	if chatGPTResponse.Subtopic != conversation.CurrentSubtopic {
+	if chatGPTResponse.NextSubtopic != conversation.CurrentSubtopic {
 		incrementQuestion = true
 		conversation.CurrentQuestionNumber++
 		_, err := repo.UpdateConversationCurrents(conversation.ID, conversation.CurrentTopic, conversation.CurrentQuestionNumber, chatGPTResponse.Subtopic)

@@ -60,6 +60,8 @@ func StartInterview(repo InterviewRepo, userId, length, numberQuestions int, dif
 		"    \"score\": the score (1-10) you think the previous answer deserves,\n" +
 		"    \"feedback\": \"your feedback about the quality of the previous answer\",\n" +
 		"    \"next_question\": \"the next question\",\n" +
+		"    \"next_topic\": \"the topic of the next question\",\n" +
+		"    \"next_subtopic\": \"the subtopic of the next question\",\n" +
 		"}"
 
 	chatGPTResponse, err := getChatGPTResponse(prompt)
