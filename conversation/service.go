@@ -179,6 +179,7 @@ func AppendConversation(
 	if moveToNewTopic {
 		//DEBUG PRINT MOVETONEWTOPIC AND CONVERSATION TOPIC AND CHATGPT NEXT TOPIC
 		fmt.Printf("\n\n\nmoveToNewTopic: %v\n", moveToNewTopic)
+		fmt.Printf("topicID: %v\n", topicID)
 		fmt.Printf("conversation.CurrentTopic: %v\n", conversation.CurrentTopic)
 		fmt.Printf("chatGPTResponse.NextTopic: %v\n", chatGPTResponse.NextTopic)
 		fmt.Printf("conversation.CurrentQuestionNumber: %v\n", conversation.CurrentQuestionNumber)
@@ -222,7 +223,7 @@ func AppendConversation(
 			log.Printf("AddQuestion in AppendConversation err: %v", err)
 		}
 
-		_, err = repo.AddMessage(conversationID, nextTopicID, questionNumber, messageFirstQuestion)
+		_, err = repo.AddMessage(conversationID, nextTopicID, resetQuestionNumber, messageFirstQuestion)
 		if err != nil {
 			return nil, err
 		}
