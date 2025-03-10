@@ -44,9 +44,6 @@ func main() {
 	log.SetFlags(log.LstdFlags | log.Llongfile)
 
 	err := godotenv.Load()
-	if err != nil {
-		log.Fatalf("Error loading .env file")
-	}
 
 	const filepathRoot = "."
 	const port = "8080"
