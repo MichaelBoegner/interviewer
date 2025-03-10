@@ -456,7 +456,7 @@ func getConversationHistory(conversation *Conversation) ([]map[string]string, er
 			"    \"topic\": \"the current topic\",\n"+
 			"    \"subtopic\": \"the current subtopic\",\n"+
 			"    \"question\": \"the previous question\",\n"+
-			"    \"score\": the score (1-10) you think the previous answer deserves,\n"+
+			"    \"score\": the score (1-10) you think the previous answer deserves, default to 0 if you don't have a score,\n"+
 			"    \"feedback\": \"your feedback about the quality of the previous answer\",\n"+
 			"    \"next_question\": \"the next question\",\n"+
 			"    \"next_topic\": \"the topic of the next question\",\n"+
