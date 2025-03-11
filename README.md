@@ -1,156 +1,58 @@
-
 # Interviewer App
 
-### A Mock Technical Interview Application built with Go
-
-Welcome to **Interviewerio**, a backend system designed to simulate mock technical interviews. This project is built to help users practice for technical job interviews by interacting with dynamic, pre-stored or generated questions and evaluating their answers in real-time. 
+**An intelligent, interactive mock interview platform powered by Go and React, designed to help users confidently prepare for technical interviews.**
 
 ---
 
-## Features
+## 🚀 Overview
 
-- **Modular Architecture**: Organized into multiple services (e.g., interview, conversation, user, token) with clean separation of concerns.
-- **Scalable Design**: Structured with Go's best practices, using models, repositories, and services for maintainability and scalability.
-- **Interview Simulation**: Users can participate in mock interviews with real-time feedback.
-- **Token-Based Authentication**: Secure authentication with JWT for user sessions and token refreshes.
-- **Database Integration**: Fully integrated with PostgreSQL for persistent storage, using structured migrations.
-- **Unit Tests**: Comprehensive testing ensures reliability of the core functionalities.
+Interviewer App provides users with a dynamic technical interviewing experience powered by conversational AI (ChatGPT). The system presents one question at a time in a structured interview format. Future updates will introduce progress tracking, scoring, and personalized feedback to enhance user insights.
 
----
+## 🎯 Features
 
-## Technologies Used
+- **Structured Mock Interviews:** Conduct interviews with sequential, dynamically generated technical questions.
+- **Interactive Conversational AI:** Powered by OpenAI’s GPT models for natural, context-aware dialogue.
+- **JWT-based Authentication:** Secure user authentication and session management.
+- **Efficient Architecture:** Built with a Go backend (HTTP handlers, PostgreSQL, and robust middleware) and a React frontend.
 
-- **Go**: The main language used to build the backend.
-- **Python**: The language being tested in the interviews.
-- **PostgreSQL**: For relational database management.
-- **JWT (JSON Web Token)**: For secure authentication and session management.
-- **SQL Migrations**: Managed with structured SQL files to handle database versioning.
+## 🛠️ Tech Stack
 
----
+| Component      | Technology                   |
+| -------------- | ---------------------------- |
+| Backend        | Go (Golang), HTTP Handlers   |
+| Database       | PostgreSQL                   |
+| Authentication | JWT-based authentication (access & refresh tokens) |
+| AI Integration | OpenAI GPT API               |
+| Testing        | Unit Tests (Go)              |
 
-## Directory Structure
-```
-├── conversation/
-│   ├── model.go
-│   ├── repository.go
-│   └── service.go
-├── database/
-│   ├── migrations/
-│   │    ├── 000001_create_users_table.up.sql
-│   │    ├── 000001_create_users_table.down.sql
-│   │    ├── 000002_create_interviews_table.up.sql
-│   │    ├── 000002_create_interviews_table.down.sql
-│   │    ├── 000003_create_refresh_tokens_table.up.sql
-│   │    ├── 000003_create_refresh_tokens_table.down.sql
-│   │    ├── 000004_create_conversations_table.up.sql
-│   │    └── 000004_create_conversations_table.down.sql
-│   └── database.go
-├── interview/
-│   ├── model.go
-│   ├── repository.go
-│   ├── repository_mock.go
-│   └── service.go
-├── middleware/
-│   └── context.go
-├── token/
-│   ├── model.go
-│   ├── repository.go
-│   ├── repository_mock.go
-│   └── service.go
-├── user/
-│   ├── model.go
-│   ├── repository.go
-│   ├── repository_mock.go
-│   └── service.go
-├── go.mod
-├── go.sum
-├── handlers.go
-├── handlers_test.go
-├── main.go
-├── README.md
+## 🚧 Upcoming Improvements
+
+- Standardized Error Handling
+- Middleware Separation (Authentication & Authorization)
+- Enhanced Unit & Integration Testing
+- Optimized Database Queries (using JOINs)
+- Structured Logging and Monitoring
+- UI for progress tracking and scoring.
+- More detailed analytics and visualization tools.
+- Implementing integration testing and automated end-to-end tests.
+
+## 🔑 How to Run Locally
+
+```sh
+git clone https://github.com/yourusername/interviewer.git
+cd interviewer/backend
+go mod download
+cp .env.example .env # update with your own keys
+make run
 ```
 
-### Key Components
+## 📦 Deployment
+📜 License
+This project is licensed under the MIT License. See the LICENSE file for details.
 
-- **Main App** (`main.go`): The entry point of the application. It initializes the necessary services, sets up routing, and starts the HTTP server.
-  
-- **Handlers**: Defined in `handlers.go`, these handle HTTP requests for various resources, interacting with services and repositories to perform necessary actions.
-  
-- **Models**: Define the structure of entities like `User`, `Interview`, `Conversation`, etc., and live in their respective directories (e.g., `user/model.go`).
-  
-- **Repositories**: Responsible for database interactions, each module has a repository (e.g., `interview/repository.go`) that abstracts SQL queries and updates.
-  
-- **Services**: Contain business logic (e.g., `user/service.go`) and interact with repositories for executing core functionalities.
-
-- **Mock Repository**: Used for testing purposes (e.g., `interview/repository_mock.go`), allowing for unit tests without database dependencies.
-
----
-
-## Getting Started
-
-### Prerequisites
-- **Go**: Version 1.19 or above.
-- **PostgreSQL**: A running instance of PostgreSQL for local development.
-- **Git**: For version control.
-
-### Setup
-
-1. Clone the repository:
-    ```
-    git clone https://github.com/your-username/interviewer-app.git
-    cd interviewer-app
-    ```
-
-2. Install dependencies:
-    ```
-    go mod download
-    ```
-
-3. Set up your environment:
-    ```
-    cp .env.example .env
-    ```
-
-4. Run the SQL migrations to set up the database:
-    ```
-    go run main.go migrate
-    ```
-
-5. Start the application:
-    ```
-    go run main.go
-    ```
-
----
-
-## Testing
-
-Unit tests are provided for key features of the application. You can run the tests with:
-```
-go test ./...
-```
-
----
-
-## Future Enhancements
-
-- **Frontend Integration**: Build a frontend (in a framework like Vue or React) to make the user experience more interactive.
-- **Advanced Interview Scoring**: Implement machine learning models to evaluate user answers more effectively.
-- **Additional Question Types**: Support for different interview types beyond technical coding, such as system design or behavioral questions.
-- **Multiple Languages**: Support for different languages beyond Python, such as Go, Javascript, C, etc . . .
-
----
-
-## License
-
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
-
----
-
-## Contact
-
-For any inquiries or suggestions, feel free to contact me:
-
-**Michael**  
-[LinkedIn](https://www.linkedin.com/in/michael-boegner-855a9741) 
-
+Containerized via Docker for seamless deployment.
+Easily deployable on cloud platforms like AWS, GCP, or DigitalOcean.
+📌 Why This Project Stands Out
+Demonstrates a comprehensive understanding of modern backend engineering practices in Go.
+Utilizes advanced integration with conversational AI to simulate real-world use cases.
+Reflects well-thought-out architecture, prioritizing maintainability, scalability, and clean coding practices.

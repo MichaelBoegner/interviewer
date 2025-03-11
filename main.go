@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/michaelboegner/interviewer/conversation"
 	"github.com/michaelboegner/interviewer/database"
@@ -26,7 +27,12 @@ type apiConfig struct {
 func enableCors(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-		w.Header().Set("Access-Control-Allow-Origin", "http://localhost:5173") // Allow all origins, or set specific domain
+		// In production, this should be a specific domain. For development, we check the environment
+		if os.Getenv("ENV") == "production" {
+			w.Header().Set("Access-Control-Allow-Origin", "https://your-production-domain.com")
+		} else {
+			w.Header().Set("Access-Control-Allow-Origin", "http://localhost:5173")
+		}
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "Authorization, Content-Type")
 		w.Header().Set("Access-Control-Allow-Credentials", "true")
