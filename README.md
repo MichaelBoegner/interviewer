@@ -29,12 +29,13 @@ Interviewer App provides users with a dynamic technical interviewing experience 
 
 - Standardized Error Handling
 - Middleware Separation (Authentication & Authorization)
-- Enhanced Unit & Integration Testing
+- Enhanced Unit Testing
+- Integration Testing
+- Implementation of CI/CD
 - Optimized Database Queries (using JOINs)
 - Structured Logging and Monitoring
-- UI for progress tracking and scoring.
+- UI for progress tracking, scoring, and feedback.
 - More detailed analytics and visualization tools.
-- Implementing integration testing and automated end-to-end tests.
 
 ## 🔑 How to Run Locally
 
