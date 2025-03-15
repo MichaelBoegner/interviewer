@@ -172,6 +172,16 @@ func AppendConversation(
 			return nil, err
 		}
 
+		messageFinal := newMessage(conversationID, questionNumber, Interviewer, chatGPTResponseString)
+		_, err = repo.AddMessage(conversationID, topicID, questionNumber, messageFinal)
+		if err != nil {
+			return nil, err
+		}
+
+		messages := conversation.Topics[topicID].Questions[questionNumber].Messages
+		messages = append(messages, *messageFinal)
+		conversation.Topics[topicID].Questions[questionNumber].Messages = messages
+
 		return conversation, nil
 	}
 
