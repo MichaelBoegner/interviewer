@@ -146,7 +146,6 @@ func AppendConversation(
 		return nil, err
 	}
 
-	// Check the current states of the Conversation
 	moveToNewTopic, incrementQuestion, isFinished, err := checkConversationState(chatGPTResponse, conversation, repo)
 	if err != nil {
 		log.Printf("checkConversationState err: %v", err)
@@ -184,7 +183,7 @@ func AppendConversation(
 		conversation.CurrentSubtopic = chatGPTResponse.NextSubtopic
 		conversation.CurrentQuestionNumber = 1
 
-		_, err := repo.UpdateConversationCurrents(conversationID, nextTopicID, resetQuestionNumber, chatGPTResponse.NextSubtopic)
+		_, err := repo.UpdateConversationCurrents(conversationID, conversation.CurrentTopic, conversation.CurrentQuestionNumber, conversation.CurrentSubtopic)
 		if err != nil {
 			log.Printf("UpdateConversationTopic error: %v", err)
 			return nil, err
@@ -491,7 +490,7 @@ func ChatGPTResponseToString(chatGPTResponse *models.ChatGPTResponse) (string, e
 	return string(chatGPTResponseString), nil
 }
 
-func checkConversationState(chatGPTResponse *models.ChatGPTResponse, conversation *Conversation, repo ConversationRepo) (bool, bool, bool, error) {
+func checkConversationState(chatGPTResponse *models.ChatGPTResponse, conversation *Conversation) (bool, bool, bool, error) {
 	isFinished := false
 	moveToNewTopic := false
 	incrementQuestion := false
