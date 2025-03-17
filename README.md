@@ -1,59 +1,305 @@
 # Interviewer App
+**An intelligent, interactive mock interview platform powered by Go, React, and PostgreSQL, designed to help users confidently prepare for technical interviews.**
 
-**An intelligent, interactive mock interview platform powered by Go and React, designed to help users confidently prepare for technical interviews.**
+![Go Version](https://img.shields.io/badge/Go-1.20+-00ADD8?style=flat&logo=go&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15+-336791?style=flat&logo=postgresql&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=flat&logo=docker&logoColor=white)
+![License](https://img.shields.io/badge/License-MIT-green.svg)
 
 ---
 
+## 📋 Contents
+
+- [Overview](#-overview)
+- [System Architecture](#-system-architecture)
+- [Key Features](#-key-features)
+- [Tech Stack](#-tech-stack)
+- [API Documentation](#-api-documentation)
+- [Database Schema](#-database-schema)
+- [Deployment](#-deployment)
+- [Local Development](#-local-development)
+- [Security Implementation](#-security-implementation)
+- [Performance Considerations](#-performance-considerations)
+- [Testing Strategy](#-testing-strategy)
+- [Development Roadmap](#-development-roadmap)
+- [License](#-license)
+
 ## 🚀 Overview
 
-Interviewer App provides users with a dynamic technical interviewing experience powered by conversational AI (ChatGPT). The system presents one question at a time in a structured interview format. Future updates will introduce progress tracking, scoring, and personalized feedback to enhance user insights.
+Interviewer App is a robust backend service that powers an interactive technical interviewing experience. It leverages ChatGPT's conversational AI capabilities to create personalized, adaptive interview sessions tailored to each user's preferences.
 
-## 🎯 Features
+The application was built with a focus on:
 
-- **Structured Mock Interviews:** Conduct interviews with sequential, dynamically generated technical questions.
-- **Interactive Conversational AI:** Powered by OpenAI’s GPT models for natural, context-aware dialogue.
-- **JWT-based Authentication:** Secure user authentication and session management.
-- **Efficient Architecture:** Built with a Go backend (HTTP handlers, PostgreSQL, and robust middleware) and a React frontend.
+- **Clean Architecture**: Following repository-service pattern with clear separation of concerns
+- **Scalability**: Designed for horizontal scaling with stateless API design
+- **Security**: Implementing industry-standard JWT authentication with refresh token rotation
+- **Developer Experience**: Well-documented codebase with comprehensive test coverage
+- **Maintainability**: Modular code structure with reusable components
+
+## 🏗 System Architecture
+
+```
+┌─────────────────┐      ┌──────────────────────────────────────┐      ┌───────────────┐
+│                 │      │                                      │      │               │
+│   Client App    │◄────►│   Go Backend API (This Repository)   │◄────►│   PostgreSQL  │
+│   (React.js)    │      │                                      │      │   Database    │
+│                 │      │                                      │      │               │
+└─────────────────┘      └───────────────┬──────────────────────┘      └───────────────┘
+                                        │
+                                        │
+                                        ▼
+                          ┌─────────────────────────┐
+                          │                         │
+                          │   OpenAI API (ChatGPT)  │
+                          │                         │
+                          └─────────────────────────┘
+```
+
+The backend is structured using a layered architecture:
+
+- **Router Layer**: HTTP request handling and routing
+- **Handler Layer**: Request validation and response formation
+- **Service Layer**: Business logic encapsulation
+- **Repository Layer**: Data access and persistence
+- **Middleware**: Cross-cutting concerns (authentication, logging, etc.)
+
+## 🎯 Key Features
+
+- **User Management**: Secure user registration, authentication, and profile management
+- **JWT-based Authentication**: Access tokens with configurable expiration and refresh token rotation
+- **Structured Mock Interviews**: Dynamic interview generation based on user preferences
+- **Conversational AI Integration**: Seamless integration with OpenAI's GPT model
+- **Persistent Data Storage**: Complete interview history stored for future review
+- **RESTful API Design**: Consistent and predictable API endpoints
+- **Middleware Pipeline**: Extensible middleware for request processing
+- **Environment-based Configuration**: Flexible configuration for different deployment environments
 
 ## 🛠️ Tech Stack
 
-| Component      | Technology                   |
-| -------------- | ---------------------------- |
-| Backend        | Go (Golang), HTTP Handlers   |
-| Database       | PostgreSQL                   |
-| Authentication | JWT-based authentication (access & refresh tokens) |
-| AI Integration | OpenAI GPT API               |
-| Testing        | Unit Tests (Go)              |
+| Component             | Technology                                       |
+|-----------------------|--------------------------------------------------|
+| **Backend Language**  | Go (Golang) 1.20+                               |
+| **Database**          | PostgreSQL 15+                                   |
+| **Authentication**    | JWT-based authentication (access & refresh tokens) |
+| **AI Integration**    | OpenAI GPT API (4.0)                             |
+| **Testing**           | Go standard testing package                      |
+| **Containerization**  | Docker                                           |
+| **Deployment**        | Fly.io                                           |
+| **Database Hosting**  | Supabase (PostgreSQL)                            |
+| **Version Control**   | Git                                              |
 
-## 🚧 Upcoming Improvements
+## 📘 API Documentation
 
-- Standardized Error Handling
-- Middleware Separation (Authentication & Authorization)
-- Enhanced Unit Testing
-- Integration Testing
-- Implementation of CI/CD
-- Optimized Database Queries (using JOINs)
-- Structured Logging and Monitoring
-- UI for progress tracking, scoring, and feedback.
-- More detailed analytics and visualization tools.
+### Authentication Flow
 
-## 🔑 How to Run Locally
+```
+┌─────────┐                                  ┌─────────┐                       ┌─────────┐
+│         │                                  │         │                       │         │
+│ Client  │                                  │ Server  │                       │ Database│
+│         │                                  │         │                       │         │
+└────┬────┘                                  └────┬────┘                       └────┬────┘
+     │                                            │                                 │
+     │ POST /api/users/ (Register)                │                                 │
+     │───────────────────────────────────────────►│                                 │
+     │                                            │                                 │
+     │                                            │ Store User                      │
+     │                                            │────────────────────────────────►│
+     │                                            │                                 │
+     │ 201 Created                                │                                 │
+     │◄───────────────────────────────────────────│                                 │
+     │                                            │                                 │
+     │ POST /api/auth/login                       │                                 │
+     │───────────────────────────────────────────►│                                 │
+     │                                            │ Verify Credentials              │
+     │                                            │────────────────────────────────►│
+     │                                            │                                 │
+     │ 200 OK (Access Token + Refresh Token)      │                                 │
+     │◄───────────────────────────────────────────│                                 │
+     │                                            │                                 │
+     │ Request with Access Token                  │                                 │
+     │───────────────────────────────────────────►│                                 │
+     │                                            │ Validate Token                  │
+     │                                            │                                 │
+     │ Response                                   │                                 │
+     │◄───────────────────────────────────────────│                                 │
+     │                                            │                                 │
+     │ POST /api/auth/token (Refresh)             │                                 │
+     │───────────────────────────────────────────►│                                 │
+     │                                            │ Verify Refresh Token            │
+     │                                            │────────────────────────────────►│
+     │                                            │                                 │
+     │ 200 OK (New Access Token + Refresh Token)  │                                 │
+     │◄───────────────────────────────────────────│                                 │
+     │                                            │                                 │
+```
 
-```sh
-git clone https://github.com/yourusername/interviewer.git
-cd interviewer/backend
-go mod download
-cp .env.example .env # update with your own keys
-make run
+### API Endpoints
+
+#### User Management
+- `POST /api/users/` - Register a new user
+- `GET /api/users/:id` - Get user profile
+
+#### Authentication
+- `POST /api/auth/login` - User login
+- `POST /api/auth/token` - Refresh access token
+
+#### Interviews
+- `POST /api/interviews` - Create a new interview
+- `GET /api/interviews` - List user's interviews
+- `GET /api/interviews/:id` - Get interview details
+
+#### Conversations
+- `POST /api/conversations/` - Create a new conversation
+- `GET /api/conversations/:id` - Get conversation details
+
+## 🗄 Database Schema
+
+```
+┌─────────────────┐       ┌──────────────────┐       ┌──────────────────┐
+│     users       │       │    interviews    │       │  conversations   │
+├─────────────────┤       ├──────────────────┤       ├──────────────────┤
+│ id              │       │ id               │       │ id               │
+│ username        │       │ user_id          │◄──────┤ interview_id     │
+│ email           │       │ length           │       │ current_topic    │
+│ password        │       │ number_questions │       │ current_subtopic │
+│ created_at      │       │ difficulty       │       │ current_question_│
+│ updated_at      │       │ status           │       │ created_at       │
+└────────┬────────┘       │ score            │       │ updated_at       │
+         │                │ language         │       └────────┬─────────┘
+         │                │ prompt           │                │
+         │                │ first_question   │                │
+         │                │ subtopic         │                │
+         │                │ created_at       │                │
+         │                │ updated_at       │                │
+         │                └─────────┬────────┘                │
+         │                          │                         │
+         │                          │                         │
+┌────────▼────────┐       ┌─────────▼────────┐      ┌────────▼─────────┐
+│ refresh_tokens  │       │    questions     │      │     messages     │
+├─────────────────┤       ├──────────────────┤      ├──────────────────┤
+│ id              │       │ id               │      │ id               │
+│ user_id         │       │ conversation_id  │◄─────┤ conversation_id  │
+│ refresh_token   │       │ topic_id         │      │ topic_id         │
+│ expires_at      │       │ question_number  │      │ question_number  │
+│ created_at      │       │ prompt           │      │ author           │
+│ updated_at      │       │ created_at       │      │ content          │
+└─────────────────┘       └──────────────────┘      │ created_at       │
+                                                    └──────────────────┘
 ```
 
 ## 📦 Deployment
-📜 License
+
+This application is currently deployed on Fly.io with a PostgreSQL database hosted on Supabase.
+
+### Deployment Stack
+- **Application Hosting**: Fly.io (containerized deployment)
+- **Database**: Supabase PostgreSQL
+- **Environment Variables**: Managed through Fly.io secrets
+
+### Deployment Process
+1. Build Docker container using the included Dockerfile
+2. Push to Fly.io platform
+3. Configure environment variables for production
+
+```bash
+# Deploy to Fly.io
+fly launch
+fly secrets set JWT_SECRET=your-secret DATABASE_URL=your-supabase-url OPENAI_API_KEY=your-api-key
+fly deploy
+```
+
+## 🔧 Local Development
+
+### Prerequisites
+- Go 1.20+
+- PostgreSQL 15+
+- Docker (optional, for containerized development)
+
+### Setup Instructions
+
+1. Clone the repository
+   ```bash
+   git clone https://github.com/yourusername/interviewer.git
+   cd interviewer
+   ```
+
+2. Install dependencies
+   ```bash
+   go mod download
+   ```
+
+3. Set up environment variables
+   ```bash
+   cp .env.example .env
+   # Edit .env with your configuration
+   ```
+
+4. Create the database
+   ```bash
+   # Create PostgreSQL database named 'interviewerio'
+   createdb interviewerio
+   
+   # Apply migrations
+   # Either manually execute SQL files in database/migrations or use a migration tool
+   ```
+
+5. Run the application
+   ```bash
+   go run main.go
+   ```
+
+### Using Docker
+```bash
+docker build -t interviewer .
+docker run -p 8080:8080 --env-file .env interviewer
+```
+
+## 🔒 Security Implementation
+
+- **Password Hashing**: Passwords are securely hashed and never stored in plaintext
+- **JWT Authentication**: Short-lived access tokens with refresh token rotation
+- **Input Validation**: All user inputs are validated before processing
+- **Prepared Statements**: All database queries use prepared statements to prevent SQL injection
+- **CORS Configuration**: Configured to restrict origins in production environments
+- **Environment Variables**: Sensitive configuration stored in environment variables
+- **Error Handling**: Careful error handling to prevent leaking sensitive information
+
+## ⚡ Performance Considerations
+
+- **Connection Pooling**: Database connections are pooled for efficient reuse
+- **Stateless Design**: The API is designed to be stateless, allowing for horizontal scaling
+- **Efficient Database Queries**: Queries are optimized for performance
+- **Response Caching**: Critical paths implement caching where appropriate
+- **Proper Indexing**: Database tables are indexed for query performance
+
+## 🧪 Testing Strategy
+
+- **Unit Tests**: Testing individual components in isolation
+- **Integration Tests**: Testing interactions between components
+- **Test Coverage**: Aiming for high test coverage, especially in critical paths
+- **Automated Testing**: Tests run automatically as part of CI/CD pipeline
+
+## 🛣️ Development Roadmap
+
+### Current Focus
+- Expanding test coverage
+- Refining API documentation
+- Optimizing database queries
+
+### Upcoming Improvements
+- Implementation of CI/CD pipeline
+- Structured logging for better observability
+- Supporting multiple conversation tracks within an interview
+- Adding detailed analytics for interview performance
+- Enhancing error handling and recovery mechanisms
+
+## 📜 License
+
 This project is licensed under the MIT License. See the LICENSE file for details.
 
-Containerized via Docker for seamless deployment.
-Easily deployable on cloud platforms like AWS, GCP, or DigitalOcean.
-📌 Why This Project Stands Out
-Demonstrates a comprehensive understanding of modern backend engineering practices in Go.
-Utilizes advanced integration with conversational AI to simulate real-world use cases.
-Reflects well-thought-out architecture, prioritizing maintainability, scalability, and clean coding practices.
+---
+
+**Created by Michael Boegner** - [GitHub Profile](https://github.com/michaelboegner)
+
+
+
