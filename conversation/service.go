@@ -131,9 +131,7 @@ func AppendConversation(
 	// Add response message to Messages struct
 	messageUser := newMessage(conversationID, questionNumber, message.Author, message.Content)
 
-	messages := conversation.Topics[topicID].Questions[questionNumber].Messages
-	messages = append(messages, *messageUser)
-	conversation.Topics[topicID].Questions[questionNumber].Messages = messages
+	conversation.Topics[topicID].Questions[questionNumber].Messages = append(conversation.Topics[topicID].Questions[questionNumber].Messages, *messageUser)
 
 	// Call ChatGPT for next question and convert to string and store. String conversion is need for when sending convo history back to ChatGPT.
 	chatGPTResponse, err := getNextQuestion(conversation)
@@ -147,11 +145,6 @@ func AppendConversation(
 		log.Printf("Marshalled response err: %v", err)
 		return nil, err
 	}
-	//DEBUG PRINT CONVERSATION TOPIC AND SUBTOPIC STATES
-	fmt.Printf("conversation.CurrentTopic state being checked: %v\n", conversation.CurrentTopic)
-	fmt.Printf("conversation.CurrentSubtopic state being checked: %v\n", conversation.CurrentSubtopic)
-	fmt.Printf("chatGPTResponse.Topic state being checked: %v\n", chatGPTResponse.NextTopic)
-	fmt.Printf("chatGPTResponse.Subtopic state being checked: %v\n", chatGPTResponse.NextSubtopic)
 
 	// Check the current states of the Conversation
 	moveToNewTopic, incrementQuestion, isFinished, err := checkConversationState(chatGPTResponse, conversation, repo)
@@ -178,23 +171,13 @@ func AppendConversation(
 			return nil, err
 		}
 
-		messages := conversation.Topics[topicID].Questions[questionNumber].Messages
-		messages = append(messages, *messageFinal)
-		conversation.Topics[topicID].Questions[questionNumber].Messages = messages
+		conversation.Topics[topicID].Questions[questionNumber].Messages = append(conversation.Topics[topicID].Questions[questionNumber].Messages, *messageFinal)
 
 		return conversation, nil
 	}
 
 	// if moveToNewTopic, increment topicID and reset questionNumber
 	if moveToNewTopic {
-		//DEBUG PRINT MOVETONEWTOPIC AND CONVERSATION TOPIC AND CHATGPT NEXT TOPIC
-		fmt.Printf("\n\n\nmoveToNewTopic: %v\n", moveToNewTopic)
-		fmt.Printf("topicID: %v\n", topicID)
-		fmt.Printf("conversation.CurrentTopic: %v\n", conversation.CurrentTopic)
-		fmt.Printf("chatGPTResponse.NextTopic: %v\n", chatGPTResponse.NextTopic)
-		fmt.Printf("conversation.CurrentQuestionNumber: %v\n", conversation.CurrentQuestionNumber)
-		fmt.Printf("questionNumber: %v\n\n\n", questionNumber)
-
 		nextTopicID := topicID + 1
 		resetQuestionNumber := 1
 		conversation.CurrentTopic = nextTopicID
@@ -262,16 +245,10 @@ func AppendConversation(
 			}
 		}
 	}
-	//DEBUG CHECK INCREMENTQUESTION, CURRENTQUESTIONUMBER, AND QUESTIONNUMBER
-	fmt.Printf("\n\n\nincrementQuestion: %v\n", incrementQuestion)
-	fmt.Printf("conversation.CurrentQuestionNumber: %v\n", conversation.CurrentQuestionNumber)
-	fmt.Printf("questionNumber: %v\n\n\n", questionNumber)
 
 	messageNextQuestion := newMessage(conversationID, questionNumber, Interviewer, chatGPTResponseString)
 
-	messages = conversation.Topics[topicID].Questions[questionNumber].Messages
-	messages = append(messages, *messageNextQuestion)
-	conversation.Topics[topicID].Questions[questionNumber].Messages = messages
+	conversation.Topics[topicID].Questions[questionNumber].Messages = append(conversation.Topics[topicID].Questions[questionNumber].Messages, *messageNextQuestion)
 
 	_, err = repo.AddQuestion(conversation.Topics[topicID].Questions[questionNumber])
 	if err != nil {
