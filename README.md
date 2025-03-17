@@ -33,7 +33,6 @@ The application was built with a focus on:
 - **Clean Architecture**: Following repository-service pattern with clear separation of concerns
 - **Scalability**: Designed for horizontal scaling with stateless API design
 - **Security**: Implementing industry-standard JWT authentication with refresh token rotation
-- **Developer Experience**: Well-documented codebase with comprehensive test coverage
 - **Maintainability**: Modular code structure with reusable components
 
 ## 🏗 System Architecture
@@ -57,7 +56,6 @@ The application was built with a focus on:
 
 The backend is structured using a layered architecture:
 
-- **Router Layer**: HTTP request handling and routing
 - **Handler Layer**: Request validation and response formation
 - **Service Layer**: Business logic encapsulation
 - **Repository Layer**: Data access and persistence
@@ -67,7 +65,7 @@ The backend is structured using a layered architecture:
 
 - **User Management**: Secure user registration, authentication, and profile management
 - **JWT-based Authentication**: Access tokens with configurable expiration and refresh token rotation
-- **Structured Mock Interviews**: Dynamic interview generation based on user preferences
+- **Structured Mock Interviews**: Dynamic interview generation
 - **Conversational AI Integration**: Seamless integration with OpenAI's GPT model
 - **Persistent Data Storage**: Complete interview history stored for future review
 - **RESTful API Design**: Consistent and predictable API endpoints
@@ -258,26 +256,16 @@ docker run -p 8080:8080 --env-file .env interviewer
 
 - **Password Hashing**: Passwords are securely hashed and never stored in plaintext
 - **JWT Authentication**: Short-lived access tokens with refresh token rotation
-- **Input Validation**: All user inputs are validated before processing
 - **Prepared Statements**: All database queries use prepared statements to prevent SQL injection
 - **CORS Configuration**: Configured to restrict origins in production environments
 - **Environment Variables**: Sensitive configuration stored in environment variables
-- **Error Handling**: Careful error handling to prevent leaking sensitive information
 
 ## ⚡ Performance Considerations
 
-- **Connection Pooling**: Database connections are pooled for efficient reuse
 - **Stateless Design**: The API is designed to be stateless, allowing for horizontal scaling
-- **Efficient Database Queries**: Queries are optimized for performance
 - **Response Caching**: Critical paths implement caching where appropriate
 - **Proper Indexing**: Database tables are indexed for query performance
 
-## 🧪 Testing Strategy
-
-- **Unit Tests**: Testing individual components in isolation
-- **Integration Tests**: Testing interactions between components
-- **Test Coverage**: Aiming for high test coverage, especially in critical paths
-- **Automated Testing**: Tests run automatically as part of CI/CD pipeline
 
 ## 🛣️ Development Roadmap
 
@@ -292,6 +280,8 @@ docker run -p 8080:8080 --env-file .env interviewer
 - Supporting multiple conversation tracks within an interview
 - Adding detailed analytics for interview performance
 - Enhancing error handling and recovery mechanisms
+- Input validation
+- Interview preferences (language, difficulty, duration, etc . . .)
 
 ## 📜 License
 
