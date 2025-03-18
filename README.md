@@ -287,6 +287,7 @@ docker run -p 8080:8080 --env-file .env interviewer
 - Adding detailed analytics for interview performance
 - Enhancing error handling and recovery mechanisms
 - Input validation
+- Implement a single active session policy
 - Interview preferences (language, difficulty, duration, etc . . .)
 
 ## 📜 License
