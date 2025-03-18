@@ -1,7 +1,6 @@
 package main
 
 import (
-	"database/sql"
 	"log"
 	"net/http"
 	"os"
@@ -16,14 +15,6 @@ import (
 
 	"github.com/joho/godotenv"
 )
-
-type apiConfig struct {
-	DB               *sql.DB
-	InterviewRepo    interview.InterviewRepo
-	UserRepo         user.UserRepo
-	TokenRepo        token.TokenRepo
-	ConversationRepo conversation.ConversationRepo
-}
 
 func enableCors(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -51,6 +42,9 @@ func main() {
 	log.SetFlags(log.LstdFlags | log.Llongfile)
 
 	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
 
 	const filepathRoot = "."
 	const port = "8080"
@@ -67,7 +61,7 @@ func main() {
 	tokenRepo := token.NewRepository(db)
 	conversationRepo := conversation.NewRepository(db)
 
-	handler := handlers.NewHandler(db, interviewRepo, userRepo, tokenRepo, conversationRepo)
+	handler := handlers.NewHandler(interviewRepo, userRepo, tokenRepo, conversationRepo)
 
 	mux.Handle("/api/users/", middleware.GetContext(http.HandlerFunc(handler.UsersHandler)))
 	mux.Handle("/api/auth/login", middleware.GetContext(http.HandlerFunc(handler.LoginHandler)))

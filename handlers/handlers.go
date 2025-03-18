@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"database/sql"
 	"encoding/json"
 	"errors"
 	"log"
@@ -17,16 +16,14 @@ import (
 )
 
 type Handler struct {
-	DB               *sql.DB
 	UserRepo         user.UserRepo
 	InterviewRepo    interview.InterviewRepo
 	ConversationRepo conversation.ConversationRepo
 	TokenRepo        token.TokenRepo
 }
 
-func NewHandler(db *sql.DB, interviewRepo interview.InterviewRepo, userRepo user.UserRepo, tokenRepo token.TokenRepo, conversationRepo conversation.ConversationRepo) *Handler {
+func NewHandler(interviewRepo interview.InterviewRepo, userRepo user.UserRepo, tokenRepo token.TokenRepo, conversationRepo conversation.ConversationRepo) *Handler {
 	return &Handler{
-		DB:               db,
 		InterviewRepo:    interviewRepo,
 		UserRepo:         userRepo,
 		TokenRepo:        tokenRepo,
