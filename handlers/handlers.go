@@ -22,7 +22,11 @@ type Handler struct {
 	TokenRepo        token.TokenRepo
 }
 
-func NewHandler(interviewRepo interview.InterviewRepo, userRepo user.UserRepo, tokenRepo token.TokenRepo, conversationRepo conversation.ConversationRepo) *Handler {
+func NewHandler(
+	interviewRepo interview.InterviewRepo,
+	userRepo user.UserRepo,
+	tokenRepo token.TokenRepo,
+	conversationRepo conversation.ConversationRepo) *Handler {
 	return &Handler{
 		InterviewRepo:    interviewRepo,
 		UserRepo:         userRepo,

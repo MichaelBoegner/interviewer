@@ -40,6 +40,7 @@ The application was built with a focus on:
 - The frontend is located here: [https://github.com/michaelboegner/interviewer-ui](https://github.com/michaelboegner/interviewer-ui). 
 - However, due to the costs involved with calls to OpenAI, I have opted to provide a recorded demo in lieue of open access.
 - Live demonstrations are available upon request. 
+(Recorded demo coming in the next couple days! Mar 18, 20205)
 
 ## 🏗 System Architecture
 
