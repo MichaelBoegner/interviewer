@@ -50,14 +50,14 @@ The application was built with a focus on:
 │   (React.js)    │      │                                      │      │   Database    │
 │                 │      │                                      │      │               │
 └─────────────────┘      └───────────────┬──────────────────────┘      └───────────────┘
-                                        │
-                                        │
-                                        ▼
-                          ┌─────────────────────────┐
-                          │                         │
-                          │   OpenAI API (ChatGPT)  │
-                          │                         │
-                          └─────────────────────────┘
+                                         │
+                                         │
+                                         ▼
+                           ┌─────────────────────────┐
+                           │                         │
+                           │   OpenAI API (ChatGPT)  │
+                           │                         │
+                           └─────────────────────────┘
 ```
 
 The backend is structured using a layered architecture:
