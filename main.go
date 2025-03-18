@@ -8,6 +8,7 @@ import (
 
 	"github.com/michaelboegner/interviewer/conversation"
 	"github.com/michaelboegner/interviewer/database"
+	"github.com/michaelboegner/interviewer/handlers"
 	"github.com/michaelboegner/interviewer/interview"
 	"github.com/michaelboegner/interviewer/middleware"
 	"github.com/michaelboegner/interviewer/token"
@@ -66,19 +67,13 @@ func main() {
 	tokenRepo := token.NewRepository(db)
 	conversationRepo := conversation.NewRepository(db)
 
-	apiCfg := &apiConfig{
-		DB:               db,
-		InterviewRepo:    interviewRepo,
-		UserRepo:         userRepo,
-		TokenRepo:        tokenRepo,
-		ConversationRepo: conversationRepo,
-	}
+	handler := handlers.NewHandler(db, interviewRepo, userRepo, tokenRepo, conversationRepo)
 
-	mux.Handle("/api/users/", middleware.GetContext(http.HandlerFunc(apiCfg.usersHandler)))
-	mux.Handle("/api/auth/login", middleware.GetContext(http.HandlerFunc(apiCfg.loginHandler)))
-	mux.Handle("/api/interviews", middleware.GetContext(http.HandlerFunc(apiCfg.interviewsHandler)))
-	mux.Handle("/api/auth/token", middleware.GetContext(http.HandlerFunc(apiCfg.refreshTokensHandler)))
-	mux.Handle("/api/conversations/", middleware.GetContext(http.HandlerFunc(apiCfg.conversationsHandler)))
+	mux.Handle("/api/users/", middleware.GetContext(http.HandlerFunc(handler.UsersHandler)))
+	mux.Handle("/api/auth/login", middleware.GetContext(http.HandlerFunc(handler.LoginHandler)))
+	mux.Handle("/api/interviews", middleware.GetContext(http.HandlerFunc(handler.InterviewsHandler)))
+	mux.Handle("/api/auth/token", middleware.GetContext(http.HandlerFunc(handler.RefreshTokensHandler)))
+	mux.Handle("/api/conversations/", middleware.GetContext(http.HandlerFunc(handler.ConversationsHandler)))
 
 	log.Printf("Serving files from %s on port: %s\n", filepathRoot, port)
 	log.Fatal(http.ListenAndServe(":8080", enableCors(mux)))

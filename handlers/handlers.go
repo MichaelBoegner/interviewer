@@ -1,6 +1,7 @@
-package main
+package handlers
 
 import (
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"log"
@@ -14,6 +15,24 @@ import (
 	"github.com/michaelboegner/interviewer/token"
 	"github.com/michaelboegner/interviewer/user"
 )
+
+type Handler struct {
+	DB               *sql.DB
+	UserRepo         user.UserRepo
+	InterviewRepo    interview.InterviewRepo
+	ConversationRepo conversation.ConversationRepo
+	TokenRepo        token.TokenRepo
+}
+
+func NewHandler(db *sql.DB, interviewRepo interview.InterviewRepo, userRepo user.UserRepo, tokenRepo token.TokenRepo, conversationRepo conversation.ConversationRepo) *Handler {
+	return &Handler{
+		DB:               db,
+		InterviewRepo:    interviewRepo,
+		UserRepo:         userRepo,
+		TokenRepo:        tokenRepo,
+		ConversationRepo: conversationRepo,
+	}
+}
 
 type returnVals struct {
 	ID             int                        `json:"id,omitempty"`
@@ -33,7 +52,7 @@ type returnVals struct {
 	Conversation   *conversation.Conversation `json:"conversation,omitempty"`
 }
 
-func (apiCfg *apiConfig) usersHandler(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) UsersHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	// POST create a user
 	case http.MethodPost:
@@ -48,7 +67,7 @@ func (apiCfg *apiConfig) usersHandler(w http.ResponseWriter, r *http.Request) {
 			respondWithError(w, http.StatusBadRequest, "Username, Email, and Password required")
 			return
 		}
-		user, err := user.CreateUser(apiCfg.UserRepo, params.Username, params.Email, params.Password)
+		user, err := user.CreateUser(h.UserRepo, params.Username, params.Email, params.Password)
 		if err != nil {
 			log.Printf("CreateUser error: %v", err)
 			respondWithError(w, http.StatusInternalServerError, "Internal Server Error")
@@ -70,7 +89,7 @@ func (apiCfg *apiConfig) usersHandler(w http.ResponseWriter, r *http.Request) {
 			respondWithError(w, http.StatusBadRequest, "Invalid ID.")
 		}
 
-		user, err := user.GetUser(apiCfg.UserRepo, userID)
+		user, err := user.GetUser(h.UserRepo, userID)
 		if err != nil {
 			log.Printf("GetUsers error: %v", err)
 			return
@@ -87,7 +106,7 @@ func (apiCfg *apiConfig) usersHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (apiCfg *apiConfig) loginHandler(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	// POST login a user
 	case http.MethodPost:
@@ -104,14 +123,14 @@ func (apiCfg *apiConfig) loginHandler(w http.ResponseWriter, r *http.Request) {
 
 		}
 
-		jwToken, userID, err := user.LoginUser(apiCfg.UserRepo, params.Username, params.Password)
+		jwToken, userID, err := user.LoginUser(h.UserRepo, params.Username, params.Password)
 		if err != nil {
 			log.Printf("LoginUser error: %v", err)
 			respondWithError(w, http.StatusUnauthorized, "Invalid username or password.")
 			return
 		}
 
-		refreshToken, err := token.CreateRefreshToken(apiCfg.TokenRepo, userID)
+		refreshToken, err := token.CreateRefreshToken(h.TokenRepo, userID)
 		if err != nil {
 			log.Printf("RefreshToken error: %v", err)
 			respondWithError(w, http.StatusUnauthorized, "")
@@ -131,7 +150,7 @@ func (apiCfg *apiConfig) loginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (apiCfg *apiConfig) interviewsHandler(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) InterviewsHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	// POST start a resource instance of an interview and return the first question
 	case http.MethodPost:
@@ -148,7 +167,7 @@ func (apiCfg *apiConfig) interviewsHandler(w http.ResponseWriter, r *http.Reques
 			return
 		}
 
-		interviewStarted, err := interview.StartInterview(apiCfg.InterviewRepo, userID, 30, 3, "easy")
+		interviewStarted, err := interview.StartInterview(h.InterviewRepo, userID, 30, 3, "easy")
 		if err != nil {
 			log.Printf("Interview failed to start: %v", err)
 			return
@@ -164,7 +183,7 @@ func (apiCfg *apiConfig) interviewsHandler(w http.ResponseWriter, r *http.Reques
 	}
 }
 
-func (apiCfg *apiConfig) conversationsHandler(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) ConversationsHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	// POST start an instance of conversations and return next question
 	case http.MethodPost:
@@ -181,9 +200,9 @@ func (apiCfg *apiConfig) conversationsHandler(w http.ResponseWriter, r *http.Req
 		}
 
 		var conversationFromDatabase *conversation.Conversation
-		exists := conversation.CheckForConversation(apiCfg.ConversationRepo, InterviewID)
+		exists := conversation.CheckForConversation(h.ConversationRepo, InterviewID)
 
-		interviewReturned, err := interview.GetInterview(apiCfg.InterviewRepo, InterviewID)
+		interviewReturned, err := interview.GetInterview(h.InterviewRepo, InterviewID)
 		if err != nil {
 			log.Printf("GetInterview error: %v\n", err)
 			respondWithError(w, http.StatusBadRequest, "Invalid interview_id")
@@ -192,7 +211,7 @@ func (apiCfg *apiConfig) conversationsHandler(w http.ResponseWriter, r *http.Req
 
 		if !exists {
 			conversationFromDatabase, err = conversation.CreateConversation(
-				apiCfg.ConversationRepo,
+				h.ConversationRepo,
 				InterviewID,
 				1,
 				interviewReturned.Prompt,
@@ -205,7 +224,7 @@ func (apiCfg *apiConfig) conversationsHandler(w http.ResponseWriter, r *http.Req
 				return
 			}
 		} else {
-			conversationFromDatabase, err = conversation.GetConversation(apiCfg.ConversationRepo, InterviewID)
+			conversationFromDatabase, err = conversation.GetConversation(h.ConversationRepo, InterviewID)
 			if err != nil {
 				log.Printf("GetConversation error: %v", err)
 				respondWithError(w, http.StatusBadRequest, "Invalid ID.")
@@ -213,7 +232,7 @@ func (apiCfg *apiConfig) conversationsHandler(w http.ResponseWriter, r *http.Req
 			}
 
 			conversationFromDatabase, err = conversation.AppendConversation(
-				apiCfg.ConversationRepo,
+				h.ConversationRepo,
 				conversationFromDatabase,
 				params.Message,
 				params.ConversationID,
@@ -236,7 +255,7 @@ func (apiCfg *apiConfig) conversationsHandler(w http.ResponseWriter, r *http.Req
 	}
 }
 
-func (apiCfg *apiConfig) refreshTokensHandler(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) RefreshTokensHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	// POST generate and return userID and a refreshToken
 	case http.MethodPost:
@@ -247,7 +266,7 @@ func (apiCfg *apiConfig) refreshTokensHandler(w http.ResponseWriter, r *http.Req
 			return
 		}
 
-		storedToken, err := token.GetStoredRefreshToken(apiCfg.TokenRepo, params.UserID)
+		storedToken, err := token.GetStoredRefreshToken(h.TokenRepo, params.UserID)
 		if err != nil {
 			log.Printf("GetStoredRefreshToken error: %v", err)
 			respondWithError(w, http.StatusUnauthorized, "User ID is invalid.")
@@ -261,7 +280,7 @@ func (apiCfg *apiConfig) refreshTokensHandler(w http.ResponseWriter, r *http.Req
 			return
 		}
 
-		refreshToken, err := token.CreateRefreshToken(apiCfg.TokenRepo, params.UserID)
+		refreshToken, err := token.CreateRefreshToken(h.TokenRepo, params.UserID)
 		if err != nil {
 			log.Printf("CreateRefreshToken error: %v", err)
 			respondWithError(w, http.StatusUnauthorized, "")

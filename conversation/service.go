@@ -146,7 +146,7 @@ func AppendConversation(
 		return nil, err
 	}
 
-	moveToNewTopic, incrementQuestion, isFinished, err := checkConversationState(chatGPTResponse, conversation, repo)
+	moveToNewTopic, incrementQuestion, isFinished, err := checkConversationState(chatGPTResponse, conversation)
 	if err != nil {
 		log.Printf("checkConversationState err: %v", err)
 		return nil, err
