@@ -11,6 +11,7 @@
 ## 📋 Contents
 
 - [Overview](#-overview)
+- [Recorded Demo](#-recorded-demo)
 - [System Architecture](#-system-architecture)
 - [Key Features](#-key-features)
 - [Tech Stack](#-tech-stack)
@@ -34,6 +35,11 @@ The application was built with a focus on:
 - **Scalability**: Designed for horizontal scaling with stateless API design
 - **Security**: Implementing industry-standard JWT authentication with refresh token rotation
 - **Maintainability**: Modular code structure with reusable components
+
+## 🎥 Recorded Demo
+- The frontend is located here. However, due to the costs involved with calls to OpenAI, I have opted to provide a recorded demo in lieue of open access.
+- That being said, if you wish to request a live demo of the app, I will be happy to facilitate that. 
+
 
 ## 🏗 System Architecture
 
