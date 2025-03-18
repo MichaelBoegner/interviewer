@@ -37,9 +37,9 @@ The application was built with a focus on:
 - **Maintainability**: Modular code structure with reusable components
 
 ## 🎥 Recorded Demo
-- The frontend is located here. However, due to the costs involved with calls to OpenAI, I have opted to provide a recorded demo in lieue of open access.
-- That being said, if you wish to request a live demo of the app, I will be happy to facilitate that. 
-
+- The frontend is located here: [https://github.com/michaelboegner/interviewer-ui](https://github.com/michaelboegner/interviewer-ui). 
+- However, due to the costs involved with calls to OpenAI, I have opted to provide a recorded demo in lieue of open access.
+- Live demonstrations are available upon request. 
 
 ## 🏗 System Architecture
 
