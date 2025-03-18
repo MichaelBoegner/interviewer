@@ -269,8 +269,6 @@ docker run -p 8080:8080 --env-file .env interviewer
 ## ⚡ Performance Considerations
 
 - **Stateless Design**: The API is designed to be stateless, allowing for horizontal scaling
-- **Response Caching**: Critical paths implement caching where appropriate
-- **Proper Indexing**: Database tables are indexed for query performance
 
 
 ## 🛣️ Development Roadmap
