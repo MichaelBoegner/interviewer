@@ -1,0 +1,19 @@
+services:
+  test-db:
+    image: postgres:15
+    container_name: test_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: testuser
+      POSTGRES_PASSWORD: testpassword
+      POSTGRES_DB: testdb
+    ports:
+      - "5433:5432"
+
+  migrate:
+    image: migrate/migrate
+    depends_on:
+      - test-db
+    entrypoint: ["/bin/sh", "-c", "sleep 3 && migrate -path ./migrations -database 'postgres://testuser:testpassword@test-db:5432/testdb?sslmode=disable' up"]
+    volumes:
+      - ./database/migrations:/migrations
