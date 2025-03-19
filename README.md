@@ -276,17 +276,17 @@ docker run -p 8080:8080 --env-file .env interviewer
 
 ### Current Focus
 - Expanding test coverage
-- Refining API documentation
-- Optimizing database queries
 
 ### Upcoming Improvements
 - Implementation of CI/CD pipeline
-- Structured logging for better observability
-- Supporting multiple conversation tracks within an interview
-- Adding detailed analytics for interview performance
 - Enhancing error handling and recovery mechanisms
+- Structured logging for better observability
 - Input validation
 - Implement a single active session policy
+- Supporting multiple conversation tracks within an interview
+- Adding detailed analytics for interview performance
+- Optimizing database queries
+- Refining API documentation
 - Interview preferences (language, difficulty, duration, etc . . .)
 
 ## 📜 License

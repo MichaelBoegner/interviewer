@@ -29,6 +29,7 @@ func CreateUser(repo UserRepo, username, email, password string) (*User, error) 
 
 	err = repo.CreateUser(user)
 	if err != nil {
+
 		return nil, err
 	}
 
