@@ -149,7 +149,6 @@ func getChatGPTResponse(prompt string) (*models.ChatGPTResponse, error) {
 	}
 
 	chatGPTResponseRaw := choices[0].(map[string]interface{})["message"].(map[string]interface{})["content"].(string)
-	fmt.Printf("\n\nchatGPTResponseRaw: %v\n\n", chatGPTResponseRaw)
 
 	var chatGPTResponse models.ChatGPTResponse
 	if err := json.Unmarshal([]byte(chatGPTResponseRaw), &chatGPTResponse); err != nil {

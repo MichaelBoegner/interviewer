@@ -280,15 +280,8 @@ func GetConversation(repo ConversationRepo, interviewID int) (*Conversation, err
 		return nil, err
 	}
 
-	//DEBUG PRINT QUESTIONS RETURNED
-	for i, q := range questionsReturned {
-		fmt.Printf("\nquestionsReturned[%d]: \n%+v\n", i, *q)
-	}
-
 	// Apply returned questions to respective Topic structs
 	for topicID := 1; topicID <= conversation.CurrentTopic; topicID++ {
-		fmt.Printf("topicID: %v\n", topicID)
-
 		topic := conversation.Topics[topicID]
 		topic.ConversationID = conversation.ID
 		topic.Questions = make(map[int]*Question)
@@ -375,7 +368,6 @@ func getNextQuestion(conversation *Conversation) (*models.ChatGPTResponse, error
 	}
 
 	chatGPTResponseRaw := choices[0].(map[string]interface{})["message"].(map[string]interface{})["content"].(string)
-	fmt.Printf("\n\nchatGPTResponseRaw: %v\n\n", chatGPTResponseRaw)
 
 	var chatGPTResponse models.ChatGPTResponse
 	if err := json.Unmarshal([]byte(chatGPTResponseRaw), &chatGPTResponse); err != nil {

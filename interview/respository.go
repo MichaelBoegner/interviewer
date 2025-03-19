@@ -16,8 +16,6 @@ func NewRepository(db *sql.DB) *Repository {
 }
 
 func (repo *Repository) CreateInterview(interview *Interview) (int, error) {
-	// fmt.Printf("CreateInterview firing: %v\n", interview)
-
 	query := `
     INSERT INTO interviews (user_id, length, number_questions, difficulty, status, score, language, prompt, first_question, subtopic)
     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)

@@ -10,7 +10,7 @@ import (
 )
 
 func StartDB() (*sql.DB, error) {
-	fmt.Printf("StartDB firing\n")
+	fmt.Println("StartDB firing")
 
 	dbHost := os.Getenv("DB_HOST")
 	dbPort := os.Getenv("DB_PORT")
