@@ -1,4 +1,4 @@
-package handlers
+package handlers_test
 
 import (
 	"context"
@@ -16,6 +16,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/joho/godotenv"
 	"github.com/michaelboegner/interviewer/conversation"
+	"github.com/michaelboegner/interviewer/internal/testutil"
 	"github.com/michaelboegner/interviewer/interview"
 	"github.com/michaelboegner/interviewer/middleware"
 	"github.com/michaelboegner/interviewer/token"
@@ -32,14 +33,26 @@ type TestCase struct {
 }
 
 func TestMain(m *testing.M) {
-	log.SetFlags(log.LstdFlags | log.Llongfile)
-
-	err := godotenv.Load()
+	log.Println("Loading environment variables...")
+	err := godotenv.Load("../.env.test")
 	if err != nil {
-		log.Fatalf("Error loading .env file")
+		log.Fatalf("Error loading .env.test file: %v", err)
 	}
 
+	log.Println("Initializing test server...")
+	testutil.InitTestServer()
+
+	// 🚨 Check `TestServerURL` before running any tests
+	if testutil.TestServerURL == "" {
+		log.Fatal("TestMain: TestServerURL is empty! The server did not start properly.")
+	}
+
+	log.Printf("TestMain: Test server started successfully at: %s", testutil.TestServerURL)
+
 	code := m.Run()
+
+	log.Println("Stopping test server...")
+	testutil.StopTestServer()
 
 	os.Exit(code)
 }
@@ -75,7 +88,7 @@ func TestUsersHandler_Post(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			// Arrange
 			mockUserRepo := user.NewMockRepo()
-			apiCfg := &apiConfig{UserRepo: mockUserRepo}
+			handler := &Handler{UserRepo: mockUserRepo}
 
 			w, req, tc, err := setRequestAndWriter(http.MethodPost, "/api/users", tc)
 			if err != nil {
@@ -83,7 +96,7 @@ func TestUsersHandler_Post(t *testing.T) {
 			}
 
 			// Act
-			apiCfg.usersHandler(w, req)
+			handler.UsersHandler(w, req)
 
 			// Assert
 			if w.Code != tc.expectedStatus {
@@ -119,7 +132,7 @@ func TestUsersHandler_Get(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			// Arrange
 			mockUserRepo := user.NewMockRepo()
-			apiCfg := &apiConfig{UserRepo: mockUserRepo}
+			handler := &Handler{UserRepo: mockUserRepo}
 
 			w, req, tc, err := setRequestAndWriter(http.MethodGet, "/api/users/1", tc)
 			if err != nil {
@@ -127,7 +140,7 @@ func TestUsersHandler_Get(t *testing.T) {
 			}
 
 			// Act
-			apiCfg.usersHandler(w, req)
+			handler.UsersHandler(w, req)
 
 			// Assert
 			if w.Code != tc.expectedStatus {
@@ -178,7 +191,7 @@ func TestLoginHandler_Post(t *testing.T) {
 			// Arrange
 			mockTokenRepo := token.NewMockRepo()
 			mockUserRepo := user.NewMockRepo()
-			apiCfg := &apiConfig{
+			handler := &Handler{
 				TokenRepo: mockTokenRepo,
 				UserRepo:  mockUserRepo,
 			}
@@ -189,7 +202,7 @@ func TestLoginHandler_Post(t *testing.T) {
 			}
 
 			// Act
-			apiCfg.loginHandler(w, req)
+			handler.LoginHandler(w, req)
 
 			// Assert
 			if w.Code != tc.expectedStatus {
@@ -234,7 +247,7 @@ func TestInterviewsHandler_Post(t *testing.T) {
 			mockUserRepo := user.NewMockRepo()
 			mockInterviewRepo := interview.NewMockRepo()
 
-			apiCfg := &apiConfig{
+			handler := &Handler{
 				UserRepo:      mockUserRepo,
 				InterviewRepo: mockInterviewRepo,
 			}
@@ -247,10 +260,10 @@ func TestInterviewsHandler_Post(t *testing.T) {
 			req.Header.Set("Authorization", "Bearer "+token)
 
 			// Apply the middleware to the handler
-			handler := middleware.GetContext(http.HandlerFunc(apiCfg.interviewsHandler))
+			handlerWithMiddleware := middleware.GetContext(http.HandlerFunc(handler.InterviewsHandler))
 
 			// Act
-			handler.ServeHTTP(w, req)
+			handlerWithMiddleware.ServeHTTP(w, req)
 
 			// Assert
 			if w.Code != tc.expectedStatus {
@@ -289,7 +302,7 @@ func TestRefreshTokensHandler_Post(t *testing.T) {
 			mockInterviewRepo := interview.NewMockRepo()
 			mockTokenRepo := token.NewMockRepo()
 
-			apiCfg := &apiConfig{
+			handler := &Handler{
 				UserRepo:      mockUserRepo,
 				InterviewRepo: mockInterviewRepo,
 				TokenRepo:     mockTokenRepo,
@@ -303,10 +316,10 @@ func TestRefreshTokensHandler_Post(t *testing.T) {
 			req.Header.Set("Authorization", "Bearer "+tokenKey)
 
 			// Apply the middleware to the handler
-			handler := middleware.GetContext(http.HandlerFunc(apiCfg.refreshTokensHandler))
+			handlerWithMiddleware := middleware.GetContext(http.HandlerFunc(handler.RefreshTokensHandler))
 
 			// Act
-			handler.ServeHTTP(w, req)
+			handlerWithMiddleware.ServeHTTP(w, req)
 
 			// Assert
 			if w.Code != tc.expectedStatus {
@@ -333,31 +346,31 @@ func TestConversationsHandler_Post(t *testing.T) {
 	}
 	topic := conversationResponse.Topics[1]
 	topic.ConversationID = 1
-	topic.Questions = make(map[int]conversation.Question)
+	topic.Questions = make(map[int]*conversation.Question)
 
 	question := topic.Questions[1]
-	question.ID = 1
+	question.ConversationID = 1
 	question.QuestionNumber = 1
 	question.Prompt = "What is the flight speed of an unladdened swallow?"
 
 	messageFirst := &conversation.Message{
-		ID:         1,
-		QuestionID: 1,
-		Author:     "interviewer",
-		Content:    "What is the flight speed of an unladdened swallow?",
-		CreatedAt:  time.Now(),
+		ConversationID: 1,
+		QuestionNumber: 1,
+		Author:         "interviewer",
+		Content:        "What is the flight speed of an unladdened swallow?",
+		CreatedAt:      time.Now(),
 	}
 
 	messageResponse := &conversation.Message{
-		ID:         2,
-		QuestionID: 1,
-		Author:     "user",
-		Content:    "European or African?",
-		CreatedAt:  time.Now(),
+		ConversationID: 1,
+		QuestionNumber: 1,
+		Author:         "user",
+		Content:        "European or African?",
+		CreatedAt:      time.Now(),
 	}
 
-	messageResponse.ID = 2
-	messageResponse.QuestionID = 1
+	messageResponse.ConversationID = 1
+	messageResponse.QuestionNumber = 1
 	messageResponse.CreatedAt = time.Now()
 
 	question.Messages = make([]conversation.Message, 0)
@@ -393,7 +406,7 @@ func TestConversationsHandler_Post(t *testing.T) {
 			mockTokenRepo := token.NewMockRepo()
 			mockConversationRepo := conversation.NewMockRepo()
 
-			apiCfg := &apiConfig{
+			handler := &Handler{
 				UserRepo:         mockUserRepo,
 				InterviewRepo:    mockInterviewRepo,
 				TokenRepo:        mockTokenRepo,
@@ -408,10 +421,10 @@ func TestConversationsHandler_Post(t *testing.T) {
 			req.Header.Set("Authorization", "Bearer "+tokenKey)
 
 			// Apply the middleware to the handler
-			handler := middleware.GetContext(http.HandlerFunc(apiCfg.conversationsHandler))
+			handlerWithMiddleware := middleware.GetContext(http.HandlerFunc(handler.ConversationsHandler))
 
 			// Act
-			handler.ServeHTTP(w, req)
+			handlerWithMiddleware.ServeHTTP(w, req)
 
 			// Assert
 			if w.Code != tc.expectedStatus {

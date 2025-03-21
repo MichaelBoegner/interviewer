@@ -59,7 +59,7 @@ func (repo *MockRepo) CreateConversation(conversation *Conversation) (int, error
 	return 1, nil
 }
 
-func (repo *MockRepo) CreateQuestion(conversation *Conversation) (int, error) {
+func (repo *MockRepo) CreateQuestion(conversation *Conversation, prompt string) (int, error) {
 	return 1, nil
 }
 
@@ -67,6 +67,24 @@ func (repo *MockRepo) CreateMessages(conversation *Conversation, messages []Mess
 	return nil
 }
 
-func (repo *MockRepo) AddMessage(questionID int, message *Message) (int, error) {
+func (repo *MockRepo) AddMessage(conversationID, topic_id, questionNumber int, message *Message) (int, error) {
 	return 3, nil
+}
+
+func (repo *MockRepo) AddQuestion(question *Question) (int, error) {
+	return 2, nil
+}
+
+func (repo *MockRepo) GetMessages(conversationID, topic_id, questionNumber int) ([]Message, error) {
+	var messages []Message
+	return messages, nil
+}
+
+func (repo *MockRepo) GetQuestions(Conversation *Conversation) ([]*Question, error) {
+	var questions []*Question
+	return questions, nil
+}
+
+func (repo *MockRepo) UpdateConversationCurrents(conversationID, currentQuestionNumber, topicID int, subtopic string) (int, error) {
+	return 1, nil
 }
