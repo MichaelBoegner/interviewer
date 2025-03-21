@@ -41,7 +41,7 @@ func enableCors(next http.Handler) http.Handler {
 func main() {
 	log.SetFlags(log.LstdFlags | log.Llongfile)
 
-	err := godotenv.Load()
+	err := godotenv.Load(".env.dev")
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}

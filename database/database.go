@@ -16,17 +16,19 @@ func StartDB() (*sql.DB, error) {
 	dbPort := os.Getenv("DB_PORT")
 	dbUser := os.Getenv("DB_USER")
 	dbName := os.Getenv("DB_NAME")
+	dbPassword := os.Getenv("DB_PASSWORD")
 	sslMode := os.Getenv("DB_SSLMODE")
 
 	var connStr string
-	connStr = fmt.Sprintf("host=%s port=%s user=%s dbname=%s sslmode=%s",
-		dbHost, dbPort, dbUser, dbName, sslMode)
+	connStr = fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
+		dbHost, dbPort, dbUser, dbPassword, dbName, sslMode)
 
 	// For direct Supabase connection string (alternative method)
 	supabaseConnStr := os.Getenv("DATABASE_URL")
 	if supabaseConnStr != "" {
 		connStr = supabaseConnStr
 	}
+	log.Printf("ConnStr env variables being used: %s", connStr)
 
 	// Open the connection
 	db, err := sql.Open("postgres", connStr)

@@ -79,7 +79,7 @@ func (h *Handler) UsersHandler(w http.ResponseWriter, r *http.Request) {
 			Username: user.Username,
 			Email:    user.Email,
 		}
-		respondWithJSON(w, http.StatusOK, payload)
+		respondWithJSON(w, http.StatusCreated, payload)
 		return
 
 	// GET a user by {id}
