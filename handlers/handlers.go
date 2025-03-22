@@ -20,18 +20,21 @@ type Handler struct {
 	InterviewRepo    interview.InterviewRepo
 	ConversationRepo conversation.ConversationRepo
 	TokenRepo        token.TokenRepo
+	OpenAI           interview.AIClient
 }
 
 func NewHandler(
 	interviewRepo interview.InterviewRepo,
 	userRepo user.UserRepo,
 	tokenRepo token.TokenRepo,
-	conversationRepo conversation.ConversationRepo) *Handler {
+	conversationRepo conversation.ConversationRepo,
+	openAI interview.AIClient) *Handler {
 	return &Handler{
 		InterviewRepo:    interviewRepo,
 		UserRepo:         userRepo,
 		TokenRepo:        tokenRepo,
 		ConversationRepo: conversationRepo,
+		OpenAI:           openAI,
 	}
 }
 
@@ -168,7 +171,7 @@ func (h *Handler) InterviewsHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		interviewStarted, err := interview.StartInterview(h.InterviewRepo, userID, 30, 3, "easy")
+		interviewStarted, err := interview.StartInterview(h.InterviewRepo, h.OpenAI, userID, 30, 3, "easy")
 		if err != nil {
 			log.Printf("Interview failed to start: %v", err)
 			return

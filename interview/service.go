@@ -15,7 +15,7 @@ import (
 	"github.com/michaelboegner/interviewer/models"
 )
 
-func StartInterview(repo InterviewRepo, userId, length, numberQuestions int, difficulty string) (*Interview, error) {
+func StartInterview(repo InterviewRepo, ai AIClient, userId, length, numberQuestions int, difficulty string) (*Interview, error) {
 	now := time.Now()
 	prompt := "You are conducting a structured backend development interview. " +
 		"The interview follows **six topics in this order**:\n\n" +
@@ -47,7 +47,7 @@ func StartInterview(repo InterviewRepo, userId, length, numberQuestions int, dif
 		"    \"next_subtopic\": \"next subtopic\"\n" +
 		"}"
 
-	chatGPTResponse, err := getChatGPTResponse(prompt)
+	chatGPTResponse, err := ai.GetChatGPTResponse(prompt)
 	if err != nil {
 		log.Printf("getChatGPTResponse err: %v\n", err)
 		return nil, err
@@ -89,7 +89,7 @@ func GetInterview(repo InterviewRepo, interviewID int) (*Interview, error) {
 	return interview, nil
 }
 
-func getChatGPTResponse(prompt string) (*models.ChatGPTResponse, error) {
+func (c *OpenAIClient) GetChatGPTResponse(prompt string) (*models.ChatGPTResponse, error) {
 	ctx := context.Background()
 	apiKey := os.Getenv("OPENAI_API_KEY")
 

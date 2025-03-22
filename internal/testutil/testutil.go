@@ -8,6 +8,7 @@ import (
 	"github.com/michaelboegner/interviewer/conversation"
 	"github.com/michaelboegner/interviewer/database"
 	"github.com/michaelboegner/interviewer/handlers"
+	"github.com/michaelboegner/interviewer/internal/mocks"
 	"github.com/michaelboegner/interviewer/interview"
 	"github.com/michaelboegner/interviewer/middleware"
 	"github.com/michaelboegner/interviewer/token"
@@ -34,8 +35,9 @@ func InitTestServer() {
 	userRepo := user.NewRepository(db)
 	tokenRepo := token.NewRepository(db)
 	conversationRepo := conversation.NewRepository(db)
+	openAI := &mocks.MockOpenAIClient{}
 
-	handler := handlers.NewHandler(interviewRepo, userRepo, tokenRepo, conversationRepo)
+	handler := handlers.NewHandler(interviewRepo, userRepo, tokenRepo, conversationRepo, openAI)
 
 	TestMux = http.NewServeMux()
 	TestMux.Handle("/api/users/", middleware.GetContext(http.HandlerFunc(handler.UsersHandler)))

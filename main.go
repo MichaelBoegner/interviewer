@@ -60,8 +60,9 @@ func main() {
 	userRepo := user.NewRepository(db)
 	tokenRepo := token.NewRepository(db)
 	conversationRepo := conversation.NewRepository(db)
+	openAI := &interview.OpenAIClient{}
 
-	handler := handlers.NewHandler(interviewRepo, userRepo, tokenRepo, conversationRepo)
+	handler := handlers.NewHandler(interviewRepo, userRepo, tokenRepo, conversationRepo, openAI)
 
 	mux.Handle("/api/users/", middleware.GetContext(http.HandlerFunc(handler.UsersHandler)))
 	mux.Handle("/api/auth/login", middleware.GetContext(http.HandlerFunc(handler.LoginHandler)))
