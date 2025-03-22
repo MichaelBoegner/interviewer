@@ -16,6 +16,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/joho/godotenv"
 	"github.com/michaelboegner/interviewer/conversation"
+	"github.com/michaelboegner/interviewer/handlers"
 	"github.com/michaelboegner/interviewer/internal/testutil"
 	"github.com/michaelboegner/interviewer/interview"
 	"github.com/michaelboegner/interviewer/middleware"
@@ -29,10 +30,12 @@ type TestCase struct {
 	params         middleware.AcceptedVals
 	expectedStatus int
 	expectError    bool
-	respBody       returnVals
+	respBody       handlers.ReturnVals
 }
 
 func TestMain(m *testing.M) {
+	log.SetFlags(log.LstdFlags | log.Llongfile)
+
 	log.Println("Loading environment variables...")
 	err := godotenv.Load("../.env.test")
 	if err != nil {
@@ -69,7 +72,7 @@ func TestUsersHandler_Post(t *testing.T) {
 			},
 			expectedStatus: http.StatusOK,
 			expectError:    false,
-			respBody: returnVals{
+			respBody: handlers.ReturnVals{
 				Username: "testuser",
 				Email:    "test@example.com",
 			},
@@ -80,7 +83,7 @@ func TestUsersHandler_Post(t *testing.T) {
 			params:         middleware.AcceptedVals{},
 			expectedStatus: http.StatusBadRequest,
 			expectError:    true,
-			respBody:       returnVals{},
+			respBody:       handlers.ReturnVals{},
 		},
 	}
 
@@ -88,7 +91,7 @@ func TestUsersHandler_Post(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			// Arrange
 			mockUserRepo := user.NewMockRepo()
-			handler := &Handler{UserRepo: mockUserRepo}
+			handler := &handlers.Handler{UserRepo: mockUserRepo}
 
 			w, req, tc, err := setRequestAndWriter(http.MethodPost, "/api/users", tc)
 			if err != nil {
@@ -120,7 +123,7 @@ func TestUsersHandler_Get(t *testing.T) {
 			params:         middleware.AcceptedVals{},
 			expectedStatus: http.StatusOK,
 			expectError:    false,
-			respBody: returnVals{
+			respBody: handlers.ReturnVals{
 				ID:       1,
 				Username: "testuser",
 				Email:    "test@example.com",
@@ -132,7 +135,7 @@ func TestUsersHandler_Get(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			// Arrange
 			mockUserRepo := user.NewMockRepo()
-			handler := &Handler{UserRepo: mockUserRepo}
+			handler := &handlers.Handler{UserRepo: mockUserRepo}
 
 			w, req, tc, err := setRequestAndWriter(http.MethodGet, "/api/users/1", tc)
 			if err != nil {
@@ -167,7 +170,7 @@ func TestLoginHandler_Post(t *testing.T) {
 			},
 			expectedStatus: http.StatusOK,
 			expectError:    false,
-			respBody: returnVals{
+			respBody: handlers.ReturnVals{
 				ID:           1,
 				JWToken:      "",
 				RefreshToken: "",
@@ -182,7 +185,7 @@ func TestLoginHandler_Post(t *testing.T) {
 			},
 			expectedStatus: http.StatusUnauthorized,
 			expectError:    true,
-			respBody:       returnVals{},
+			respBody:       handlers.ReturnVals{},
 		},
 	}
 
@@ -191,7 +194,7 @@ func TestLoginHandler_Post(t *testing.T) {
 			// Arrange
 			mockTokenRepo := token.NewMockRepo()
 			mockUserRepo := user.NewMockRepo()
-			handler := &Handler{
+			handler := &handlers.Handler{
 				TokenRepo: mockTokenRepo,
 				UserRepo:  mockUserRepo,
 			}
@@ -237,7 +240,7 @@ func TestInterviewsHandler_Post(t *testing.T) {
 			},
 			expectedStatus: http.StatusOK,
 			expectError:    false,
-			respBody:       returnVals{},
+			respBody:       handlers.ReturnVals{},
 		},
 	}
 
@@ -247,7 +250,7 @@ func TestInterviewsHandler_Post(t *testing.T) {
 			mockUserRepo := user.NewMockRepo()
 			mockInterviewRepo := interview.NewMockRepo()
 
-			handler := &Handler{
+			handler := &handlers.Handler{
 				UserRepo:      mockUserRepo,
 				InterviewRepo: mockInterviewRepo,
 			}
@@ -291,7 +294,7 @@ func TestRefreshTokensHandler_Post(t *testing.T) {
 			},
 			expectedStatus: http.StatusOK,
 			expectError:    false,
-			respBody:       returnVals{},
+			respBody:       handlers.ReturnVals{},
 		},
 	}
 
@@ -302,7 +305,7 @@ func TestRefreshTokensHandler_Post(t *testing.T) {
 			mockInterviewRepo := interview.NewMockRepo()
 			mockTokenRepo := token.NewMockRepo()
 
-			handler := &Handler{
+			handler := &handlers.Handler{
 				UserRepo:      mockUserRepo,
 				InterviewRepo: mockInterviewRepo,
 				TokenRepo:     mockTokenRepo,
@@ -392,7 +395,7 @@ func TestConversationsHandler_Post(t *testing.T) {
 			},
 			expectedStatus: http.StatusOK,
 			expectError:    false,
-			respBody: returnVals{
+			respBody: handlers.ReturnVals{
 				Conversation: conversationResponse,
 			},
 		},
@@ -406,7 +409,7 @@ func TestConversationsHandler_Post(t *testing.T) {
 			mockTokenRepo := token.NewMockRepo()
 			mockConversationRepo := conversation.NewMockRepo()
 
-			handler := &Handler{
+			handler := &handlers.Handler{
 				UserRepo:         mockUserRepo,
 				InterviewRepo:    mockInterviewRepo,
 				TokenRepo:        mockTokenRepo,
@@ -448,8 +451,8 @@ func setRequestAndWriter(method, endpoint string, tc TestCase) (*httptest.Respon
 	return w, req, tc, nil
 }
 
-func checkResponse(w *httptest.ResponseRecorder, respBody returnVals, expectError bool) (returnVals, error) {
-	var resp returnVals
+func checkResponse(w *httptest.ResponseRecorder, respBody handlers.ReturnVals, expectError bool) (handlers.ReturnVals, error) {
+	var resp handlers.ReturnVals
 
 	err := json.Unmarshal(w.Body.Bytes(), &resp)
 	if err != nil {

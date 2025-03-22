@@ -35,7 +35,7 @@ func NewHandler(
 	}
 }
 
-type returnVals struct {
+type ReturnVals struct {
 	ID             int                        `json:"id,omitempty"`
 	UserID         int                        `json:"user_id,omitempty"`
 	InterviewID    int                        `json:"interview_id,omitempty"`
@@ -75,7 +75,7 @@ func (h *Handler) UsersHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		payload := &returnVals{
+		payload := &ReturnVals{
 			Username: user.Username,
 			Email:    user.Email,
 		}
@@ -96,7 +96,7 @@ func (h *Handler) UsersHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		payload := &returnVals{
+		payload := &ReturnVals{
 			ID:       user.ID,
 			Username: user.Username,
 			Email:    user.Email,
@@ -138,7 +138,7 @@ func (h *Handler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		payload := returnVals{
+		payload := ReturnVals{
 			UserID:       userID,
 			Username:     params.Username,
 			JWToken:      jwToken,
@@ -174,7 +174,7 @@ func (h *Handler) InterviewsHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		payload := returnVals{
+		payload := ReturnVals{
 			InterviewID:   interviewStarted.Id,
 			FirstQuestion: interviewStarted.FirstQuestion,
 		}
@@ -249,7 +249,7 @@ func (h *Handler) ConversationsHandler(w http.ResponseWriter, r *http.Request) {
 
 		}
 
-		payload := &returnVals{
+		payload := &ReturnVals{
 			Conversation: conversationFromDatabase,
 		}
 		respondWithJSON(w, http.StatusOK, payload)
@@ -295,7 +295,7 @@ func (h *Handler) RefreshTokensHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		payload := &returnVals{
+		payload := &ReturnVals{
 			ID:           params.UserID,
 			JWToken:      jwToken,
 			RefreshToken: refreshToken,
@@ -348,7 +348,7 @@ func respondWithError(w http.ResponseWriter, code int, msg string) {
 		w.WriteHeader(code)
 	}
 
-	respBody := returnVals{
+	respBody := ReturnVals{
 		Error: msg,
 	}
 
