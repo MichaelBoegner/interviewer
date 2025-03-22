@@ -70,7 +70,7 @@ func TestUsersHandler_Post(t *testing.T) {
 				Email:    "test@example.com",
 				Password: "password",
 			},
-			expectedStatus: http.StatusOK,
+			expectedStatus: http.StatusCreated,
 			expectError:    false,
 			respBody: handlers.ReturnVals{
 				Username: "testuser",
