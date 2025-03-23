@@ -27,6 +27,6 @@ func CreateTestUserAndJWT(t *testing.T, router http.Handler) (int, string) {
 	}
 	// 2. Login via POST /api/auth/login
 	// 3. Extract JWT + userID from response
-	print(
+
 	return 0, ""
 }
