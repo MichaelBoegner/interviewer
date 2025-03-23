@@ -46,22 +46,10 @@ func InitTestServer() {
 	TestMux.Handle("/api/auth/token", middleware.GetContext(http.HandlerFunc(handler.RefreshTokensHandler)))
 	TestMux.Handle("/api/conversations/", middleware.GetContext(http.HandlerFunc(handler.ConversationsHandler)))
 
-	// ✅ Debug before starting the server
-	if TestMux == nil {
-		log.Fatal("TestMux is nil before starting httptest.NewServer")
-	}
-
 	log.Println("Starting in-memory test server...")
 
 	TestServer = httptest.NewServer(TestMux)
 	TestServerURL = TestServer.URL
-
-	// ✅ Debug after starting the server
-	if TestServerURL == "" {
-		log.Fatal("TestServerURL is empty! Server failed to start.")
-	} else {
-		log.Printf("Test server running at: %s", TestServerURL)
-	}
 }
 
 func StopTestServer() {

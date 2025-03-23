@@ -2,11 +2,9 @@ package user
 
 import (
 	"log"
-	"os"
-	"strconv"
 	"time"
 
-	"github.com/golang-jwt/jwt/v5"
+	"github.com/michaelboegner/interviewer/token"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -47,7 +45,7 @@ func LoginUser(repo UserRepo, username, password string) (string, int, error) {
 		return "", 0, err
 	}
 
-	jwToken, err := createJWT(id, 0)
+	jwToken, err := token.CreateJWT(id, 0)
 	if err != nil {
 		log.Printf("JWT creation failed: %v", err)
 		return "", 0, err
@@ -67,33 +65,4 @@ func GetUser(repo UserRepo, userID int) (*User, error) {
 		return nil, err
 	}
 	return userReturned, nil
-}
-
-func createJWT(id, expires int) (string, error) {
-	var (
-		key   []byte
-		token *jwt.Token
-	)
-
-	jwtSecret := os.Getenv("JWT_SECRET")
-	now := time.Now()
-	if expires == 0 {
-		expires = 3600
-	}
-	expiresAt := time.Now().Add(time.Duration(expires) * time.Second)
-	key = []byte(jwtSecret)
-	claims := jwt.RegisteredClaims{
-		Issuer:    "interviewer",
-		IssuedAt:  jwt.NewNumericDate(now),
-		ExpiresAt: jwt.NewNumericDate(expiresAt),
-		Subject:   strconv.Itoa(id),
-	}
-	token = jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	signedToken, err := token.SignedString(key)
-	if err != nil {
-		log.Fatalf("Bad SignedString: %s", err)
-		return "", err
-	}
-
-	return signedToken, nil
 }
