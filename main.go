@@ -21,8 +21,10 @@ func enableCors(next http.Handler) http.Handler {
 
 		// In production, this should be a specific domain. For development, we check the environment
 		if os.Getenv("ENV") == "production" {
-			w.Header().Set("Access-Control-Allow-Origin", "https://your-production-domain.com")
+			log.Println("Using production")
+			w.Header().Set("Access-Control-Allow-Origin", "https://interviewer-ui.vercel.app")
 		} else {
+			log.Println("NOT using production")
 			w.Header().Set("Access-Control-Allow-Origin", "http://localhost:5173")
 		}
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
@@ -41,9 +43,10 @@ func enableCors(next http.Handler) http.Handler {
 func main() {
 	log.SetFlags(log.LstdFlags | log.Llongfile)
 
-	err := godotenv.Load(".env.dev")
-	if err != nil {
-		log.Fatalf("Error loading .env file: %v", err)
+	if os.Getenv("ENV") != "production" {
+		if err := godotenv.Load(".env.dev"); err != nil {
+			log.Printf("Error loading .env file: %v", err)
+		}
 	}
 
 	const filepathRoot = "."

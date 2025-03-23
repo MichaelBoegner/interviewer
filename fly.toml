@@ -1,0 +1,21 @@
+app = "interviewmocker"
+
+primary_region = "sin" # or whatever your original region is
+
+[build]
+  # Optional – only if you use a specific builder or Dockerfile
+
+[env]
+  PORT = "8080" # or whatever your app listens on
+
+[[services]]
+  internal_port = 8080
+  protocol = "tcp"
+
+  [[services.ports]]
+    port = 80
+    handlers = ["http"]
+
+  [[services.ports]]
+    port = 443
+    handlers = ["tls", "http"]
