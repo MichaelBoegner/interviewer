@@ -27,7 +27,7 @@ func TestInterviewsHandler_Post_Integration(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			// Arrange
-			 := user.NewMockRepo()
+			user := user.NewMockRepo()
 			handler := &handlers.Handler{UserRepo: mockUserRepo}
 
 			w, req, tc, err := setRequestAndWriter(http.MethodPost, "/api/users", tc)
