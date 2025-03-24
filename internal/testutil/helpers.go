@@ -1,10 +1,10 @@
 package testutil
 
 import (
+	"bytes"
 	"io"
 	"log"
 	"net/http"
-	"strings"
 	"testing"
 )
 
@@ -13,13 +13,14 @@ func CreateTestUserAndJWT(t *testing.T) (string, string, error) {
 	t.Helper()
 	client := &http.Client{}
 
-	reqBodyUser := `{
+	reqBodyUser := []byte(`{
 		"username":"test",
 		"email":"test@email.com",
 		"password":"test"
-	}`
+	}`)
+
 	t.Logf("Request body being sent: %s", reqBodyUser)
-	req, err := http.NewRequest("POST", TestServerURL+"/api/users", strings.NewReader(reqBodyUser))
+	req, err := http.NewRequest("POST", TestServerURL+"/api/users/", bytes.NewBuffer(reqBodyUser))
 	if err != nil {
 		t.Logf("CreateTestUserAndJWT user creation failed: %v", err)
 	}

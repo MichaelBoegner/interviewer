@@ -60,7 +60,7 @@ func (h *Handler) UsersHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	// POST create a user
 	case http.MethodPost:
-		params, ok := r.Context().Value("params").(middleware.AcceptedVals)
+		params, ok := r.Context().Value(middleware.ContextKeyParams).(middleware.AcceptedVals)
 		if !ok {
 			respondWithError(w, http.StatusBadRequest, "Invalid request parameters")
 			return
@@ -116,7 +116,7 @@ func (h *Handler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	// POST login a user
 	case http.MethodPost:
-		params, ok := r.Context().Value("params").(middleware.AcceptedVals)
+		params, ok := r.Context().Value(middleware.ContextKeyParams).(middleware.AcceptedVals)
 		if !ok {
 			respondWithError(w, http.StatusBadRequest, "Invalid request parameters")
 			return
@@ -160,7 +160,7 @@ func (h *Handler) InterviewsHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	// POST start a resource instance of an interview and return the first question
 	case http.MethodPost:
-		token, ok := r.Context().Value("tokenKey").(string)
+		token, ok := r.Context().Value(middleware.ContextKeyTokenKey).(string)
 		if !ok {
 			respondWithError(w, http.StatusBadRequest, "Invalid request parameters")
 			return
@@ -193,7 +193,7 @@ func (h *Handler) ConversationsHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	// POST start an instance of conversations and return next question
 	case http.MethodPost:
-		params, ok := r.Context().Value("params").(middleware.UpdateConversation)
+		params, ok := r.Context().Value(middleware.ContextKeyParams).(middleware.UpdateConversation)
 		if !ok {
 			respondWithError(w, http.StatusBadRequest, "Invalid request parameters")
 			return
@@ -265,8 +265,8 @@ func (h *Handler) RefreshTokensHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	// POST generate and return userID and a refreshToken
 	case http.MethodPost:
-		providedToken := r.Context().Value("tokenKey").(string)
-		params, ok := r.Context().Value("params").(middleware.AcceptedVals)
+		providedToken := r.Context().Value(middleware.ContextKeyTokenKey).(string)
+		params, ok := r.Context().Value(middleware.ContextKeyParams).(middleware.AcceptedVals)
 		if !ok {
 			respondWithError(w, http.StatusBadRequest, "Invalid request parameters")
 			return

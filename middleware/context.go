@@ -23,8 +23,8 @@ type AcceptedVals struct {
 	Email        string                     `json:"email"`
 	AccessToken  string                     `json:"access_token"`
 	InterviewID  int                        `json:"interview_id"`
-	Conversation *conversation.Conversation `json:"conversation"`
-	Message      *conversation.Message      `json:"message"`
+	Conversation *conversation.Conversation `json:"conversation,omitempty"`
+	Message      *conversation.Message      `json:"message,omitempty"`
 }
 
 type returnVals struct {
@@ -38,6 +38,13 @@ type UpdateConversation struct {
 	QuestionNumber int                   `json:"question_number"`
 	Message        *conversation.Message `json:"message"`
 }
+
+type ContextKey string
+
+const (
+	ContextKeyParams   ContextKey = "params"
+	ContextKeyTokenKey ContextKey = "tokenKey"
+)
 
 func GetContext(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -84,6 +91,8 @@ func GetContext(next http.Handler) http.Handler {
 			var generalParams AcceptedVals
 			err := json.Unmarshal(body, &generalParams)
 			if err != nil {
+				log.Printf("Unmarshal error: %v", err)
+				log.Printf("Raw body: %s", string(body))
 				respondWithError(w, http.StatusBadRequest, "Error decoding general params")
 				return
 			}
@@ -93,8 +102,8 @@ func GetContext(next http.Handler) http.Handler {
 
 		// Set extracted data in context for access by handlers
 		ctx := r.Context()
-		ctx = context.WithValue(ctx, "tokenKey", tokenKey)
-		ctx = context.WithValue(ctx, "params", params)
+		ctx = context.WithValue(ctx, ContextKeyTokenKey, tokenKey)
+		ctx = context.WithValue(ctx, ContextKeyParams, params)
 
 		// Pass along the request with the new context to the handler
 		next.ServeHTTP(w, r.WithContext(ctx))
