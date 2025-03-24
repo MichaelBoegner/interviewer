@@ -117,7 +117,6 @@ func AppendConversation(
 	conversationID, topicID, questionID, questionNumber int,
 	prompt string) (*Conversation, error) {
 
-	// Check that conversation ID matches with Interview ID
 	if conversation.ID != conversationID {
 		return nil, errors.New("conversation_id doesn't match with current interview")
 	}
