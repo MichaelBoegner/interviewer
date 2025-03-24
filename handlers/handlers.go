@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -74,7 +75,8 @@ func (h *Handler) UsersHandler(w http.ResponseWriter, r *http.Request) {
 		user, err := user.CreateUser(h.UserRepo, params.Username, params.Email, params.Password)
 		if err != nil {
 			log.Printf("CreateUser error: %v", err)
-			respondWithError(w, http.StatusInternalServerError, "Internal Server Error")
+			noNewUsers := fmt.Sprintf("%s", err)
+			respondWithError(w, http.StatusInternalServerError, noNewUsers)
 			return
 		}
 
