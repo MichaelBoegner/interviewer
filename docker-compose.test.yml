@@ -10,10 +10,10 @@ services:
     ports:
       - "5433:5432"
 
-  migrate:
-    image: migrate/migrate
-    depends_on:
-      - test-db
-    entrypoint: ["/bin/sh", "-c", "sleep 3 && migrate -path ./migrations -database 'postgres://testuser:testpassword@test-db:5432/testdb?sslmode=disable' up"]
-    volumes:
-      - ./database/migrations:/migrations
+  # migrate:
+  #   image: migrate/migrate
+  #   depends_on:
+  #     - test-db
+  #   entrypoint: ["/bin/sh", "-c", "sleep 3 && migrate -path ./migrations -database 'postgres://testuser:testpassword@testdb:5432/testdb?sslmode=disable' up"]
+  #   volumes:
+  #     - ./database/migrations:/migrations

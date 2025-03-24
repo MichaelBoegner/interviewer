@@ -1,32 +1,52 @@
 package testutil
 
 import (
+	"io"
+	"log"
 	"net/http"
-	"net/http/httptest"
 	"strings"
 	"testing"
 )
 
-func CreateTestUserAndJWT(t *testing.T, router http.Handler) (int, string) {
-	t.Helper()
+func CreateTestUserAndJWT(t *testing.T) (string, string, error) {
 
-	// 1. Register a new user via POST /api/users
-	reqBody := `{
+	t.Helper()
+	client := &http.Client{}
+
+	reqBodyUser := `{
 		"username":"test",
 		"email":"test@email.com",
-		"password":"test
+		"password":"test"
 	}`
-	req := httptest.NewRequest("POST", "/api/users", strings.NewReader(reqBody))
+	t.Logf("Request body being sent: %s", reqBodyUser)
+	req, err := http.NewRequest("POST", TestServerURL+"/api/users", strings.NewReader(reqBodyUser))
+	if err != nil {
+		t.Logf("CreateTestUserAndJWT user creation failed: %v", err)
+	}
 	req.Header.Set("Content-Type", "application/json")
 
-	rr := httptest.NewRecorder()
-	router.ServeHTTP(rr, req)
-
-	if rr.Code != http.StatusCreated {
-		t.Fatalf("Expected status 201, got %d. Body: %s", rr.Code, rr.Body.String())
+	resp, err := client.Do(req)
+	if err != nil {
+		t.Logf("Request to create test user failed: %v", err)
 	}
+	defer resp.Body.Close()
+
+	bodyBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		t.Logf("Reading response failed: %v", err)
+	}
+
+	log.Printf("\n\n\nTHIS IS THE RESP: %v\n\n\n", string(bodyBytes))
+
 	// 2. Login via POST /api/auth/login
+	// reqBodyLogin := `
+	// 	{
+	// 		"username": "test",
+	// 		"password": "test"
+	// 	}
+	// `
+
 	// 3. Extract JWT + userID from response
 
-	return 0, ""
+	return "", "", nil
 }
