@@ -42,9 +42,10 @@ The application was built with a focus on:
 ## 🎥 Recorded Demo
 - The frontend is located here: [https://github.com/michaelboegner/interviewer-ui](https://github.com/michaelboegner/interviewer-ui). 
 - However, due to the costs involved with calls to OpenAI, I have opted to provide a recorded demo in lieue of open access.
+- While there’s plenty of room to expand the frontend — such as adding topic listings, dashboards, and user account features — this project is primarily focused on backend engineering. My goal was to design and implement a clean, well-structured backend system with real-world patterns like service layering, token authentication, and integration with external APIs.
 - Live demonstrations are available upon request. 
-- [Watch the video](https://www.loom.com/share/ca43dab68f3a4130b46d877dca23d888?sid=9d7d9b36-40b9-4c72-86e0-a67f2fc45021)
-[![Watch the video](assets/loom-preview.png)](https://www.loom.com/share/ca43dab68f3a4130b46d877dca23d888?sid=9d7d9b36-40b9-4c72-86e0-a67f2fc45021)
+- [Watch the video](https://www.loom.com/share/df1cd256e2254650b0691af254747fb9?sid=0407a578-961e-4580-8425-f3066b6d183c)
+[![Watch the video](assets/loom-preview.png)](https://www.loom.com/share/df1cd256e2254650b0691af254747fb9?sid=0407a578-961e-4580-8425-f3066b6d183c)
 
 ## 🏗 System Architecture
 

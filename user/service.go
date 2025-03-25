@@ -27,7 +27,7 @@ func CreateUser(repo UserRepo, username, email, password string) (*User, error) 
 
 	err = repo.CreateUser(user)
 	if err != nil {
-
+		log.Printf("CreateUser failing: %v", err)
 		return nil, err
 	}
 
