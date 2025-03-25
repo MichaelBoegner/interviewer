@@ -296,7 +296,11 @@ docker run -p 8080:8080 --env-file .env interviewer
 
 ## 📜 License
 
-This project is licensed under the MIT License. See the LICENSE file for details.
+Copyright (c) 2024 Michael Boegner
+
+This source code is proprietary. 
+All rights reserved. No part of this code may be reproduced, distributed, or used 
+without explicit permission from the author.
 
 ---
 
