@@ -27,7 +27,7 @@
 
 ## 🚀 Overview
 
-Interviewer App is a robust backend service that powers an interactive technical interviewing experience. It leverages ChatGPT's conversational AI capabilities to create personalized, adaptive interview sessions tailored to each user's preferences.
+Interviewer App is a robust backend service, coupled with a light demo frontend, that powers an interactive Backend Engineer interviewing experience. It leverages ChatGPT's conversational AI capabilities to create personalized, adaptive interview sessions tailored to each user's preferences.
 
 *For a deep dive into the challenges, design decisions, and lessons learned, check out my retrospective:*  
 **[Interviewer App: Lessons from Building an AI-Powered Mock Interview Platform](https://medium.com/@michaelboegner/my-experience-developing-the-mock-interview-app-interviewer-7dfc42f82ee4)**  
