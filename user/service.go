@@ -1,40 +1,40 @@
 package user
 
 import (
-	"errors"
 	"log"
+	"time"
 
 	"github.com/michaelboegner/interviewer/token"
 	"golang.org/x/crypto/bcrypt"
 )
 
 func CreateUser(repo UserRepo, username, email, password string) (*User, error) {
-	// now := time.Now()
+	now := time.Now()
 
-	// passwordHashed, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.MinCost)
-	// if err != nil {
-	// 	log.Printf("Error: %v\n", err)
-	// 	return nil, err
-	// }
+	passwordHashed, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.MinCost)
+	if err != nil {
+		log.Printf("Error: %v\n", err)
+		return nil, err
+	}
 
-	// user := &User{
-	// 	Username:  username,
-	// 	Email:     email,
-	// 	Password:  []byte(passwordHashed),
-	// 	CreatedAt: now,
-	// 	UpdatedAt: now,
-	// }
+	user := &User{
+		Username:  username,
+		Email:     email,
+		Password:  []byte(passwordHashed),
+		CreatedAt: now,
+		UpdatedAt: now,
+	}
 
-	// err = repo.CreateUser(user)
-	// if err != nil {
-	// 	log.Printf("CreateUser failing: %v", err)
-	// 	return nil, err
-	// }
+	err = repo.CreateUser(user)
+	if err != nil {
+		log.Printf("CreateUser failing: %v", err)
+		return nil, err
+	}
 
-	// return user, nil
+	return user, nil
 	// For preventing user creation in deployment:
-	err := errors.New("User creation has been disabled for now. Live demos available upon request!")
-	return nil, err
+	// err := errors.New("User creation has been disabled for now. Live demos available upon request!")
+	// return nil, err
 }
 
 func LoginUser(repo UserRepo, username, password string) (string, int, error) {
