@@ -1,48 +1,80 @@
 package testutil
 
 import (
+	"encoding/json"
 	"io"
 	"net/http"
 	"strings"
 	"testing"
+
+	"github.com/michaelboegner/interviewer/token"
 )
 
-func CreateTestUserAndJWT(t *testing.T) (string, string, error) {
+func CreateTestUserAndJWT(t *testing.T) (string, string, int) {
 	t.Helper()
 
 	var (
-		user string
+		username string
+		jwt      string
+		userID   int
 	)
-
+	//test user created
 	reqBodyUser := strings.NewReader(`{
 		"username":"test",
 		"email":"test@email.com",
 		"password":"test"
 	}`)
 
-	bodyBytes, err := testRequests(t, "POST", TestServerURL+"/api/users/", reqBodyUser)
+	userResp, err := testRequests(t, "POST", TestServerURL+"/api/users/", reqBodyUser)
 	if err != nil {
-		t.Logf("CreateTestUserAndJWT user creation failed: %v", err)
+		t.Fatalf("CreateTestUserAndJWT user creation failed: %v", err)
 	}
 
-	user = string(bodyBytes)
+	type UserResponse struct {
+		UserID   int    `json:"user_id"`
+		Username string `json:"username"`
+	}
+	var user = &UserResponse{}
+	json.Unmarshal(userResp, user)
+	username = user.Username
 
-	// 2. Login via POST /api/auth/login
-	reqBodyLogin := `
+	//test jwt retrieved
+	reqBodyLogin := strings.NewReader(`
 		{
 			"username": "test",
 			"password": "test"
 		}
-	`
+	`)
 
-	// 3. Extract JWT + userID from response
+	loginResp, err := testRequests(t, "POST", TestServerURL+"/api/auth/login", reqBodyLogin)
+	if err != nil {
+		t.Fatalf("CreateTestUserAndJWT JWT creation failed: %v", err)
+	}
 
-	return user, "", nil
+	type AuthResponse struct {
+		UserID       int    `json:"user_id"`
+		Username     string `json:"username"`
+		JWToken      string `json:"jwtoken"`
+		RefreshToken string `json:"refresh_token"`
+	}
+
+	var decodedLoginResp = &AuthResponse{}
+	json.Unmarshal(loginResp, decodedLoginResp)
+
+	jwt = decodedLoginResp.JWToken
+
+	//test userID extracted
+	userID, err = token.ExtractUserIDFromToken(jwt)
+	if err != nil {
+		t.Fatalf("CreateTestUserandJWT userID extraction failed: %v", err)
+	}
+
+	return username, jwt, userID
 }
 
 func testRequests(t *testing.T, method, url string, reqBody *strings.Reader) ([]byte, error) {
 	client := &http.Client{}
-	req, err := http.NewRequest(method, TestServerURL+url, reqBody)
+	req, err := http.NewRequest(method, url, reqBody)
 	if err != nil {
 		t.Logf("CreateTestUserAndJWT user creation failed: %v", err)
 		return nil, err

@@ -1,6 +1,7 @@
 package handlers_test
 
 import (
+	"fmt"
 	"net/http"
 	"testing"
 
@@ -12,10 +13,8 @@ import (
 func TestInterviewsHandler_Post_Integration(t *testing.T) {
 	// t.Skip("TODO: skipping for now while setting up recorded demo")
 
-	_, _, err := testutil.CreateTestUserAndJWT(t)
-	if err != nil {
-		t.Fatalf("CreateTestUserAndJWT failed: %v", err)
-	}
+	user, jwt, userID := testutil.CreateTestUserAndJWT(t)
+	fmt.Printf("USER JWT USERID TEST: %s, %s, %d", user, jwt, userID)
 
 	tests := []TestCase{
 		{
