@@ -20,8 +20,8 @@ test:
 	go test -v -count=1 ./...
 	
 	# @echo "Make: Shutting down test database..."
-	docker-compose -f docker-compose.test.yml down -v
+	docker-compose -f docker-compose.test.yml down -v --remove-orphans --timeout 2 || true
 
 test-clean:
 	@echo "Make: Cleaning up test database..."
-	docker-compose -f docker-compose.test.yml down -v
+	docker-compose -f docker-compose.test.yml down -v --remove-orphans --timeout 2 || true
