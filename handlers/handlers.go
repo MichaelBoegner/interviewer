@@ -184,7 +184,7 @@ func (h *Handler) InterviewsHandler(w http.ResponseWriter, r *http.Request) {
 			FirstQuestion: interviewStarted.FirstQuestion,
 		}
 
-		respondWithJSON(w, http.StatusOK, payload)
+		respondWithJSON(w, http.StatusCreated, payload)
 		return
 	}
 }

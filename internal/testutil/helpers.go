@@ -25,7 +25,7 @@ func CreateTestUserAndJWT(t *testing.T) (string, string, int) {
 		"password":"test"
 	}`)
 
-	userResp, err := testRequests(t, "POST", TestServerURL+"/api/users/", reqBodyUser)
+	userResp, _, err := TestRequests(t, "", "", "POST", TestServerURL+"/api/users/", reqBodyUser)
 	if err != nil {
 		t.Fatalf("CreateTestUserAndJWT user creation failed: %v", err)
 	}
@@ -46,7 +46,7 @@ func CreateTestUserAndJWT(t *testing.T) (string, string, int) {
 		}
 	`)
 
-	loginResp, err := testRequests(t, "POST", TestServerURL+"/api/auth/login", reqBodyLogin)
+	loginResp, _, err := TestRequests(t, "", "", "POST", TestServerURL+"/api/auth/login", reqBodyLogin)
 	if err != nil {
 		t.Fatalf("CreateTestUserAndJWT JWT creation failed: %v", err)
 	}
@@ -72,27 +72,31 @@ func CreateTestUserAndJWT(t *testing.T) (string, string, int) {
 	return username, jwt, userID
 }
 
-func testRequests(t *testing.T, method, url string, reqBody *strings.Reader) ([]byte, error) {
+func TestRequests(t *testing.T, headerType, header, method, url string, reqBody *strings.Reader) ([]byte, int, error) {
+	t.Helper()
 	client := &http.Client{}
 	req, err := http.NewRequest(method, url, reqBody)
 	if err != nil {
 		t.Logf("CreateTestUserAndJWT user creation failed: %v", err)
-		return nil, err
+		return nil, 0, err
 	}
 	req.Header.Set("Content-Type", "application/json")
+	if headerType != "" {
+		req.Header.Set(headerType, header)
+	}
 
 	resp, err := client.Do(req)
 	if err != nil {
 		t.Logf("Request to create test user failed: %v", err)
-		return nil, err
+		return nil, resp.StatusCode, err
 	}
 	defer resp.Body.Close()
 
 	bodyBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
 		t.Logf("Reading response failed: %v", err)
-		return nil, err
+		return nil, resp.StatusCode, err
 	}
 
-	return bodyBytes, nil
+	return bodyBytes, resp.StatusCode, nil
 }
