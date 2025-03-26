@@ -31,7 +31,7 @@ func TestInterviewsHandler_Post_Integration(t *testing.T) {
 			},
 		},
 		{
-			name:           "CreateInterview_MissingToken",
+			name:           "CreateInterview_MissingBearer&Token",
 			method:         "POST",
 			url:            testutil.TestServerURL + "/api/interviews",
 			reqBody:        `{}`,
@@ -42,7 +42,19 @@ func TestInterviewsHandler_Post_Integration(t *testing.T) {
 			},
 		},
 		{
-			name:           "CreateInterview_MalformedToken",
+			name:           "CreateInterview_MissingToken",
+			method:         "POST",
+			url:            testutil.TestServerURL + "/api/interviews",
+			reqBody:        `{}`,
+			headerKey:      "Authorization",
+			headerValue:    "Bearer ",
+			expectedStatus: http.StatusUnauthorized,
+			respBody: handlers.ReturnVals{
+				Error: "Unauthorized",
+			},
+		},
+		{
+			name:           "CreateInterview_MalformedHeaderValue",
 			method:         "POST",
 			url:            testutil.TestServerURL + "/api/interviews",
 			reqBody:        `{}`,
