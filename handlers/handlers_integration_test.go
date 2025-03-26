@@ -2,13 +2,12 @@ package handlers_test
 
 import (
 	"encoding/json"
-	"errors"
 	"log"
 	"net/http"
-	"reflect"
 	"strings"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/michaelboegner/interviewer/handlers"
 	"github.com/michaelboegner/interviewer/internal/testutil"
 	"github.com/michaelboegner/interviewer/middleware"
@@ -54,20 +53,12 @@ func TestInterviewsHandler_Post_Integration(t *testing.T) {
 				t.Fatalf("expected status %d, got %d", tc.expectedStatus, respCode)
 			}
 
-			// Validate resp
-			resp, err := checkResponseIntegrations(*interviewsUnmarshalled, tc.respBody)
-			if err != nil {
-				t.Fatalf("expected %v\ngot: %v", tc.respBody, resp)
+			got := *interviewsUnmarshalled
+			expected := tc.respBody
+
+			if diff := cmp.Diff(expected, got); diff != "" {
+				t.Errorf("Mismatch (-expected +got):\n%s", diff)
 			}
 		})
 	}
-}
-
-func checkResponseIntegrations(response handlers.ReturnVals, expectedResponse handlers.ReturnVals) (handlers.ReturnVals, error) {
-	if !reflect.DeepEqual(expectedResponse, response) {
-		err := errors.New("DeepEqual check on responses failed")
-		return response, err
-	}
-
-	return response, nil
 }
