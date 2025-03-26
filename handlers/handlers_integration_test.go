@@ -2,6 +2,7 @@ package handlers_test
 
 import (
 	"encoding/json"
+	"io"
 	"log"
 	"net/http"
 	"strings"
@@ -10,7 +11,6 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/michaelboegner/interviewer/handlers"
 	"github.com/michaelboegner/interviewer/internal/testutil"
-	"github.com/michaelboegner/interviewer/middleware"
 )
 
 func TestInterviewsHandler_Post_Integration(t *testing.T) {
@@ -24,7 +24,6 @@ func TestInterviewsHandler_Post_Integration(t *testing.T) {
 			reqBody:        `{}`,
 			headerType:     "Authorization",
 			header:         "Bearer " + jwt,
-			params:         middleware.AcceptedVals{},
 			expectedStatus: http.StatusCreated,
 			respBody: handlers.ReturnVals{
 				InterviewID:   1,
@@ -32,13 +31,10 @@ func TestInterviewsHandler_Post_Integration(t *testing.T) {
 			},
 		},
 		{
-			name:           "CreateInterview_MissingToken",
+			name:           "CreateInterview_MissingHeaders",
 			method:         "POST",
 			url:            testutil.TestServerURL + "/api/interviews",
 			reqBody:        `{}`,
-			headerType:     "Authorization",
-			header:         "",
-			params:         middleware.AcceptedVals{},
 			expectedStatus: http.StatusUnauthorized,
 			respBody: handlers.ReturnVals{
 				Error: "Unauthorized",
@@ -49,7 +45,7 @@ func TestInterviewsHandler_Post_Integration(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			// Act
-			resp, respCode, err := testutil.TestRequests(t, tc.headerType, tc.header, tc.method, tc.url, strings.NewReader(tc.reqBody))
+			resp, respCode, err := testRequests(t, tc.headerType, tc.header, tc.method, tc.url, strings.NewReader(tc.reqBody))
 			if err != nil {
 				log.Fatalf("TestRequest for interview creation failed: %v", err)
 			}
@@ -62,15 +58,45 @@ func TestInterviewsHandler_Post_Integration(t *testing.T) {
 
 			// Assert
 			if respCode != tc.expectedStatus {
-				t.Fatalf("expected status %d, got %d", tc.expectedStatus, respCode)
+				t.Fatalf("[%s]expected status %d, got %d", tc.name, tc.expectedStatus, respCode)
 			}
 
-			got := *respUnmarshalled
 			expected := tc.respBody
+			got := *respUnmarshalled
 
 			if diff := cmp.Diff(expected, got); diff != "" {
 				t.Errorf("Mismatch (-expected +got):\n%s", diff)
 			}
 		})
 	}
+}
+
+func testRequests(t *testing.T, headerType, header, method, url string, reqBody *strings.Reader) ([]byte, int, error) {
+	t.Helper()
+	client := &http.Client{}
+
+	req, err := http.NewRequest(method, url, reqBody)
+	if err != nil {
+		t.Logf("CreateTestUserAndJWT user creation failed: %v", err)
+		return nil, 0, err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	if headerType != "" && header != "" {
+		req.Header.Set(headerType, header)
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		t.Logf("Request failed: %v", err)
+		return nil, resp.StatusCode, err
+	}
+	defer resp.Body.Close()
+
+	bodyBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		t.Logf("Reading response failed: %v", err)
+		return nil, resp.StatusCode, err
+	}
+
+	return bodyBytes, resp.StatusCode, nil
 }
