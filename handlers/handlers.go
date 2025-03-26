@@ -169,7 +169,7 @@ func (h *Handler) InterviewsHandler(w http.ResponseWriter, r *http.Request) {
 		userID, err := middleware.VerifyToken(token)
 		if err != nil {
 			log.Printf("Supplied token returns error: %v", err)
-			respondWithError(w, http.StatusUnauthorized, "Unauthorized.")
+			respondWithError(w, http.StatusUnauthorized, "Unauthorized")
 			return
 		}
 

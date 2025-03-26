@@ -26,10 +26,22 @@ func TestInterviewsHandler_Post_Integration(t *testing.T) {
 			header:         "Bearer " + jwt,
 			params:         middleware.AcceptedVals{},
 			expectedStatus: http.StatusCreated,
-			expectError:    false,
 			respBody: handlers.ReturnVals{
 				InterviewID:   1,
 				FirstQuestion: "Tell me a little bit about your work history.",
+			},
+		},
+		{
+			name:           "CreateInterview_MissingToken",
+			method:         "POST",
+			url:            testutil.TestServerURL + "/api/interviews",
+			reqBody:        `{}`,
+			headerType:     "Authorization",
+			header:         "",
+			params:         middleware.AcceptedVals{},
+			expectedStatus: http.StatusUnauthorized,
+			respBody: handlers.ReturnVals{
+				Error: "Unauthorized",
 			},
 		},
 	}
