@@ -49,13 +49,13 @@ func TestInterviewsHandler_Post_Integration(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			// Act
-			interviewResp, respCode, err := testutil.TestRequests(t, tc.headerType, tc.header, tc.method, tc.url, strings.NewReader(tc.reqBody))
+			resp, respCode, err := testutil.TestRequests(t, tc.headerType, tc.header, tc.method, tc.url, strings.NewReader(tc.reqBody))
 			if err != nil {
 				log.Fatalf("TestRequest for interview creation failed: %v", err)
 			}
 
-			interviewsUnmarshalled := &handlers.ReturnVals{}
-			err = json.Unmarshal(interviewResp, interviewsUnmarshalled)
+			respUnmarshalled := &handlers.ReturnVals{}
+			err = json.Unmarshal(resp, respUnmarshalled)
 			if err != nil {
 				t.Fatalf("failed to unmarshal response: %v", err)
 			}
@@ -65,7 +65,7 @@ func TestInterviewsHandler_Post_Integration(t *testing.T) {
 				t.Fatalf("expected status %d, got %d", tc.expectedStatus, respCode)
 			}
 
-			got := *interviewsUnmarshalled
+			got := *respUnmarshalled
 			expected := tc.respBody
 
 			if diff := cmp.Diff(expected, got); diff != "" {
