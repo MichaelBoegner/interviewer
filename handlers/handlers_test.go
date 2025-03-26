@@ -29,8 +29,8 @@ type TestCase struct {
 	method         string
 	url            string
 	reqBody        string
-	headerType     string
-	header         string
+	headerKey      string
+	headerValue    string
 	params         middleware.AcceptedVals
 	expectedStatus int
 	expectError    bool
