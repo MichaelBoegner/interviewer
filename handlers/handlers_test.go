@@ -440,8 +440,8 @@ func setRequestAndWriter(method, endpoint string, tc TestCase) (*httptest.Respon
 	req := httptest.NewRequest(method, endpoint, strings.NewReader(tc.reqBody))
 	req = req.WithContext(context.WithValue(req.Context(), "params", tc.params))
 	req.Header.Set("Content-Type", "application/json")
-	if tc.headerType != "" {
-		req.Header.Set(tc.headerType, tc.header)
+	if tc.headerKey != "" {
+		req.Header.Set(tc.headerKey, tc.headerValue)
 	}
 	w := httptest.NewRecorder()
 

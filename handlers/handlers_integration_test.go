@@ -31,10 +31,23 @@ func TestInterviewsHandler_Post_Integration(t *testing.T) {
 			},
 		},
 		{
-			name:           "CreateInterview_MissingHeaders",
+			name:           "CreateInterview_MissingToken",
 			method:         "POST",
 			url:            testutil.TestServerURL + "/api/interviews",
 			reqBody:        `{}`,
+			headerKey:      "Authorization",
+			expectedStatus: http.StatusUnauthorized,
+			respBody: handlers.ReturnVals{
+				Error: "Unauthorized",
+			},
+		},
+		{
+			name:           "CreateInterview_MalformedToken",
+			method:         "POST",
+			url:            testutil.TestServerURL + "/api/interviews",
+			reqBody:        `{}`,
+			headerKey:      "Authorization",
+			headerValue:    "as9d8f7as09d87",
 			expectedStatus: http.StatusUnauthorized,
 			respBody: handlers.ReturnVals{
 				Error: "Unauthorized",
@@ -81,7 +94,7 @@ func testRequests(t *testing.T, headerKey, headerValue, method, url string, reqB
 		return nil, 0, err
 	}
 	req.Header.Set("Content-Type", "application/json")
-	if headerKey != "" && headerValue != "" {
+	if headerKey != "" {
 		req.Header.Set(headerKey, headerValue)
 	}
 
