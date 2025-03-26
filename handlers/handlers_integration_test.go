@@ -15,8 +15,6 @@ import (
 )
 
 func TestInterviewsHandler_Post_Integration(t *testing.T) {
-	// t.Skip("TODO: skipping for now while setting up recorded demo")
-
 	_, jwt, _ := testutil.CreateTestUserAndJWT(t)
 
 	tests := []TestCase{
@@ -46,7 +44,10 @@ func TestInterviewsHandler_Post_Integration(t *testing.T) {
 			}
 
 			interviewsUnmarshalled := &handlers.ReturnVals{}
-			json.Unmarshal(interviewResp, interviewsUnmarshalled)
+			err = json.Unmarshal(interviewResp, interviewsUnmarshalled)
+			if err != nil {
+				t.Fatalf("failed to unmarshal response: %v", err)
+			}
 
 			// Assert
 			if respCode != tc.expectedStatus {
@@ -56,7 +57,7 @@ func TestInterviewsHandler_Post_Integration(t *testing.T) {
 			// Validate resp
 			resp, err := checkResponseIntegrations(*interviewsUnmarshalled, tc.respBody)
 			if err != nil {
-				t.Fatalf("expected response %v\ngot response: %v", tc.respBody, resp)
+				t.Fatalf("expected %v\ngot: %v", tc.respBody, resp)
 			}
 		})
 	}
