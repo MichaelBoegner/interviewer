@@ -50,6 +50,7 @@ func GetContext(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Extract token from Authorization header
 		tokenParts := strings.Split(r.Header.Get("Authorization"), " ")
+
 		var tokenKey string
 		if len(tokenParts) < 2 {
 			tokenKey = ""

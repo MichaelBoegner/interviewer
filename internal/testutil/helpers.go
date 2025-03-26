@@ -75,6 +75,7 @@ func CreateTestUserAndJWT(t *testing.T) (string, string, int) {
 func TestRequests(t *testing.T, headerType, header, method, url string, reqBody *strings.Reader) ([]byte, int, error) {
 	t.Helper()
 	client := &http.Client{}
+
 	req, err := http.NewRequest(method, url, reqBody)
 	if err != nil {
 		t.Logf("CreateTestUserAndJWT user creation failed: %v", err)
