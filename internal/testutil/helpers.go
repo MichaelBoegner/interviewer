@@ -3,10 +3,15 @@ package testutil
 import (
 	"encoding/json"
 	"io"
+	"log"
 	"net/http"
+	"os"
+	"strconv"
 	"strings"
 	"testing"
+	"time"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/michaelboegner/interviewer/token"
 )
 
@@ -97,4 +102,34 @@ func testRequests(t *testing.T, method, url string, reqBody *strings.Reader) ([]
 	}
 
 	return bodyBytes, resp.StatusCode, nil
+}
+
+func CreateTestJWT(t *testing.T, id, expires int) (string, error) {
+	t.Helper()
+
+	var token *jwt.Token
+	jwtSecret := os.Getenv("JWT_SECRET")
+	key := []byte(jwtSecret)
+	now := time.Now()
+
+	if expires == 0 {
+		expires = 36000
+	}
+	expiresAt := time.Now().Add(time.Duration(expires) * time.Millisecond)
+
+	claims := jwt.RegisteredClaims{
+		Issuer:    "interviewer",
+		IssuedAt:  jwt.NewNumericDate(now),
+		ExpiresAt: jwt.NewNumericDate(expiresAt),
+		Subject:   strconv.Itoa(id),
+	}
+	token = jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+	s, err := token.SignedString(key)
+	if err != nil {
+		log.Fatalf("Bad SignedString: %s", err)
+		return "", err
+	}
+
+	return s, nil
 }

@@ -14,7 +14,11 @@ import (
 )
 
 func TestInterviewsHandler_Post_Integration(t *testing.T) {
-	_, jwt, _ := testutil.CreateTestUserAndJWT(t)
+	_, jwt, userID := testutil.CreateTestUserAndJWT(t)
+	expiredJWT, err := testutil.CreateTestJWT(t, userID, 1)
+	if err != nil {
+		log.Fatalf("CreateTestJWT failed to create expiredJWT: %v", err)
+	}
 
 	tests := []TestCase{
 		{
@@ -65,6 +69,18 @@ func TestInterviewsHandler_Post_Integration(t *testing.T) {
 				Error: "Unauthorized",
 			},
 		},
+		{
+			name:           "CreateInterview_ExpiredToken",
+			method:         "POST",
+			url:            testutil.TestServerURL + "/api/interviews",
+			reqBody:        `{}`,
+			headerKey:      "Authorization",
+			headerValue:    "Bearer " + expiredJWT,
+			expectedStatus: http.StatusUnauthorized,
+			respBody: handlers.ReturnVals{
+				Error: "Unauthorized",
+			},
+		},
 	}
 
 	for _, tc := range tests {
@@ -83,7 +99,7 @@ func TestInterviewsHandler_Post_Integration(t *testing.T) {
 
 			// Assert
 			if respCode != tc.expectedStatus {
-				t.Fatalf("[%s]expected status %d, got %d", tc.name, tc.expectedStatus, respCode)
+				t.Fatalf("[%s]expected status %d, got %d\n", tc.name, tc.expectedStatus, respCode)
 			}
 
 			expected := tc.respBody
