@@ -124,8 +124,8 @@ func TestInterviewsHandler_Post_Integration(t *testing.T) {
 				t.Errorf("Mismatch (-expected +got):\n%s", diff)
 			}
 
+			// Assert Database
 			if tc.DBCheck {
-				// Assert Database
 				interview, err := interview.GetInterview(Handler.InterviewRepo, respUnmarshalled.InterviewID)
 				if err != nil {
 					t.Fatalf("Assert Database: GetInterview failing: %v", err)
