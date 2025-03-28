@@ -45,7 +45,7 @@ func (repo *Repository) CreateInterview(interview *Interview) (int, error) {
 
 func (repo *Repository) GetInterview(interviewID int) (*Interview, error) {
 	query := `
-	SELECT user_id, length, number_questions, difficulty, status, score, language, prompt, first_question, subtopic
+	SELECT id, user_id, length, number_questions, difficulty, status, score, language, prompt, first_question, subtopic
 	FROM interviews
 	WHERE id = $1
 	`
@@ -53,6 +53,7 @@ func (repo *Repository) GetInterview(interviewID int) (*Interview, error) {
 	interview := &Interview{}
 	err := repo.DB.QueryRow(query,
 		interviewID).Scan(
+		&interview.Id,
 		&interview.UserId,
 		&interview.Length,
 		&interview.NumberQuestions,

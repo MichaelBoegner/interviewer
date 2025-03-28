@@ -35,7 +35,11 @@ type TestCase struct {
 	expectedStatus int
 	expectError    bool
 	respBody       handlers.ReturnVals
+	Interview      *interview.Interview
+	DBCheck        bool
 }
+
+var Handler *handlers.Handler
 
 func TestMain(m *testing.M) {
 	log.SetFlags(log.LstdFlags | log.Llongfile)
@@ -47,7 +51,7 @@ func TestMain(m *testing.M) {
 	}
 
 	log.Println("Initializing test server...")
-	testutil.InitTestServer()
+	Handler = testutil.InitTestServer()
 
 	// 🚨 Check `TestServerURL` before running any tests
 	if testutil.TestServerURL == "" {

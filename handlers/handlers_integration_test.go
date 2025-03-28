@@ -11,6 +11,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/michaelboegner/interviewer/handlers"
 	"github.com/michaelboegner/interviewer/internal/testutil"
+	"github.com/michaelboegner/interviewer/interview"
 )
 
 func TestInterviewsHandler_Post_Integration(t *testing.T) {
@@ -33,6 +34,20 @@ func TestInterviewsHandler_Post_Integration(t *testing.T) {
 				InterviewID:   1,
 				FirstQuestion: "Tell me a little bit about your work history.",
 			},
+			Interview: &interview.Interview{
+				Id:              1,
+				UserId:          1,
+				Length:          30,
+				NumberQuestions: 3,
+				Difficulty:      "easy",
+				Status:          "Running",
+				Score:           100,
+				Language:        "Python",
+				Prompt:          testutil.TestPrompt,
+				FirstQuestion:   "Tell me a little bit about your work history.",
+				Subtopic:        "General Background",
+			},
+			DBCheck: true,
 		},
 		{
 			name:           "CreateInterview_MissingBearer&Token",
@@ -97,7 +112,7 @@ func TestInterviewsHandler_Post_Integration(t *testing.T) {
 				t.Fatalf("failed to unmarshal response: %v", err)
 			}
 
-			// Assert
+			// Assert Response
 			if respCode != tc.expectedStatus {
 				t.Fatalf("[%s]expected status %d, got %d\n", tc.name, tc.expectedStatus, respCode)
 			}
@@ -107,6 +122,21 @@ func TestInterviewsHandler_Post_Integration(t *testing.T) {
 
 			if diff := cmp.Diff(expected, got); diff != "" {
 				t.Errorf("Mismatch (-expected +got):\n%s", diff)
+			}
+
+			if tc.DBCheck {
+				// Assert Database
+				interview, err := interview.GetInterview(Handler.InterviewRepo, respUnmarshalled.InterviewID)
+				if err != nil {
+					t.Fatalf("Assert Database: GetInterview failing: %v", err)
+				}
+
+				expectedDB := tc.Interview
+				gotDB := interview
+
+				if diff := cmp.Diff(expectedDB, gotDB); diff != "" {
+					t.Errorf("Mismatch (-expected +got):\n%s", diff)
+				}
 			}
 		})
 	}

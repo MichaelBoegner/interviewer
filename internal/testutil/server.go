@@ -21,7 +21,7 @@ var (
 	TestServerURL string
 )
 
-func InitTestServer() {
+func InitTestServer() *handlers.Handler {
 	log.Println("Initializing test database connection...")
 
 	db, err := database.StartDB()
@@ -50,6 +50,8 @@ func InitTestServer() {
 
 	TestServer = httptest.NewServer(TestMux)
 	TestServerURL = TestServer.URL
+
+	return handler
 }
 
 func StopTestServer() {
