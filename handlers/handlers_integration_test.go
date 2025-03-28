@@ -15,7 +15,7 @@ import (
 
 func TestInterviewsHandler_Post_Integration(t *testing.T) {
 	_, jwt, userID := testutil.CreateTestUserAndJWT(t)
-	expiredJWT, err := testutil.CreateTestJWT(t, userID, 1)
+	expiredJWT, err := testutil.CreateTestJWT(t, userID, -1)
 	if err != nil {
 		log.Fatalf("CreateTestJWT failed to create expiredJWT: %v", err)
 	}

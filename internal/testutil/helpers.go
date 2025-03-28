@@ -115,7 +115,7 @@ func CreateTestJWT(t *testing.T, id, expires int) (string, error) {
 	if expires == 0 {
 		expires = 36000
 	}
-	expiresAt := time.Now().Add(time.Duration(expires) * time.Millisecond)
+	expiresAt := time.Now().Add(time.Duration(expires) * time.Second)
 
 	claims := jwt.RegisteredClaims{
 		Issuer:    "interviewer",
