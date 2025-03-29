@@ -1,6 +1,10 @@
-package models
+package chatgpt
 
-import "time"
+import (
+	"time"
+
+	chatgpt "github.com/michaelboegner/interviewer/chatGPT"
+)
 
 type ChatGPTResponse struct {
 	Topic        string    `json:"topic"`
@@ -12,4 +16,10 @@ type ChatGPTResponse struct {
 	NextTopic    string    `json:"next_topic"`
 	NextSubtopic string    `json:"next_subtopic"`
 	CreatedAt    time.Time `json:"created_at"`
+}
+
+type OpenAIClient struct{}
+
+type AIClient interface {
+	GetChatGPTResponse(prompt string) (*chatgpt.ChatGPTResponse, error)
 }
