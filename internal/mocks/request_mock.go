@@ -1,6 +1,6 @@
-package testutil
+package mocks
 
-var TestPrompt = "You are conducting a structured backend development interview. " +
+const TestPrompt = "You are conducting a structured backend development interview. " +
 	"The interview follows **six topics in this order**:\n\n" +
 	"1. **Introduction**\n" +
 	"2. **Coding**\n" +

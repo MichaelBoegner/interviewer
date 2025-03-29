@@ -10,14 +10,14 @@ type MockOpenAIClient struct{}
 
 func (m *MockOpenAIClient) GetChatGPTResponseInterview(prompt string) (*chatgpt.ChatGPTResponse, error) {
 	return &chatgpt.ChatGPTResponse{
-		Topic:        "Introduction",
-		Subtopic:     "General Background",
+		Topic:        "None",
+		Subtopic:     "None",
 		Question:     "None",
 		Score:        0,
 		Feedback:     "None",
 		NextQuestion: "Tell me a little bit about your work history.",
 		NextTopic:    "Introduction",
-		NextSubtopic: "General Backend Experience",
+		NextSubtopic: "General Background",
 		CreatedAt:    time.Now(),
 	}, nil
 }
@@ -26,12 +26,12 @@ func (m *MockOpenAIClient) GetChatGPTResponseConversation(conversationHistory []
 	return &chatgpt.ChatGPTResponse{
 		Topic:        "Introduction",
 		Subtopic:     "General Background",
-		Question:     "None",
-		Score:        0,
-		Feedback:     "None",
-		NextQuestion: "Tell me a little bit about your work history.",
+		Question:     "Tell me a little bit about your work history",
+		Score:        10,
+		Feedback:     "Sounds like you have a good deal of problem solving experience.",
+		NextQuestion: "Can you tell me about your most recent backend project?",
 		NextTopic:    "Introduction",
-		NextSubtopic: "General Backend Experience",
+		NextSubtopic: "General Engineering Experience",
 		CreatedAt:    time.Now(),
 	}, nil
 }

@@ -161,7 +161,7 @@ func AppendConversation(
 		return nil, err
 	}
 
-	// if isFinished, then raise flags to close conversation and begin closing sequence
+	// If isFinished, then raise flags to close conversation and begin closing sequence
 	if isFinished {
 		conversation.CurrentTopic = 0
 		conversation.CurrentSubtopic = "Finished"
@@ -184,7 +184,7 @@ func AppendConversation(
 		return conversation, nil
 	}
 
-	// if moveToNewTopic, increment topicID and reset questionNumber
+	// If moveToNewTopic, increment topicID and reset questionNumber
 	if moveToNewTopic {
 		nextTopicID := topicID + 1
 		resetQuestionNumber := 1

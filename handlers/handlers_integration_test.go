@@ -10,6 +10,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/michaelboegner/interviewer/handlers"
+	"github.com/michaelboegner/interviewer/internal/mocks"
 	"github.com/michaelboegner/interviewer/internal/testutil"
 	"github.com/michaelboegner/interviewer/interview"
 )
@@ -40,7 +41,7 @@ func TestInterviewsHandler_Post_Integration(t *testing.T) {
 				Status:          "Running",
 				Score:           100,
 				Language:        "Python",
-				Prompt:          testutil.TestPrompt,
+				Prompt:          mocks.TestPrompt,
 				FirstQuestion:   "Tell me a little bit about your work history.",
 				Subtopic:        "General Background",
 			},
@@ -149,14 +150,15 @@ func TestConversationsHandler_Post_Integration(t *testing.T) {
 			method: "POST",
 			url:    testutil.TestServerURL + "/api/conversations/1",
 			reqBody: `{
-				"message" : "I have been a TSE for 5 years."
+				"message" : {
+  					"author": "user",
+  					"content": "I have been a TSE for 5 years."
 			}`,
 			headerKey:      "Authorization",
 			headerValue:    "Bearer " + jwt,
 			expectedStatus: http.StatusCreated,
 			respBody: handlers.ReturnVals{
-				InterviewID:   1,
-				FirstQuestion: "Tell me a little bit about your work history.",
+				Conversation: mocks.TestCreatedConversation,
 			},
 			DBCheck: false,
 		},
