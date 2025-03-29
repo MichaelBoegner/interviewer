@@ -3,13 +3,13 @@ package mocks
 import (
 	"time"
 
-	"github.com/michaelboegner/interviewer/models"
+	"github.com/michaelboegner/interviewer/chatgpt"
 )
 
 type MockOpenAIClient struct{}
 
-func (m *MockOpenAIClient) GetChatGPTResponse(prompt string) (*models.ChatGPTResponse, error) {
-	return &models.ChatGPTResponse{
+func (m *MockOpenAIClient) GetChatGPTResponse(prompt string) (*chatgpt.ChatGPTResponse, error) {
+	return &chatgpt.ChatGPTResponse{
 		Topic:        "Introduction",
 		Subtopic:     "General Background",
 		Question:     "None",

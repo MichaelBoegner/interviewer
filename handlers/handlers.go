@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/michaelboegner/interviewer/chatgpt"
 	"github.com/michaelboegner/interviewer/conversation"
 	"github.com/michaelboegner/interviewer/interview"
 	"github.com/michaelboegner/interviewer/middleware"
@@ -28,7 +29,7 @@ func NewHandler(
 	userRepo user.UserRepo,
 	tokenRepo token.TokenRepo,
 	conversationRepo conversation.ConversationRepo,
-	openAI interview.AIClient) *Handler {
+	openAI chatgpt.AIClient) *Handler {
 	return &Handler{
 		InterviewRepo:    interviewRepo,
 		UserRepo:         userRepo,

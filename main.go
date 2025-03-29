@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/michaelboegner/interviewer/chatgpt"
 	"github.com/michaelboegner/interviewer/conversation"
 	"github.com/michaelboegner/interviewer/database"
 	"github.com/michaelboegner/interviewer/handlers"
@@ -63,7 +64,7 @@ func main() {
 	userRepo := user.NewRepository(db)
 	tokenRepo := token.NewRepository(db)
 	conversationRepo := conversation.NewRepository(db)
-	openAI := &interview.OpenAIClient{}
+	openAI := &chatgpt.OpenAIClient{}
 
 	handler := handlers.NewHandler(interviewRepo, userRepo, tokenRepo, conversationRepo, openAI)
 
