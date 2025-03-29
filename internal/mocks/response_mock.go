@@ -2,7 +2,7 @@ package mocks
 
 import "github.com/michaelboegner/interviewer/conversation"
 
-var Conversation = &conversation.Conversation{
+var TestCreatedConversation = &conversation.Conversation{
 	InterviewID:           1,
 	CurrentTopic:          1,
 	CurrentSubtopic:       "General Background",
