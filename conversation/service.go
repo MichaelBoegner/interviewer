@@ -379,7 +379,6 @@ func getNextQuestion(conversation *Conversation) (*models.ChatGPTResponse, error
 	}
 
 	return &chatGPTResponse, nil
-
 }
 
 func getConversationHistory(conversation *Conversation) ([]map[string]string, error) {

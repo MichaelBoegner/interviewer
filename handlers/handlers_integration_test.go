@@ -146,9 +146,9 @@ func TestConversationsHandler_Post_Integration(t *testing.T) {
 		{
 			name:   "CreateConvesation_Success",
 			method: "POST",
-			url:    testutil.TestServerURL + "/api/conversations",
+			url:    testutil.TestServerURL + "/api/conversations/1",
 			reqBody: `{
-			
+				"message" : "I have been a TSE for 5 years."
 			}`,
 			headerKey:      "Authorization",
 			headerValue:    "Bearer " + jwt,
