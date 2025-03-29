@@ -117,7 +117,7 @@ func CreateConversation(
 
 func AppendConversation(
 	repo ConversationRepo,
-	openAI chatgpt.OpenAIClient,
+	openAI chatgpt.AIClient,
 	conversation *Conversation,
 	message *Message,
 	conversationID, topicID, questionID, questionNumber int,
