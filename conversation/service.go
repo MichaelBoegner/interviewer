@@ -12,7 +12,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/michaelboegner/interviewer/models"
+	"github.com/michaelboegner/interviewer/chatgpt"
 )
 
 func CheckForConversation(repo ConversationRepo, interviewID int) bool {
@@ -312,7 +312,7 @@ func GetConversation(repo ConversationRepo, interviewID int) (*Conversation, err
 	return conversation, nil
 }
 
-func getNextQuestion(conversation *Conversation) (*models.ChatGPTResponse, error) {
+func getNextQuestion(conversation *Conversation) (*chatgpt.ChatGPTResponse, error) {
 	ctx := context.Background()
 	apiKey := os.Getenv("OPENAI_API_KEY")
 
@@ -372,7 +372,7 @@ func getNextQuestion(conversation *Conversation) (*models.ChatGPTResponse, error
 
 	chatGPTResponseRaw := choices[0].(map[string]interface{})["message"].(map[string]interface{})["content"].(string)
 
-	var chatGPTResponse models.ChatGPTResponse
+	var chatGPTResponse chatgpt.ChatGPTResponse
 	if err := json.Unmarshal([]byte(chatGPTResponseRaw), &chatGPTResponse); err != nil {
 		log.Printf("Unmarshal chatGPTResponse err: %v", err)
 		return nil, err
@@ -474,7 +474,7 @@ func newMessage(conversationID, currentQuestionNumber int, author Author, conten
 	return message
 }
 
-func ChatGPTResponseToString(chatGPTResponse *models.ChatGPTResponse) (string, error) {
+func ChatGPTResponseToString(chatGPTResponse *chatgpt.ChatGPTResponse) (string, error) {
 	chatGPTResponseString, err := json.Marshal(chatGPTResponse)
 	if err != nil {
 		log.Printf("chatGPTResponseToString failed: %v", err)
@@ -484,7 +484,7 @@ func ChatGPTResponseToString(chatGPTResponse *models.ChatGPTResponse) (string, e
 	return string(chatGPTResponseString), nil
 }
 
-func checkConversationState(chatGPTResponse *models.ChatGPTResponse, conversation *Conversation) (bool, bool, bool, error) {
+func checkConversationState(chatGPTResponse *chatgpt.ChatGPTResponse, conversation *Conversation) (bool, bool, bool, error) {
 	isFinished := false
 	moveToNewTopic := false
 	incrementQuestion := false

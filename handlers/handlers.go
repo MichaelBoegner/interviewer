@@ -21,7 +21,7 @@ type Handler struct {
 	InterviewRepo    interview.InterviewRepo
 	ConversationRepo conversation.ConversationRepo
 	TokenRepo        token.TokenRepo
-	OpenAI           interview.AIClient
+	OpenAI           chatgpt.AIClient
 }
 
 func NewHandler(
