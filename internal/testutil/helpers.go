@@ -3,7 +3,6 @@ package testutil
 import (
 	"encoding/json"
 	"io"
-	"log"
 	"net/http"
 	"os"
 	"strconv"
@@ -104,7 +103,7 @@ func testRequests(t *testing.T, method, url string, reqBody *strings.Reader) ([]
 	return bodyBytes, resp.StatusCode, nil
 }
 
-func CreateTestJWT(t *testing.T, id, expires int) (string, error) {
+func CreateTestJWT(t *testing.T, id, expires int) string {
 	t.Helper()
 
 	var token *jwt.Token
@@ -127,9 +126,9 @@ func CreateTestJWT(t *testing.T, id, expires int) (string, error) {
 
 	s, err := token.SignedString(key)
 	if err != nil {
-		log.Fatalf("Bad SignedString: %s", err)
-		return "", err
+		t.Fatalf("Bad SignedString: %s", err)
+		return ""
 	}
 
-	return s, nil
+	return s
 }
