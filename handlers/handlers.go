@@ -219,6 +219,7 @@ func (h *Handler) ConversationsHandler(w http.ResponseWriter, r *http.Request) {
 		if !exists {
 			conversationFromDatabase, err = conversation.CreateConversation(
 				h.ConversationRepo,
+				h.OpenAI,
 				InterviewID,
 				interviewReturned.Prompt,
 				interviewReturned.FirstQuestion,
@@ -239,6 +240,7 @@ func (h *Handler) ConversationsHandler(w http.ResponseWriter, r *http.Request) {
 
 			conversationFromDatabase, err = conversation.AppendConversation(
 				h.ConversationRepo,
+				h.OpenAI,
 				conversationFromDatabase,
 				params.Message,
 				params.ConversationID,

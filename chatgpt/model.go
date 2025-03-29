@@ -19,5 +19,6 @@ type ChatGPTResponse struct {
 type OpenAIClient struct{}
 
 type AIClient interface {
-	GetChatGPTResponse(prompt string) (*ChatGPTResponse, error)
+	GetChatGPTResponseInterview(prompt string) (*ChatGPTResponse, error)
+	GetChatGPTResponseConversation(conversationHistory []map[string]string) (*ChatGPTResponse, error)
 }

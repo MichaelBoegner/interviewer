@@ -1,15 +1,10 @@
 package conversation
 
 import (
-	"bytes"
-	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"log"
-	"net/http"
-	"os"
 	"time"
 
 	"github.com/michaelboegner/interviewer/chatgpt"
@@ -21,6 +16,7 @@ func CheckForConversation(repo ConversationRepo, interviewID int) bool {
 
 func CreateConversation(
 	repo ConversationRepo,
+	openAI chatgpt.AIClient,
 	interviewID int,
 	prompt,
 	firstQuestion,
@@ -89,7 +85,12 @@ func CreateConversation(
 
 	conversation.Topics[1] = topic
 
-	chatGPTResponse, err := getNextQuestion(conversation)
+	conversationHistory, err := getConversationHistory(conversation)
+	if err != nil {
+		return nil, err
+	}
+
+	chatGPTResponse, err := openAI.GetChatGPTResponseConversation(conversationHistory)
 	if err != nil {
 		log.Printf("getNextQuestion failing")
 		return nil, err
@@ -116,6 +117,7 @@ func CreateConversation(
 
 func AppendConversation(
 	repo ConversationRepo,
+	openAI chatgpt.OpenAIClient,
 	conversation *Conversation,
 	message *Message,
 	conversationID, topicID, questionID, questionNumber int,
@@ -136,8 +138,12 @@ func AppendConversation(
 
 	conversation.Topics[topicID].Questions[questionNumber].Messages = append(conversation.Topics[topicID].Questions[questionNumber].Messages, *messageUser)
 
+	conversationHistory, err := getConversationHistory(conversation)
+	if err != nil {
+		return nil, err
+	}
 	// Call ChatGPT for next question and convert to string and store. String conversion is need for when sending convo history back to ChatGPT.
-	chatGPTResponse, err := getNextQuestion(conversation)
+	chatGPTResponse, err := openAI.GetChatGPTResponseConversation(conversationHistory)
 	if err != nil {
 		log.Printf("getNextQuestion err: %v", err)
 		return nil, err
@@ -310,75 +316,6 @@ func GetConversation(repo ConversationRepo, interviewID int) (*Conversation, err
 	}
 
 	return conversation, nil
-}
-
-func getNextQuestion(conversation *Conversation) (*chatgpt.ChatGPTResponse, error) {
-	ctx := context.Background()
-	apiKey := os.Getenv("OPENAI_API_KEY")
-
-	conversationHistory, err := getConversationHistory(conversation)
-	if err != nil {
-		return nil, err
-	}
-
-	requestBody, err := json.Marshal(map[string]interface{}{
-		"model":       "gpt-4",
-		"messages":    conversationHistory,
-		"max_tokens":  150,
-		"temperature": 0.7,
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequestWithContext(ctx, "POST", "https://api.openai.com/v1/chat/completions", bytes.NewBuffer(requestBody))
-	if err != nil {
-		log.Printf("NewRequestWithContext failing")
-		return nil, err
-	}
-
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", apiKey))
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(resp.Body)
-		log.Printf("API call failed with status code: %d, response: %s", resp.StatusCode, body)
-		return nil, fmt.Errorf("API call failed with status code: %d", resp.StatusCode)
-	}
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	var result map[string]interface{}
-	if err := json.Unmarshal(body, &result); err != nil {
-		log.Printf("Unmarshal result err: %v", err)
-		return nil, err
-	}
-
-	choices := result["choices"].([]interface{})
-	if len(choices) == 0 {
-		err := errors.New("no question generated")
-		return nil, err
-	}
-
-	chatGPTResponseRaw := choices[0].(map[string]interface{})["message"].(map[string]interface{})["content"].(string)
-
-	var chatGPTResponse chatgpt.ChatGPTResponse
-	if err := json.Unmarshal([]byte(chatGPTResponseRaw), &chatGPTResponse); err != nil {
-		log.Printf("Unmarshal chatGPTResponse err: %v", err)
-		return nil, err
-	}
-
-	return &chatGPTResponse, nil
 }
 
 func getConversationHistory(conversation *Conversation) ([]map[string]string, error) {

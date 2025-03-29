@@ -39,7 +39,7 @@ func StartInterview(repo InterviewRepo, ai chatgpt.AIClient, userId, length, num
 		"    \"next_subtopic\": \"next subtopic\"\n" +
 		"}"
 
-	chatGPTResponse, err := ai.GetChatGPTResponse(prompt)
+	chatGPTResponse, err := ai.GetChatGPTResponseInterview(prompt)
 	if err != nil {
 		log.Printf("getChatGPTResponse err: %v\n", err)
 		return nil, err
