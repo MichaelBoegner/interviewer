@@ -2,8 +2,6 @@ package chatgpt
 
 import (
 	"time"
-
-	chatgpt "github.com/michaelboegner/interviewer/chatGPT"
 )
 
 type ChatGPTResponse struct {
@@ -21,5 +19,5 @@ type ChatGPTResponse struct {
 type OpenAIClient struct{}
 
 type AIClient interface {
-	GetChatGPTResponse(prompt string) (*chatgpt.ChatGPTResponse, error)
+	GetChatGPTResponse(prompt string) (*ChatGPTResponse, error)
 }
