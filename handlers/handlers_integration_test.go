@@ -146,7 +146,7 @@ func TestConversationsHandler_Post_Integration(t *testing.T) {
 
 	tests := []TestCase{
 		{
-			name:   "CreateConvesation_Success",
+			name:   "CreateConversation_Success",
 			method: "POST",
 			url:    testutil.TestServerURL + "/api/conversations/1",
 			reqBody: `{
