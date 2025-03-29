@@ -21,8 +21,7 @@ func CheckForConversation(repo ConversationRepo, interviewID int) bool {
 
 func CreateConversation(
 	repo ConversationRepo,
-	interviewID,
-	questionNumber int,
+	interviewID int,
 	prompt,
 	firstQuestion,
 	subtopic string,
@@ -34,10 +33,15 @@ func CreateConversation(
 		return nil, errors.New("messageUserResponse cannot be nil")
 	}
 
+	const (
+		questionNumber = 1
+		topicNumber    = 1
+	)
+
 	conversation := &Conversation{
 		InterviewID:           interviewID,
 		Topics:                PredefinedTopics,
-		CurrentTopic:          1,
+		CurrentTopic:          topicNumber,
 		CurrentSubtopic:       subtopic,
 		CurrentQuestionNumber: questionNumber,
 		CreatedAt:             now,
@@ -57,7 +61,7 @@ func CreateConversation(
 		return nil, err
 	}
 
-	topic := conversation.Topics[1]
+	topic := conversation.Topics[topicNumber]
 	topic.ConversationID = conversationID
 
 	messagePrompt := newMessage(conversationID, questionNumber, System, prompt)
@@ -81,7 +85,7 @@ func CreateConversation(
 	}
 
 	topic.Questions = make(map[int]*Question)
-	topic.Questions[1] = question
+	topic.Questions[questionNumber] = question
 
 	conversation.Topics[1] = topic
 
@@ -97,9 +101,9 @@ func CreateConversation(
 		return nil, err
 	}
 
-	topic = conversation.Topics[1]
-	topic.Questions[1].Messages = append(topic.Questions[1].Messages, *newMessage(conversationID, questionNumber, Interviewer, chatGPTResponseString))
-	conversation.Topics[1] = topic
+	topic = conversation.Topics[topicNumber]
+	topic.Questions[questionNumber].Messages = append(topic.Questions[1].Messages, *newMessage(conversationID, questionNumber, Interviewer, chatGPTResponseString))
+	conversation.Topics[topicNumber] = topic
 
 	err = repo.CreateMessages(conversation, question.Messages)
 	if err != nil {

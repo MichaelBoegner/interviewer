@@ -219,7 +219,6 @@ func (h *Handler) ConversationsHandler(w http.ResponseWriter, r *http.Request) {
 			conversationFromDatabase, err = conversation.CreateConversation(
 				h.ConversationRepo,
 				InterviewID,
-				1,
 				interviewReturned.Prompt,
 				interviewReturned.FirstQuestion,
 				interviewReturned.Subtopic,

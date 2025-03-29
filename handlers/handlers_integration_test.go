@@ -139,6 +139,72 @@ func TestInterviewsHandler_Post_Integration(t *testing.T) {
 	}
 }
 
+func TestConversationsHandler_Post_Integration(t *testing.T) {
+	_, jwt, userID := testutil.CreateTestUserAndJWT(t)
+
+	tests := []TestCase{
+		{
+			name:   "CreateConvesation_Success",
+			method: "POST",
+			url:    testutil.TestServerURL + "/api/conversations",
+			reqBody: `{
+			
+			}`,
+			headerKey:      "Authorization",
+			headerValue:    "Bearer " + jwt,
+			expectedStatus: http.StatusCreated,
+			respBody: handlers.ReturnVals{
+				InterviewID:   1,
+				FirstQuestion: "Tell me a little bit about your work history.",
+			},
+			DBCheck: false,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			// Act
+			resp, respCode, err := testRequests(t, tc.headerKey, tc.headerValue, tc.method, tc.url, strings.NewReader(tc.reqBody))
+			if err != nil {
+				log.Fatalf("TestRequest for interview creation failed: %v", err)
+			}
+
+			respUnmarshalled := &handlers.ReturnVals{}
+			err = json.Unmarshal(resp, respUnmarshalled)
+			if err != nil {
+				t.Fatalf("failed to unmarshal response: %v", err)
+			}
+
+			// Assert Response
+			if respCode != tc.expectedStatus {
+				t.Fatalf("[%s]expected status %d, got %d\n", tc.name, tc.expectedStatus, respCode)
+			}
+
+			expected := tc.respBody
+			got := *respUnmarshalled
+
+			if diff := cmp.Diff(expected, got); diff != "" {
+				t.Errorf("Mismatch (-expected +got):\n%s", diff)
+			}
+
+			// Assert Database
+			if tc.DBCheck {
+				interview, err := interview.GetInterview(Handler.InterviewRepo, respUnmarshalled.InterviewID)
+				if err != nil {
+					t.Fatalf("Assert Database: GetInterview failing: %v", err)
+				}
+
+				expectedDB := tc.Interview
+				gotDB := interview
+
+				if diff := cmp.Diff(expectedDB, gotDB); diff != "" {
+					t.Errorf("Mismatch (-expected +got):\n%s", diff)
+				}
+			}
+		})
+	}
+}
+
 func testRequests(t *testing.T, headerKey, headerValue, method, url string, reqBody *strings.Reader) ([]byte, int, error) {
 	t.Helper()
 	client := &http.Client{}
