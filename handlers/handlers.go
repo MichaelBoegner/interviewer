@@ -259,7 +259,7 @@ func (h *Handler) ConversationsHandler(w http.ResponseWriter, r *http.Request) {
 		payload := &ReturnVals{
 			Conversation: conversationFromDatabase,
 		}
-		respondWithJSON(w, http.StatusOK, payload)
+		respondWithJSON(w, http.StatusCreated, payload)
 	}
 }
 

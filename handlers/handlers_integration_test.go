@@ -148,7 +148,7 @@ func TestConversationsHandler_Post_Integration(t *testing.T) {
 				"message" : {
   					"author": "user",
   					"content": "I have been a TSE for 5 years."
-			}`,
+			}}`,
 			headerKey:      "Authorization",
 			headerValue:    "Bearer " + jwtoken,
 			expectedStatus: http.StatusCreated,

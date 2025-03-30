@@ -2,10 +2,13 @@ package mocks
 
 import "github.com/michaelboegner/interviewer/conversation"
 
+var responseConversationForMock, err = MarshalResponses(responseConversation)
+
 var TestCreatedConversation = &conversation.Conversation{
+	ID:                    1,
 	InterviewID:           1,
 	CurrentTopic:          1,
-	CurrentSubtopic:       "General Background",
+	CurrentSubtopic:       "None",
 	CurrentQuestionNumber: 1,
 	Topics: map[int]conversation.Topic{
 		1: {
@@ -23,8 +26,29 @@ var TestCreatedConversation = &conversation.Conversation{
 							ConversationID: 1,
 							TopicID:        1,
 							QuestionNumber: 1,
+							Author:         "system",
+							Content:        TestPrompt,
+						},
+						{
+							ConversationID: 1,
+							TopicID:        1,
+							QuestionNumber: 1,
 							Author:         "interviewer",
 							Content:        "Tell me a little bit about your work history.",
+						},
+						{
+							ConversationID: 1,
+							TopicID:        1,
+							QuestionNumber: 1,
+							Author:         "user",
+							Content:        "I have been a TSE for 5 years.",
+						},
+						{
+							ConversationID: 1,
+							TopicID:        1,
+							QuestionNumber: 1,
+							Author:         "interviewer",
+							Content:        responseConversationForMock,
 						},
 					},
 				},
