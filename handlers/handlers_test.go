@@ -39,7 +39,12 @@ type TestCase struct {
 	DBCheck        bool
 }
 
-var Handler *handlers.Handler
+var (
+	Handler    *handlers.Handler
+	jwtoken    string
+	expiredJWT string
+	userID     int
+)
 
 func TestMain(m *testing.M) {
 	log.SetFlags(log.LstdFlags | log.Llongfile)
@@ -59,6 +64,9 @@ func TestMain(m *testing.M) {
 	}
 
 	log.Printf("TestMain: Test server started successfully at: %s", testutil.TestServerURL)
+
+	jwtoken, userID = testutil.CreateTestUserAndJWT()
+	expiredJWT = testutil.CreateTestJWT(userID, -1)
 
 	code := m.Run()
 

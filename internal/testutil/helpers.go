@@ -3,24 +3,21 @@ package testutil
 import (
 	"encoding/json"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"strconv"
 	"strings"
-	"testing"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/michaelboegner/interviewer/token"
 )
 
-func CreateTestUserAndJWT(t *testing.T) (string, string, int) {
-	t.Helper()
-
+func CreateTestUserAndJWT() (string, int) {
 	var (
-		username string
-		jwt      string
-		userID   int
+		jwt    string
+		userID int
 	)
 	//test user created
 	reqBodyUser := strings.NewReader(`{
@@ -29,9 +26,9 @@ func CreateTestUserAndJWT(t *testing.T) (string, string, int) {
 		"password":"test"
 	}`)
 
-	userResp, _, err := testRequests(t, "POST", TestServerURL+"/api/users/", reqBodyUser)
+	userResp, _, err := testRequests("POST", TestServerURL+"/api/users/", reqBodyUser)
 	if err != nil {
-		t.Fatalf("CreateTestUserAndJWT user creation failed: %v", err)
+		log.Fatalf("CreateTestUserAndJWT user creation failed: %v", err)
 	}
 
 	type UserResponse struct {
@@ -40,7 +37,6 @@ func CreateTestUserAndJWT(t *testing.T) (string, string, int) {
 	}
 	var user = &UserResponse{}
 	json.Unmarshal(userResp, user)
-	username = user.Username
 
 	//test jwt retrieved
 	reqBodyLogin := strings.NewReader(`
@@ -50,9 +46,9 @@ func CreateTestUserAndJWT(t *testing.T) (string, string, int) {
 		}
 	`)
 
-	loginResp, _, err := testRequests(t, "POST", TestServerURL+"/api/auth/login", reqBodyLogin)
+	loginResp, _, err := testRequests("POST", TestServerURL+"/api/auth/login", reqBodyLogin)
 	if err != nil {
-		t.Fatalf("CreateTestUserAndJWT JWT creation failed: %v", err)
+		log.Fatalf("CreateTestUserAndJWT JWT creation failed: %v", err)
 	}
 
 	type AuthResponse struct {
@@ -70,42 +66,39 @@ func CreateTestUserAndJWT(t *testing.T) (string, string, int) {
 	//test userID extracted
 	userID, err = token.ExtractUserIDFromToken(jwt)
 	if err != nil {
-		t.Fatalf("CreateTestUserandJWT userID extraction failed: %v", err)
+		log.Fatalf("CreateTestUserandJWT userID extraction failed: %v", err)
 	}
 
-	return username, jwt, userID
+	return jwt, userID
 }
 
-func testRequests(t *testing.T, method, url string, reqBody *strings.Reader) ([]byte, int, error) {
-	t.Helper()
+func testRequests(method, url string, reqBody *strings.Reader) ([]byte, int, error) {
 	client := &http.Client{}
 
 	req, err := http.NewRequest(method, url, reqBody)
 	if err != nil {
-		t.Logf("CreateTestUserAndJWT user creation failed: %v", err)
+		log.Fatalf("CreateTestUserAndJWT user creation failed: %v", err)
 		return nil, 0, err
 	}
 	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := client.Do(req)
 	if err != nil {
-		t.Logf("Request to create test user failed: %v", err)
+		log.Fatalf("Request to create test user failed: %v", err)
 		return nil, resp.StatusCode, err
 	}
 	defer resp.Body.Close()
 
 	bodyBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
-		t.Logf("Reading response failed: %v", err)
+		log.Fatalf("Reading response failed: %v", err)
 		return nil, resp.StatusCode, err
 	}
 
 	return bodyBytes, resp.StatusCode, nil
 }
 
-func CreateTestJWT(t *testing.T, id, expires int) string {
-	t.Helper()
-
+func CreateTestJWT(id, expires int) string {
 	var token *jwt.Token
 	jwtSecret := os.Getenv("JWT_SECRET")
 	key := []byte(jwtSecret)
@@ -126,7 +119,7 @@ func CreateTestJWT(t *testing.T, id, expires int) string {
 
 	s, err := token.SignedString(key)
 	if err != nil {
-		t.Fatalf("Bad SignedString: %s", err)
+		log.Fatalf("Bad SignedString: %s", err)
 		return ""
 	}
 

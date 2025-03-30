@@ -31,12 +31,12 @@ var PredefinedTopics = map[int]Topic{
 type Conversation struct {
 	ID                    int           `json:"id"`
 	InterviewID           int           `json:"interview_id"`
-	Topics                map[int]Topic `json:"topics"`
 	CurrentTopic          int           `json:"current_topic"`
 	CurrentSubtopic       string        `json:"current_subtopic"`
 	CurrentQuestionNumber int           `json:"current_question_number"`
 	CreatedAt             time.Time     `json:"created_at"`
 	UpdatedAt             time.Time     `json:"updated_at"`
+	Topics                map[int]Topic `json:"topics"`
 }
 
 type Topic struct {
@@ -51,17 +51,17 @@ type Question struct {
 	TopicID        int       `json:"topic_id"`
 	QuestionNumber int       `json:"question_number"`
 	Prompt         string    `json:"prompt"`
-	Messages       []Message `json:"messages"`
 	CreatedAt      time.Time `json:"created_at"`
+	Messages       []Message `json:"messages"`
 }
 
 type Message struct {
 	ConversationID int       `json:"conversation_id"`
 	TopicID        int       `json:"topic_id"`
 	QuestionNumber int       `json:"question_id"`
+	CreatedAt      time.Time `json:"created_at"`
 	Author         Author    `json:"author"`
 	Content        string    `json:"content"`
-	CreatedAt      time.Time `json:"created_at"`
 }
 
 type ConversationRepo interface {

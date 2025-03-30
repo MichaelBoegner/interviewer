@@ -16,9 +16,6 @@ import (
 )
 
 func TestInterviewsHandler_Post_Integration(t *testing.T) {
-	_, jwt, userID := testutil.CreateTestUserAndJWT(t)
-	expiredJWT := testutil.CreateTestJWT(t, userID, -1)
-
 	tests := []TestCase{
 		{
 			name:           "CreateInterview_Success",
@@ -26,7 +23,7 @@ func TestInterviewsHandler_Post_Integration(t *testing.T) {
 			url:            testutil.TestServerURL + "/api/interviews",
 			reqBody:        `{}`,
 			headerKey:      "Authorization",
-			headerValue:    "Bearer " + jwt,
+			headerValue:    "Bearer " + jwtoken,
 			expectedStatus: http.StatusCreated,
 			respBody: handlers.ReturnVals{
 				InterviewID:   1,
@@ -43,7 +40,7 @@ func TestInterviewsHandler_Post_Integration(t *testing.T) {
 				Language:        "Python",
 				Prompt:          mocks.TestPrompt,
 				FirstQuestion:   "Tell me a little bit about your work history.",
-				Subtopic:        "General Background",
+				Subtopic:        "None",
 			},
 			DBCheck: true,
 		},
@@ -141,8 +138,6 @@ func TestInterviewsHandler_Post_Integration(t *testing.T) {
 }
 
 func TestConversationsHandler_Post_Integration(t *testing.T) {
-	t.Skip("TODO: Skip while refactoring models package and implementing full repo openaimocking")
-	_, jwt, _ := testutil.CreateTestUserAndJWT(t)
 
 	tests := []TestCase{
 		{
@@ -155,7 +150,7 @@ func TestConversationsHandler_Post_Integration(t *testing.T) {
   					"content": "I have been a TSE for 5 years."
 			}`,
 			headerKey:      "Authorization",
-			headerValue:    "Bearer " + jwt,
+			headerValue:    "Bearer " + jwtoken,
 			expectedStatus: http.StatusCreated,
 			respBody: handlers.ReturnVals{
 				Conversation: mocks.TestCreatedConversation,

@@ -43,19 +43,19 @@ var TestCreatedConversation = &conversation.Conversation{
 			Questions:      map[int]*conversation.Question{},
 		},
 		4: {
-			ID:             3,
+			ID:             4,
 			ConversationID: 1,
 			Name:           "Databases and Data Management",
 			Questions:      map[int]*conversation.Question{},
 		},
 		5: {
-			ID:             3,
+			ID:             5,
 			ConversationID: 1,
 			Name:           "Behavioral",
 			Questions:      map[int]*conversation.Question{},
 		},
 		6: {
-			ID:             3,
+			ID:             6,
 			ConversationID: 1,
 			Name:           "General Backend Knowledge",
 			Questions:      map[int]*conversation.Question{},
