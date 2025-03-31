@@ -20,24 +20,24 @@ func CreateConversation(
 	interviewID int,
 	prompt,
 	firstQuestion,
-	subtopic string,
-	messageUserResponse *Message) (*Conversation, error) {
+	subtopic,
+	message string) (*Conversation, error) {
 	now := time.Now()
 
-	if messageUserResponse == nil {
+	if message == "" {
 		log.Printf("messageUserResponse is nil")
 		return nil, errors.New("messageUserResponse cannot be nil")
 	}
 
 	const (
 		questionNumber = 1
-		topicNumber    = 1
+		topicID        = 1
 	)
 
 	conversation := &Conversation{
 		InterviewID:           interviewID,
 		Topics:                PredefinedTopics,
-		CurrentTopic:          topicNumber,
+		CurrentTopic:          topicID,
 		CurrentSubtopic:       subtopic,
 		CurrentQuestionNumber: questionNumber,
 		CreatedAt:             now,
@@ -57,15 +57,12 @@ func CreateConversation(
 		return nil, err
 	}
 
-	topic := conversation.Topics[topicNumber]
+	topic := conversation.Topics[topicID]
 	topic.ConversationID = conversationID
 
-	messagePrompt := newMessage(conversationID, questionNumber, System, prompt)
-	messageFirstQuestion := newMessage(conversationID, questionNumber, Interviewer, firstQuestion)
-
-	messageUserResponse.ConversationID = conversationID
-	messageUserResponse.QuestionNumber = questionNumber
-	messageUserResponse.CreatedAt = time.Now()
+	messagePrompt := newMessage(conversationID, topicID, questionNumber, System, prompt)
+	messageFirstQuestion := newMessage(conversationID, topicID, questionNumber, Interviewer, firstQuestion)
+	messageUserResponse := newMessage(conversationID, topicID, questionNumber, User, message)
 
 	question := &Question{
 		ConversationID: conversationID,
@@ -102,9 +99,9 @@ func CreateConversation(
 		return nil, err
 	}
 
-	topic = conversation.Topics[topicNumber]
-	topic.Questions[questionNumber].Messages = append(topic.Questions[1].Messages, *newMessage(conversationID, questionNumber, Interviewer, chatGPTResponseString))
-	conversation.Topics[topicNumber] = topic
+	topic = conversation.Topics[topicID]
+	topic.Questions[questionNumber].Messages = append(topic.Questions[1].Messages, *newMessage(conversationID, topicID, questionNumber, Interviewer, chatGPTResponseString))
+	conversation.Topics[topicID] = topic
 
 	err = repo.CreateMessages(conversation, question.Messages)
 	if err != nil {
@@ -119,22 +116,21 @@ func AppendConversation(
 	repo ConversationRepo,
 	openAI chatgpt.AIClient,
 	conversation *Conversation,
-	message *Message,
 	conversationID, topicID, questionID, questionNumber int,
-	prompt string) (*Conversation, error) {
+	message, prompt string) (*Conversation, error) {
 
 	if conversation.ID != conversationID {
 		return nil, errors.New("conversation_id doesn't match with current interview")
 	}
 
+	// Add response message to Messages struct
+	messageUser := newMessage(conversationID, conversation.CurrentTopic, questionNumber, User, message)
+
 	// Add response message from user to Messages table
-	_, err := repo.AddMessage(conversationID, conversation.CurrentTopic, questionNumber, message)
+	_, err := repo.AddMessage(conversationID, conversation.CurrentTopic, questionNumber, messageUser)
 	if err != nil {
 		return nil, err
 	}
-
-	// Add response message to Messages struct
-	messageUser := newMessage(conversationID, questionNumber, message.Author, message.Content)
 
 	conversation.Topics[topicID].Questions[questionNumber].Messages = append(conversation.Topics[topicID].Questions[questionNumber].Messages, *messageUser)
 
@@ -173,7 +169,7 @@ func AppendConversation(
 			return nil, err
 		}
 
-		messageFinal := newMessage(conversationID, questionNumber, Interviewer, chatGPTResponseString)
+		messageFinal := newMessage(conversationID, conversation.CurrentTopic, questionNumber, Interviewer, chatGPTResponseString)
 		_, err = repo.AddMessage(conversationID, topicID, questionNumber, messageFinal)
 		if err != nil {
 			return nil, err
@@ -201,7 +197,7 @@ func AppendConversation(
 		topic := conversation.Topics[nextTopicID]
 		topic.ConversationID = conversationID
 
-		messageFirstQuestion := newMessage(conversationID, resetQuestionNumber, Interviewer, chatGPTResponseString)
+		messageFirstQuestion := newMessage(conversationID, conversation.CurrentTopic, resetQuestionNumber, Interviewer, chatGPTResponseString)
 
 		question := &Question{
 			ConversationID: conversationID,
@@ -254,7 +250,7 @@ func AppendConversation(
 		}
 	}
 
-	messageNextQuestion := newMessage(conversationID, questionNumber, Interviewer, chatGPTResponseString)
+	messageNextQuestion := newMessage(conversationID, conversation.CurrentTopic, questionNumber, Interviewer, chatGPTResponseString)
 
 	conversation.Topics[topicID].Questions[questionNumber].Messages = append(conversation.Topics[topicID].Questions[questionNumber].Messages, *messageNextQuestion)
 
@@ -399,10 +395,11 @@ func getConversationHistory(conversation *Conversation) ([]map[string]string, er
 	return chatGPTConversationArray, nil
 }
 
-func newMessage(conversationID, currentQuestionNumber int, author Author, content string) *Message {
+func newMessage(conversationID, topicID, currentQuestionNumber int, author Author, content string) *Message {
 	message := &Message{
 		ConversationID: conversationID,
 		QuestionNumber: currentQuestionNumber,
+		TopicID:        topicID,
 		Author:         author,
 		Content:        content,
 		CreatedAt:      time.Now(),

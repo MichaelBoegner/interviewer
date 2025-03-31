@@ -242,11 +242,11 @@ func (h *Handler) ConversationsHandler(w http.ResponseWriter, r *http.Request) {
 				h.ConversationRepo,
 				h.OpenAI,
 				conversationFromDatabase,
-				params.Message,
 				params.ConversationID,
 				conversationFromDatabase.CurrentTopic,
 				params.QuestionID,
 				conversationFromDatabase.CurrentQuestionNumber,
+				params.Message,
 				interviewReturned.Prompt)
 			if err != nil {
 				log.Printf("AppendConversation error: %v", err)

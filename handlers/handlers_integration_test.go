@@ -147,10 +147,8 @@ func Test_ConversationsHandler_Post_Integration(t *testing.T) {
 			method: "POST",
 			url:    testutil.TestServerURL + "/api/conversations/1",
 			reqBody: `{
-				"message" : {
-  					"author": "user",
-  					"content": "I have been a TSE for 5 years."
-			}}`,
+				"message" : "I have been a TSE for 5 years."
+			}`,
 			headerKey:      "Authorization",
 			headerValue:    "Bearer " + jwtoken,
 			expectedStatus: http.StatusCreated,
