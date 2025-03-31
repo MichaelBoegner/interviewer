@@ -7,8 +7,10 @@ import (
 	"net/http"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/michaelboegner/interviewer/handlers"
 	"github.com/michaelboegner/interviewer/internal/mocks"
 	"github.com/michaelboegner/interviewer/internal/testutil"
@@ -181,7 +183,7 @@ func Test_ConversationsHandler_Post_Integration(t *testing.T) {
 			expected := tc.respBody
 			got := *respUnmarshalled
 
-			if diff := cmp.Diff(expected, got); diff != "" {
+			if diff := cmp.Diff(expected, got, cmpopts.EquateApproxTime(time.Second)); diff != "" {
 				t.Errorf("Mismatch (-expected +got):\n%s", diff)
 			}
 

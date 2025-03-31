@@ -1,6 +1,12 @@
 package mocks
 
-import "github.com/michaelboegner/interviewer/conversation"
+import (
+	"time"
+
+	"github.com/michaelboegner/interviewer/conversation"
+)
+
+var now = time.Now()
 
 var TestCreatedConversation = &conversation.Conversation{
 	ID:                    1,
@@ -8,6 +14,8 @@ var TestCreatedConversation = &conversation.Conversation{
 	CurrentTopic:          1,
 	CurrentSubtopic:       "None",
 	CurrentQuestionNumber: 1,
+	CreatedAt:             now,
+	UpdatedAt:             now,
 	Topics: map[int]conversation.Topic{
 		1: {
 			ID:             1,
@@ -19,6 +27,7 @@ var TestCreatedConversation = &conversation.Conversation{
 					TopicID:        1,
 					QuestionNumber: 1,
 					Prompt:         "Tell me a little bit about your work history.",
+					CreatedAt:      now,
 					Messages: []conversation.Message{
 						{
 							ConversationID: 1,
@@ -26,6 +35,7 @@ var TestCreatedConversation = &conversation.Conversation{
 							QuestionNumber: 1,
 							Author:         "system",
 							Content:        TestPrompt,
+							CreatedAt:      now,
 						},
 						{
 							ConversationID: 1,
@@ -33,6 +43,7 @@ var TestCreatedConversation = &conversation.Conversation{
 							QuestionNumber: 1,
 							Author:         "interviewer",
 							Content:        "Tell me a little bit about your work history.",
+							CreatedAt:      now,
 						},
 						{
 							ConversationID: 1,
@@ -40,6 +51,7 @@ var TestCreatedConversation = &conversation.Conversation{
 							QuestionNumber: 1,
 							Author:         "user",
 							Content:        "I have been a TSE for 5 years.",
+							CreatedAt:      now,
 						},
 						{
 							ConversationID: 1,
@@ -47,6 +59,7 @@ var TestCreatedConversation = &conversation.Conversation{
 							QuestionNumber: 1,
 							Author:         "interviewer",
 							Content:        responseConversationMock,
+							CreatedAt:      now,
 						},
 					},
 				},
