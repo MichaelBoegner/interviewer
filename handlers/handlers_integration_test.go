@@ -15,7 +15,7 @@ import (
 	"github.com/michaelboegner/interviewer/interview"
 )
 
-func TestInterviewsHandler_Post_Integration(t *testing.T) {
+func Test_InterviewsHandler_Post_Integration(t *testing.T) {
 	tests := []TestCase{
 		{
 			name:           "CreateInterview_Success",
@@ -137,7 +137,7 @@ func TestInterviewsHandler_Post_Integration(t *testing.T) {
 	}
 }
 
-func TestConversationsHandler_Post_Integration(t *testing.T) {
+func Test_ConversationsHandler_Post_Integration(t *testing.T) {
 
 	tests := []TestCase{
 		{

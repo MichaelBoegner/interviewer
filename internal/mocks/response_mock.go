@@ -2,8 +2,6 @@ package mocks
 
 import "github.com/michaelboegner/interviewer/conversation"
 
-var responseConversationForMock, err = MarshalResponses(responseConversation)
-
 var TestCreatedConversation = &conversation.Conversation{
 	ID:                    1,
 	InterviewID:           1,
@@ -48,7 +46,7 @@ var TestCreatedConversation = &conversation.Conversation{
 							TopicID:        1,
 							QuestionNumber: 1,
 							Author:         "interviewer",
-							Content:        responseConversationForMock,
+							Content:        responseConversationMock,
 						},
 					},
 				},
@@ -56,33 +54,33 @@ var TestCreatedConversation = &conversation.Conversation{
 		},
 		2: {
 			ID:             2,
-			ConversationID: 1,
+			ConversationID: 0,
 			Name:           "Coding",
-			Questions:      map[int]*conversation.Question{},
+			Questions:      nil,
 		},
 		3: {
 			ID:             3,
-			ConversationID: 1,
+			ConversationID: 0,
 			Name:           "System Design",
-			Questions:      map[int]*conversation.Question{},
+			Questions:      nil,
 		},
 		4: {
 			ID:             4,
-			ConversationID: 1,
+			ConversationID: 0,
 			Name:           "Databases and Data Management",
-			Questions:      map[int]*conversation.Question{},
+			Questions:      nil,
 		},
 		5: {
 			ID:             5,
-			ConversationID: 1,
+			ConversationID: 0,
 			Name:           "Behavioral",
-			Questions:      map[int]*conversation.Question{},
+			Questions:      nil,
 		},
 		6: {
 			ID:             6,
-			ConversationID: 1,
+			ConversationID: 0,
 			Name:           "General Backend Knowledge",
-			Questions:      map[int]*conversation.Question{},
+			Questions:      nil,
 		},
 	},
 }
