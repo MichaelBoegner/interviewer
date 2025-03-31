@@ -387,11 +387,6 @@ func getConversationHistory(conversation *Conversation) ([]map[string]string, er
 		}
 	}
 
-	// Debugging output
-	prettyJSON, _ := json.MarshalIndent(chatGPTConversationArray, "", "  ")
-	fmt.Println("THIS IS WHAT YOU'RE SENDING TO CHATGPT TO GET THE NEXT QUESTION:")
-	fmt.Println(string(prettyJSON))
-
 	return chatGPTConversationArray, nil
 }
 
