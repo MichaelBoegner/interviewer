@@ -11,6 +11,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/michaelboegner/interviewer/conversation"
 	"github.com/michaelboegner/interviewer/handlers"
 	"github.com/michaelboegner/interviewer/internal/mocks"
 	"github.com/michaelboegner/interviewer/internal/testutil"
@@ -155,7 +156,8 @@ func Test_ConversationsHandler_Post_Integration(t *testing.T) {
 			respBody: handlers.ReturnVals{
 				Conversation: mocks.TestCreatedConversation,
 			},
-			DBCheck: false,
+			DBCheck:      true,
+			Conversation: mocks.TestCreatedConversation,
 		},
 	}
 
@@ -187,15 +189,15 @@ func Test_ConversationsHandler_Post_Integration(t *testing.T) {
 
 			// Assert Database
 			if tc.DBCheck {
-				interview, err := interview.GetInterview(Handler.InterviewRepo, respUnmarshalled.InterviewID)
+				conversation, err := conversation.GetConversation(Handler.ConversationRepo, got.Conversation.ID)
 				if err != nil {
-					t.Fatalf("Assert Database: GetInterview failing: %v", err)
+					t.Fatalf("Assert Database: GetConversation failing: %v", err)
 				}
 
-				expectedDB := tc.Interview
-				gotDB := interview
+				expectedDB := tc.Conversation
+				gotDB := conversation
 
-				if diff := cmp.Diff(expectedDB, gotDB); diff != "" {
+				if diff := cmp.Diff(expectedDB, gotDB, cmpopts.EquateApproxTime(time.Second)); diff != "" {
 					t.Errorf("Mismatch (-expected +got):\n%s", diff)
 				}
 			}

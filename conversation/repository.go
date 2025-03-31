@@ -60,14 +60,14 @@ func (repo *Repository) CreateConversation(conversation *Conversation) (int, err
 	return id, nil
 }
 
-func (repo *Repository) GetConversation(interviewID int) (*Conversation, error) {
+func (repo *Repository) GetConversation(conversationID int) (*Conversation, error) {
 	conversation := &Conversation{}
 
 	query := `SELECT id, interview_id, current_topic, current_subtopic, current_question_number, created_at, updated_at
 	FROM conversations
 	WHERE interview_id = $1
 	`
-	err := repo.DB.QueryRow(query, interviewID).Scan(
+	err := repo.DB.QueryRow(query, conversationID).Scan(
 		&conversation.ID,
 		&conversation.InterviewID,
 		&conversation.CurrentTopic,
@@ -76,9 +76,10 @@ func (repo *Repository) GetConversation(interviewID int) (*Conversation, error) 
 		&conversation.CreatedAt,
 		&conversation.UpdatedAt)
 	if err == sql.ErrNoRows {
+		log.Printf("repo.GetConversation returned 0 rows: %v\n", err)
 		return nil, err
 	} else if err != nil {
-		log.Printf("Error querying conversation: %v\n", err)
+		log.Printf("repo.GetConversation failed: %v\n", err)
 		return nil, err
 	}
 
@@ -99,7 +100,7 @@ func (repo *Repository) UpdateConversationCurrents(conversationID, topicID, curr
 		topicID,
 		subtopic,
 		currentQuestionNumber,
-		time.Now(),
+		time.Now().UTC(),
 		conversationID,
 	).Scan(&id)
 	if err == sql.ErrNoRows {
@@ -126,7 +127,7 @@ func (repo *Repository) CreateQuestion(conversation *Conversation, prompt string
 		conversation.CurrentTopic,
 		1,
 		prompt,
-		time.Now(),
+		time.Now().UTC(),
 	).Scan(&questionNumber)
 	if err == sql.ErrNoRows {
 		return 0, err
@@ -152,7 +153,7 @@ func (repo *Repository) AddQuestion(question *Question) (int, error) {
 		question.TopicID,
 		question.QuestionNumber,
 		question.Prompt,
-		time.Now(),
+		time.Now().UTC(),
 	).Scan(&id)
 	if err == sql.ErrNoRows {
 		return 0, err
@@ -218,7 +219,7 @@ func (repo *Repository) CreateMessages(conversation *Conversation, messages []Me
 			message.QuestionNumber,
 			message.Author,
 			message.Content,
-			time.Now(),
+			time.Now().UTC(),
 		).Scan(&id)
 
 		if err == sql.ErrNoRows {
@@ -245,7 +246,7 @@ func (repo *Repository) AddMessage(conversationID, topic_id, questionNumber int,
 		questionNumber,
 		message.Author,
 		message.Content,
-		time.Now(),
+		time.Now().UTC(),
 	).Scan(&questionNumber)
 	if err == sql.ErrNoRows {
 		return 0, err

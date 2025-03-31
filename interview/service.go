@@ -8,7 +8,7 @@ import (
 )
 
 func StartInterview(repo InterviewRepo, ai chatgpt.AIClient, userId, length, numberQuestions int, difficulty string) (*Interview, error) {
-	now := time.Now()
+	now := time.Now().UTC()
 	prompt := "You are conducting a structured backend development interview. " +
 		"The interview follows **six topics in this order**:\n\n" +
 		"1. **Introduction**\n" +

@@ -231,7 +231,7 @@ func (h *Handler) ConversationsHandler(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		} else {
-			conversationFromDatabase, err = conversation.GetConversation(h.ConversationRepo, InterviewID)
+			conversationFromDatabase, err = conversation.GetConversation(h.ConversationRepo, params.ConversationID)
 			if err != nil {
 				log.Printf("GetConversation error: %v", err)
 				respondWithError(w, http.StatusBadRequest, "Invalid ID.")

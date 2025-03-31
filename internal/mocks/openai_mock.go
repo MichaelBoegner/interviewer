@@ -13,7 +13,7 @@ var (
 	responseConversation     *chatgpt.ChatGPTResponse
 	responseConversationMock string
 	TestCreatedConversation  *conversation.Conversation
-	now                      = time.Now()
+	now                      = time.Now().UTC()
 	responseInterview        = &chatgpt.ChatGPTResponse{
 		Topic:        "None",
 		Subtopic:     "None",
@@ -23,7 +23,7 @@ var (
 		NextQuestion: "Tell me a little bit about your work history.",
 		NextTopic:    "Introduction",
 		NextSubtopic: "General Background",
-		CreatedAt:    time.Now(),
+		CreatedAt:    now,
 	}
 )
 
@@ -37,7 +37,7 @@ func init() {
 		NextQuestion: "Can you tell me about your most recent backend project?",
 		NextTopic:    "Introduction",
 		NextSubtopic: "General Engineering Experience",
-		CreatedAt:    time.Now(),
+		CreatedAt:    now,
 	}
 
 	responseConversationMarshal, err := json.Marshal(responseConversation)

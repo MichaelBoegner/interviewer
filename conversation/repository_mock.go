@@ -17,8 +17,8 @@ func (repo *MockRepo) GetConversation(interviewID int) (*Conversation, error) {
 		ID:          1,
 		InterviewID: 1,
 		Topics:      PredefinedTopics,
-		CreatedAt:   time.Now(),
-		UpdatedAt:   time.Now(),
+		CreatedAt:   time.Now().UTC(),
+		UpdatedAt:   time.Now().UTC(),
 	}
 	topic := conversationResponse.Topics[1]
 	topic.ConversationID = 1
@@ -34,7 +34,7 @@ func (repo *MockRepo) GetConversation(interviewID int) (*Conversation, error) {
 		QuestionNumber: 1,
 		Author:         "interviewer",
 		Content:        "What is the flight speed of an unladdened swallow?",
-		CreatedAt:      time.Now(),
+		CreatedAt:      time.Now().UTC(),
 	}
 
 	messageResponse := &Message{
@@ -42,7 +42,7 @@ func (repo *MockRepo) GetConversation(interviewID int) (*Conversation, error) {
 		QuestionNumber: 1,
 		Author:         "user",
 		Content:        "European or African?",
-		CreatedAt:      time.Now(),
+		CreatedAt:      time.Now().UTC(),
 	}
 
 	question.Messages = make([]Message, 0)

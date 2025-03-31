@@ -9,7 +9,7 @@ import (
 )
 
 func CreateUser(repo UserRepo, username, email, password string) (*User, error) {
-	now := time.Now()
+	now := time.Now().UTC()
 
 	passwordHashed, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.MinCost)
 	if err != nil {

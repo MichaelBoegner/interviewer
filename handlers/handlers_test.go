@@ -35,8 +35,9 @@ type TestCase struct {
 	expectedStatus int
 	expectError    bool
 	respBody       handlers.ReturnVals
-	Interview      *interview.Interview
 	DBCheck        bool
+	Interview      *interview.Interview
+	Conversation   *conversation.Conversation
 }
 
 var (
@@ -352,8 +353,8 @@ func TestConversationsHandler_Post(t *testing.T) {
 		ID:          1,
 		InterviewID: 1,
 		Topics:      conversation.PredefinedTopics,
-		CreatedAt:   time.Now(),
-		UpdatedAt:   time.Now(),
+		CreatedAt:   time.Now().UTC(),
+		UpdatedAt:   time.Now().UTC(),
 	}
 	topic := conversationResponse.Topics[1]
 	topic.ConversationID = 1
@@ -369,7 +370,7 @@ func TestConversationsHandler_Post(t *testing.T) {
 		QuestionNumber: 1,
 		Author:         "interviewer",
 		Content:        "What is the flight speed of an unladdened swallow?",
-		CreatedAt:      time.Now(),
+		CreatedAt:      time.Now().UTC(),
 	}
 
 	messageResponse := &conversation.Message{
@@ -377,12 +378,12 @@ func TestConversationsHandler_Post(t *testing.T) {
 		QuestionNumber: 1,
 		Author:         "user",
 		Content:        "European or African?",
-		CreatedAt:      time.Now(),
+		CreatedAt:      time.Now().UTC(),
 	}
 
 	messageResponse.ConversationID = 1
 	messageResponse.QuestionNumber = 1
-	messageResponse.CreatedAt = time.Now()
+	messageResponse.CreatedAt = time.Now().UTC()
 
 	question.Messages = make([]conversation.Message, 0)
 	question.Messages = append(question.Messages, *messageFirst)
@@ -485,11 +486,11 @@ func createJWT(id, expires int) (string, error) {
 	)
 
 	jwtSecret := os.Getenv("JWT_SECRET")
-	now := time.Now()
+	now := time.Now().UTC()
 	if expires == 0 {
 		expires = 3600
 	}
-	expiresAt := time.Now().Add(time.Duration(expires) * time.Second)
+	expiresAt := time.Now().UTC().Add(time.Duration(expires) * time.Second)
 	key = []byte(jwtSecret)
 	claims := jwt.RegisteredClaims{
 		Issuer:    "interviewer",

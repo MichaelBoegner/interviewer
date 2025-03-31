@@ -102,12 +102,12 @@ func CreateTestJWT(id, expires int) string {
 	var token *jwt.Token
 	jwtSecret := os.Getenv("JWT_SECRET")
 	key := []byte(jwtSecret)
-	now := time.Now()
+	now := time.Now().UTC()
 
 	if expires == 0 {
 		expires = 36000
 	}
-	expiresAt := time.Now().Add(time.Duration(expires) * time.Second)
+	expiresAt := now.Add(time.Duration(expires) * time.Second)
 
 	claims := jwt.RegisteredClaims{
 		Issuer:    "interviewer",

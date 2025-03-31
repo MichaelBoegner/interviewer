@@ -14,7 +14,7 @@ import (
 )
 
 func CreateRefreshToken(repo TokenRepo, userID int) (string, error) {
-	now := time.Now()
+	now := time.Now().UTC()
 
 	refreshLength := 32
 	refreshBytes := make([]byte, refreshLength)
@@ -23,7 +23,7 @@ func CreateRefreshToken(repo TokenRepo, userID int) (string, error) {
 		return "", err
 	}
 	token := hex.EncodeToString(refreshBytes)
-	expiry := time.Now().Add(time.Duration(168*60) * time.Hour)
+	expiry := now.Add(time.Duration(168*60) * time.Hour)
 
 	refreshToken := &RefreshToken{
 		UserID:       userID,
@@ -86,11 +86,11 @@ func CreateJWT(id, expires int) (string, error) {
 	)
 
 	jwtSecret := os.Getenv("JWT_SECRET")
-	now := time.Now()
+	now := time.Now().UTC()
 	if expires == 0 {
 		expires = 36000
 	}
-	expiresAt := time.Now().Add(time.Duration(expires) * time.Second)
+	expiresAt := now.Add(time.Duration(expires) * time.Second)
 	key = []byte(jwtSecret)
 	claims := jwt.RegisteredClaims{
 		Issuer:    "interviewer",

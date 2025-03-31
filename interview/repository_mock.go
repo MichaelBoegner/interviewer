@@ -26,8 +26,8 @@ func (repo *MockRepo) GetInterview(interviewID int) (*Interview, error) {
 		Score:           0,
 		Language:        "python",
 		FirstQuestion:   "What is the flight speed of an unladdened swallow?",
-		CreatedAt:       time.Now(),
-		UpdatedAt:       time.Now(),
+		CreatedAt:       time.Now().UTC(),
+		UpdatedAt:       time.Now().UTC(),
 	}
 	return interview, nil
 }

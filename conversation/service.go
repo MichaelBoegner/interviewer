@@ -22,7 +22,7 @@ func CreateConversation(
 	firstQuestion,
 	subtopic,
 	message string) (*Conversation, error) {
-	now := time.Now()
+	now := time.Now().UTC()
 
 	if message == "" {
 		log.Printf("messageUserResponse is nil")
@@ -74,7 +74,7 @@ func CreateConversation(
 			*messageFirstQuestion,
 			*messageUserResponse,
 		},
-		CreatedAt: time.Now(),
+		CreatedAt: time.Now().UTC(),
 	}
 
 	topic.Questions = make(map[int]*Question)
@@ -207,7 +207,7 @@ func AppendConversation(
 			Messages: []Message{
 				*messageFirstQuestion,
 			},
-			CreatedAt: time.Now(),
+			CreatedAt: time.Now().UTC(),
 		}
 
 		topic.Questions = make(map[int]*Question)
@@ -245,7 +245,7 @@ func AppendConversation(
 				TopicID:        topicID,
 				QuestionNumber: questionNumber,
 				Messages:       []Message{},
-				CreatedAt:      time.Now(),
+				CreatedAt:      time.Now().UTC(),
 			}
 		}
 	}
@@ -269,9 +269,9 @@ func AppendConversation(
 	return conversation, nil
 }
 
-func GetConversation(repo ConversationRepo, interviewID int) (*Conversation, error) {
+func GetConversation(repo ConversationRepo, conversationID int) (*Conversation, error) {
 	// Get conversation from Conversations table and apply to Conversation struct
-	conversation, err := repo.GetConversation(interviewID)
+	conversation, err := repo.GetConversation(conversationID)
 	if err != nil {
 		return nil, err
 	}
@@ -397,7 +397,7 @@ func newMessage(conversationID, topicID, currentQuestionNumber int, author Autho
 		TopicID:        topicID,
 		Author:         author,
 		Content:        content,
-		CreatedAt:      time.Now(),
+		CreatedAt:      time.Now().UTC(),
 	}
 
 	return message
