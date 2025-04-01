@@ -68,8 +68,9 @@ func main() {
 
 	handler := handlers.NewHandler(interviewRepo, userRepo, tokenRepo, conversationRepo, openAI)
 
-	mux.Handle("/api/users/", middleware.GetContext(http.HandlerFunc(handler.UsersHandler)))
-	mux.Handle("/api/auth/login", middleware.GetContext(http.HandlerFunc(handler.LoginHandler)))
+	mux.Handle("/api/users/", http.HandlerFunc(handler.UsersHandler))
+	mux.Handle("/api/auth/login", http.HandlerFunc(handler.LoginHandler))
+
 	mux.Handle("/api/interviews", middleware.GetContext(http.HandlerFunc(handler.InterviewsHandler)))
 	mux.Handle("/api/conversations/", middleware.GetContext(http.HandlerFunc(handler.ConversationsHandler)))
 	mux.Handle("/api/auth/token", middleware.GetContext(http.HandlerFunc(handler.RefreshTokensHandler)))

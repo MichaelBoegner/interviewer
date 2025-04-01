@@ -61,10 +61,11 @@ func (h *Handler) UsersHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	// POST create a user
 	case http.MethodPost:
-		params, ok := r.Context().Value(middleware.ContextKeyParams).(middleware.AcceptedVals)
-		if !ok {
-			respondWithError(w, http.StatusBadRequest, "Invalid request parameters")
-			return
+		params := &middleware.AcceptedVals{}
+		err := json.NewDecoder(r.Body).Decode(params)
+		if err != nil {
+			log.Printf("Decoding params failed: %v", err)
+			respondWithError(w, http.StatusInternalServerError, "Internal Server Error")
 		}
 
 		if params.Username == "" || params.Email == "" || params.Password == "" {
@@ -117,10 +118,11 @@ func (h *Handler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	// POST login a user
 	case http.MethodPost:
-		params, ok := r.Context().Value(middleware.ContextKeyParams).(middleware.AcceptedVals)
-		if !ok {
-			respondWithError(w, http.StatusBadRequest, "Invalid request parameters")
-			return
+		params := &middleware.AcceptedVals{}
+		err := json.NewDecoder(r.Body).Decode(params)
+		if err != nil {
+			log.Printf("Decoding params failed: %v", err)
+			respondWithError(w, http.StatusInternalServerError, "Internal Server Error")
 		}
 
 		if params.Username == "" || params.Password == "" {
