@@ -227,9 +227,9 @@ func Test_ConversationsHandler_Post_Integration(t *testing.T) {
 			}`,
 			headerKey:      "Authorization",
 			headerValue:    "Bearer " + jwtoken,
-			expectedStatus: http.StatusCreated,
+			expectedStatus: http.StatusBadRequest,
 			respBody: handlers.ReturnVals{
-				Conversation: mocks.TestCreatedConversation,
+				Error: "Invalid ID",
 			},
 			DBCheck: false,
 		},

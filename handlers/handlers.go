@@ -182,7 +182,8 @@ func (h *Handler) ConversationsHandler(w http.ResponseWriter, r *http.Request) {
 	InterviewID, err := getPathID(r)
 	if err != nil {
 		log.Printf("PathID error: %v\n", err)
-		respondWithError(w, http.StatusBadRequest, "Invalid ID.")
+		respondWithError(w, http.StatusBadRequest, "Invalid ID")
+		return
 	}
 
 	var conversationFromDatabase *conversation.Conversation
@@ -289,12 +290,14 @@ func (h *Handler) RefreshTokensHandler(w http.ResponseWriter, r *http.Request) {
 func getPathID(r *http.Request) (int, error) {
 	pathParts := strings.Split(r.URL.Path, "/")
 	if len(pathParts) < 4 || pathParts[3] == "" {
-		err := errors.New("missing user ID")
+		log.Printf("getPathID failed: len check")
+		err := errors.New("Missing url param")
 		return 0, err
 	}
 
 	id, err := strconv.Atoi(pathParts[3])
 	if err != nil {
+		log.Printf("getPathID failed: %v", err)
 		return 0, err
 	}
 
