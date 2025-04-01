@@ -173,10 +173,11 @@ func (h *Handler) InterviewsHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) ConversationsHandler(w http.ResponseWriter, r *http.Request) {
-	params, ok := r.Context().Value(middleware.ContextKeyParams).(middleware.UpdateConversation)
-	if !ok {
-		respondWithError(w, http.StatusBadRequest, "Invalid request parameters")
-		return
+	params := &middleware.UpdateConversation{}
+	err := json.NewDecoder(r.Body).Decode(params)
+	if err != nil {
+		log.Printf("Decoding params failed: %v", err)
+		respondWithError(w, http.StatusInternalServerError, "Internal Server Error")
 	}
 
 	InterviewID, err := getPathID(r)
@@ -244,10 +245,11 @@ func (h *Handler) ConversationsHandler(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) RefreshTokensHandler(w http.ResponseWriter, r *http.Request) {
 	providedToken := r.Context().Value(middleware.ContextKeyTokenKey).(string)
-	params, ok := r.Context().Value(middleware.ContextKeyParams).(middleware.AcceptedVals)
-	if !ok {
-		respondWithError(w, http.StatusBadRequest, "Invalid request parameters")
-		return
+	params := &middleware.AcceptedVals{}
+	err := json.NewDecoder(r.Body).Decode(params)
+	if err != nil {
+		log.Printf("Decoding params failed: %v", err)
+		respondWithError(w, http.StatusInternalServerError, "Internal Server Error")
 	}
 
 	storedToken, err := token.GetStoredRefreshToken(h.TokenRepo, params.UserID)
@@ -257,7 +259,7 @@ func (h *Handler) RefreshTokensHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ok = token.VerifyRefreshToken(storedToken, providedToken)
+	ok := token.VerifyRefreshToken(storedToken, providedToken)
 	if !ok {
 		log.Printf("VerifyRefreshToken error.")
 		respondWithError(w, http.StatusUnauthorized, "Refresh token is invalid.")

@@ -1,11 +1,9 @@
 package middleware
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
-	"io"
 	"log"
 	"net/http"
 	"os"
@@ -49,10 +47,13 @@ const (
 
 func GetContext(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Extract token from Authorization header
+		var (
+			userID   int
+			err      error
+			tokenKey string
+		)
 		tokenParts := strings.Split(r.Header.Get("Authorization"), " ")
 
-		var tokenKey string
 		if len(tokenParts) < 2 {
 			tokenKey = ""
 		} else {
@@ -65,10 +66,6 @@ func GetContext(next http.Handler) http.Handler {
 			return
 		}
 
-		var (
-			userID int
-			err    error
-		)
 		if isAccessToken(tokenKey) {
 			userID, err = VerifyToken(tokenKey)
 			if err != nil {
@@ -78,44 +75,10 @@ func GetContext(next http.Handler) http.Handler {
 			}
 		}
 
-		body, err := io.ReadAll(r.Body)
-		if err != nil {
-			respondWithError(w, http.StatusBadRequest, "Failed to read request body")
-			return
-		}
-		r.Body = io.NopCloser(bytes.NewBuffer(body))
-
-		// Decode the body into UpdateConversation or AcceptedVals struct
-		var params interface{}
-		if strings.Contains(r.URL.Path, "/conversations") {
-			var updateParams UpdateConversation
-			err := json.Unmarshal(body, &updateParams)
-			if err != nil {
-				respondWithError(w, http.StatusBadRequest, "Error decoding update conversation params")
-				return
-			}
-
-			params = updateParams
-		} else {
-			var generalParams AcceptedVals
-			err := json.Unmarshal(body, &generalParams)
-			if err != nil {
-				log.Printf("Unmarshal error: %v", err)
-				log.Printf("Raw body: %s", string(body))
-				respondWithError(w, http.StatusBadRequest, "Error decoding general params")
-				return
-			}
-
-			params = generalParams
-		}
-
-		// Set extracted data in context for access by handlers
 		ctx := r.Context()
 		ctx = context.WithValue(ctx, ContextKeyTokenKey, tokenKey)
 		ctx = context.WithValue(ctx, ContextKeyTokenParams, userID)
-		ctx = context.WithValue(ctx, ContextKeyParams, params)
 
-		// Pass along the request with the new context to the handler
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
