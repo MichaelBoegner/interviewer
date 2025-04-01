@@ -12,7 +12,7 @@ import (
 var (
 	responseConversation     *chatgpt.ChatGPTResponse
 	responseConversationMock string
-	TestCreatedConversation  *conversation.Conversation
+	CreatedConversationMock  *conversation.Conversation
 	now                      = time.Now().UTC()
 	responseInterview        = &chatgpt.ChatGPTResponse{
 		Topic:        "None",
@@ -47,7 +47,7 @@ func init() {
 
 	responseConversationMock = string(responseConversationMarshal)
 
-	TestCreatedConversation = &conversation.Conversation{
+	CreatedConversationMock = &conversation.Conversation{
 		ID:                    1,
 		InterviewID:           1,
 		CurrentTopic:          1,
