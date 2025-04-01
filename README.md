@@ -280,7 +280,7 @@ docker run -p 8080:8080 --env-file .env interviewer
 ## 🛣️ Development Roadmap
 
 ### Current Focus
-- "I'm actively refining the test suite right now. The integration framework is in place — Dockerized DB, environment isolation, and Makefile setup — and I'm working through syncing older unit tests with the latest design updates."
+- I'm actively refining the test suite right now. The integration framework is in place — Dockerized DB, environment isolation, and Makefile setup — and I'm working through building out test cases.
 
 ### Upcoming Improvements
 - Implementation of CI/CD pipeline
