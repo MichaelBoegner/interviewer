@@ -109,7 +109,7 @@ The backend is structured using a layered architecture:
 │         │                                  │         │                       │         │
 └────┬────┘                                  └────┬────┘                       └────┬────┘
      │                                            │                                 │
-     │ POST /api/users/ (Register)                │                                 │
+     │ POST /api/users (Register)                │                                 │
      │───────────────────────────────────────────►│                                 │
      │                                            │                                 │
      │                                            │ Store User                      │
@@ -146,7 +146,7 @@ The backend is structured using a layered architecture:
 ### API Endpoints
 
 #### User Management
-- `POST /api/users/` - Register a new user
+- `POST /api/users` - Register a new user
 - `GET /api/users/:id` - Get user profile
 
 #### Authentication

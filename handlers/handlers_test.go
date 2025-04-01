@@ -114,7 +114,7 @@ func TestUsersHandler_Post(t *testing.T) {
 			w, req := setRequestAndWriter(http.MethodPost, "/api/users", tc)
 
 			// Act
-			handler.UsersHandler(w, req)
+			handler.GetUsersHandler(w, req)
 
 			// Assert
 			if w.Code != tc.expectedStatus {
@@ -156,7 +156,7 @@ func TestUsersHandler_Get(t *testing.T) {
 			w, req := setRequestAndWriter(http.MethodGet, "/api/users/1", tc)
 
 			// Act
-			handler.UsersHandler(w, req)
+			handler.CreateUsersHandler(w, req)
 
 			// Assert
 			if w.Code != tc.expectedStatus {

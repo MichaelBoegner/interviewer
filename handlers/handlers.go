@@ -57,254 +57,233 @@ type ReturnVals struct {
 	Conversation   *conversation.Conversation `json:"conversation,omitempty"`
 }
 
-func (h *Handler) UsersHandler(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	// POST create a user
-	case http.MethodPost:
-		params := &middleware.AcceptedVals{}
-		err := json.NewDecoder(r.Body).Decode(params)
-		if err != nil {
-			log.Printf("Decoding params failed: %v", err)
-			respondWithError(w, http.StatusInternalServerError, "Internal Server Error")
-		}
+func (h *Handler) CreateUsersHandler(w http.ResponseWriter, r *http.Request) {
+	params := &middleware.AcceptedVals{}
+	err := json.NewDecoder(r.Body).Decode(params)
+	if err != nil {
+		log.Printf("Decoding params failed: %v", err)
+		respondWithError(w, http.StatusInternalServerError, "Internal Server Error")
+	}
 
-		if params.Username == "" || params.Email == "" || params.Password == "" {
-			log.Printf("Missing params in usersHandler.")
-			respondWithError(w, http.StatusBadRequest, "Username, Email, and Password required")
-			return
-		}
-		user, err := user.CreateUser(h.UserRepo, params.Username, params.Email, params.Password)
-		if err != nil {
-			log.Printf("CreateUser error: %v", err)
-			// For preventing user creation in frontend.
-			// noNewUsers := fmt.Sprintf("%s", err)
-			respondWithError(w, http.StatusInternalServerError, "Internal Server Error")
-			return
-		}
-
-		payload := &ReturnVals{
-			Username: user.Username,
-			Email:    user.Email,
-		}
-		respondWithJSON(w, http.StatusCreated, payload)
-		return
-
-	// GET a user by {id}
-	case http.MethodGet:
-		userID, err := getPathID(r)
-		if err != nil {
-			log.Printf("PathID error: %v\n", err)
-			respondWithError(w, http.StatusBadRequest, "Invalid ID.")
-		}
-
-		user, err := user.GetUser(h.UserRepo, userID)
-		if err != nil {
-			log.Printf("GetUsers error: %v", err)
-			return
-		}
-
-		payload := &ReturnVals{
-			ID:       user.ID,
-			Username: user.Username,
-			Email:    user.Email,
-		}
-
-		respondWithJSON(w, http.StatusOK, payload)
+	if params.Username == "" || params.Email == "" || params.Password == "" {
+		log.Printf("Missing params in usersHandler.")
+		respondWithError(w, http.StatusBadRequest, "Username, Email, and Password required")
 		return
 	}
+	user, err := user.CreateUser(h.UserRepo, params.Username, params.Email, params.Password)
+	if err != nil {
+		log.Printf("CreateUser error: %v", err)
+		// For preventing user creation in frontend.
+		// noNewUsers := fmt.Sprintf("%s", err)
+		respondWithError(w, http.StatusInternalServerError, "Internal Server Error")
+		return
+	}
+
+	payload := &ReturnVals{
+		Username: user.Username,
+		Email:    user.Email,
+	}
+	respondWithJSON(w, http.StatusCreated, payload)
+	return
+}
+
+func (h *Handler) GetUsersHandler(w http.ResponseWriter, r *http.Request) {
+	userID, err := getPathID(r)
+	if err != nil {
+		log.Printf("PathID error: %v\n", err)
+		respondWithError(w, http.StatusBadRequest, "Invalid ID.")
+	}
+
+	user, err := user.GetUser(h.UserRepo, userID)
+	if err != nil {
+		log.Printf("GetUsers error: %v", err)
+		return
+	}
+
+	payload := &ReturnVals{
+		ID:       user.ID,
+		Username: user.Username,
+		Email:    user.Email,
+	}
+
+	respondWithJSON(w, http.StatusOK, payload)
+	return
 }
 
 func (h *Handler) LoginHandler(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	// POST login a user
-	case http.MethodPost:
-		params := &middleware.AcceptedVals{}
-		err := json.NewDecoder(r.Body).Decode(params)
-		if err != nil {
-			log.Printf("Decoding params failed: %v", err)
-			respondWithError(w, http.StatusInternalServerError, "Internal Server Error")
-		}
+	params := &middleware.AcceptedVals{}
+	err := json.NewDecoder(r.Body).Decode(params)
+	if err != nil {
+		log.Printf("Decoding params failed: %v", err)
+		respondWithError(w, http.StatusInternalServerError, "Internal Server Error")
+	}
 
-		if params.Username == "" || params.Password == "" {
-			log.Printf("Invalid username or password.")
-			respondWithError(w, http.StatusUnauthorized, "Invalid username or password.")
-			return
-
-		}
-
-		jwToken, userID, err := user.LoginUser(h.UserRepo, params.Username, params.Password)
-		if err != nil {
-			log.Printf("LoginUser error: %v", err)
-			respondWithError(w, http.StatusUnauthorized, "Invalid username or password.")
-			return
-		}
-
-		refreshToken, err := token.CreateRefreshToken(h.TokenRepo, userID)
-		if err != nil {
-			log.Printf("RefreshToken error: %v", err)
-			respondWithError(w, http.StatusUnauthorized, "")
-			return
-		}
-
-		payload := ReturnVals{
-			UserID:       userID,
-			Username:     params.Username,
-			JWToken:      jwToken,
-			RefreshToken: refreshToken,
-		}
-
-		respondWithJSON(w, http.StatusOK, payload)
+	if params.Username == "" || params.Password == "" {
+		log.Printf("Invalid username or password.")
+		respondWithError(w, http.StatusUnauthorized, "Invalid username or password.")
 		return
 
 	}
+
+	jwToken, userID, err := user.LoginUser(h.UserRepo, params.Username, params.Password)
+	if err != nil {
+		log.Printf("LoginUser error: %v", err)
+		respondWithError(w, http.StatusUnauthorized, "Invalid username or password.")
+		return
+	}
+
+	refreshToken, err := token.CreateRefreshToken(h.TokenRepo, userID)
+	if err != nil {
+		log.Printf("RefreshToken error: %v", err)
+		respondWithError(w, http.StatusUnauthorized, "")
+		return
+	}
+
+	payload := ReturnVals{
+		UserID:       userID,
+		Username:     params.Username,
+		JWToken:      jwToken,
+		RefreshToken: refreshToken,
+	}
+
+	respondWithJSON(w, http.StatusOK, payload)
+	return
 }
 
 func (h *Handler) InterviewsHandler(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	// POST start a resource instance of an interview and return the first question
-	case http.MethodPost:
-		userID, ok := r.Context().Value(middleware.ContextKeyTokenParams).(int)
-		if !ok {
-			respondWithError(w, http.StatusBadRequest, "Invalid userID")
-			return
-		}
-
-		interviewStarted, err := interview.StartInterview(h.InterviewRepo, h.OpenAI, userID, 30, 3, "easy")
-		if err != nil {
-			log.Printf("Interview failed to start: %v", err)
-			return
-		}
-
-		payload := ReturnVals{
-			InterviewID:   interviewStarted.Id,
-			FirstQuestion: interviewStarted.FirstQuestion,
-		}
-
-		respondWithJSON(w, http.StatusCreated, payload)
+	userID, ok := r.Context().Value(middleware.ContextKeyTokenParams).(int)
+	if !ok {
+		respondWithError(w, http.StatusBadRequest, "Invalid userID")
 		return
 	}
+
+	interviewStarted, err := interview.StartInterview(h.InterviewRepo, h.OpenAI, userID, 30, 3, "easy")
+	if err != nil {
+		log.Printf("Interview failed to start: %v", err)
+		return
+	}
+
+	payload := ReturnVals{
+		InterviewID:   interviewStarted.Id,
+		FirstQuestion: interviewStarted.FirstQuestion,
+	}
+
+	respondWithJSON(w, http.StatusCreated, payload)
+	return
 }
 
 func (h *Handler) ConversationsHandler(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	// POST start an instance of conversations and return next question
-	case http.MethodPost:
-		params, ok := r.Context().Value(middleware.ContextKeyParams).(middleware.UpdateConversation)
-		if !ok {
-			respondWithError(w, http.StatusBadRequest, "Invalid request parameters")
-			return
-		}
+	params, ok := r.Context().Value(middleware.ContextKeyParams).(middleware.UpdateConversation)
+	if !ok {
+		respondWithError(w, http.StatusBadRequest, "Invalid request parameters")
+		return
+	}
 
-		InterviewID, err := getPathID(r)
+	InterviewID, err := getPathID(r)
+	if err != nil {
+		log.Printf("PathID error: %v\n", err)
+		respondWithError(w, http.StatusBadRequest, "Invalid ID.")
+	}
+
+	var conversationFromDatabase *conversation.Conversation
+	exists := conversation.CheckForConversation(h.ConversationRepo, InterviewID)
+
+	interviewReturned, err := interview.GetInterview(h.InterviewRepo, InterviewID)
+	if err != nil {
+		log.Printf("GetInterview error: %v\n", err)
+		respondWithError(w, http.StatusBadRequest, "Invalid interview_id")
+		return
+	}
+
+	if !exists {
+		conversationFromDatabase, err = conversation.CreateConversation(
+			h.ConversationRepo,
+			h.OpenAI,
+			InterviewID,
+			interviewReturned.Prompt,
+			interviewReturned.FirstQuestion,
+			interviewReturned.Subtopic,
+			params.Message)
 		if err != nil {
-			log.Printf("PathID error: %v\n", err)
-			respondWithError(w, http.StatusBadRequest, "Invalid ID.")
-		}
-
-		var conversationFromDatabase *conversation.Conversation
-		exists := conversation.CheckForConversation(h.ConversationRepo, InterviewID)
-
-		interviewReturned, err := interview.GetInterview(h.InterviewRepo, InterviewID)
-		if err != nil {
-			log.Printf("GetInterview error: %v\n", err)
+			log.Printf("CreateConversation error: %v", err)
 			respondWithError(w, http.StatusBadRequest, "Invalid interview_id")
 			return
 		}
-
-		if !exists {
-			conversationFromDatabase, err = conversation.CreateConversation(
-				h.ConversationRepo,
-				h.OpenAI,
-				InterviewID,
-				interviewReturned.Prompt,
-				interviewReturned.FirstQuestion,
-				interviewReturned.Subtopic,
-				params.Message)
-			if err != nil {
-				log.Printf("CreateConversation error: %v", err)
-				respondWithError(w, http.StatusBadRequest, "Invalid interview_id")
-				return
-			}
-		} else {
-			conversationFromDatabase, err = conversation.GetConversation(h.ConversationRepo, params.ConversationID)
-			if err != nil {
-				log.Printf("GetConversation error: %v", err)
-				respondWithError(w, http.StatusBadRequest, "Invalid ID.")
-				return
-			}
-
-			conversationFromDatabase, err = conversation.AppendConversation(
-				h.ConversationRepo,
-				h.OpenAI,
-				conversationFromDatabase,
-				params.ConversationID,
-				conversationFromDatabase.CurrentTopic,
-				params.QuestionID,
-				conversationFromDatabase.CurrentQuestionNumber,
-				params.Message,
-				interviewReturned.Prompt)
-			if err != nil {
-				log.Printf("AppendConversation error: %v", err)
-				respondWithError(w, http.StatusBadRequest, "Invalid ID.")
-				return
-			}
-
+	} else {
+		conversationFromDatabase, err = conversation.GetConversation(h.ConversationRepo, params.ConversationID)
+		if err != nil {
+			log.Printf("GetConversation error: %v", err)
+			respondWithError(w, http.StatusBadRequest, "Invalid ID.")
+			return
 		}
 
-		payload := &ReturnVals{
-			Conversation: conversationFromDatabase,
+		conversationFromDatabase, err = conversation.AppendConversation(
+			h.ConversationRepo,
+			h.OpenAI,
+			conversationFromDatabase,
+			params.ConversationID,
+			conversationFromDatabase.CurrentTopic,
+			params.QuestionID,
+			conversationFromDatabase.CurrentQuestionNumber,
+			params.Message,
+			interviewReturned.Prompt)
+		if err != nil {
+			log.Printf("AppendConversation error: %v", err)
+			respondWithError(w, http.StatusBadRequest, "Invalid ID.")
+			return
 		}
-		respondWithJSON(w, http.StatusCreated, payload)
+
 	}
+
+	payload := &ReturnVals{
+		Conversation: conversationFromDatabase,
+	}
+	respondWithJSON(w, http.StatusCreated, payload)
 }
 
 func (h *Handler) RefreshTokensHandler(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	// POST generate and return userID and a refreshToken
-	case http.MethodPost:
-		providedToken := r.Context().Value(middleware.ContextKeyTokenKey).(string)
-		params, ok := r.Context().Value(middleware.ContextKeyParams).(middleware.AcceptedVals)
-		if !ok {
-			respondWithError(w, http.StatusBadRequest, "Invalid request parameters")
-			return
-		}
-
-		storedToken, err := token.GetStoredRefreshToken(h.TokenRepo, params.UserID)
-		if err != nil {
-			log.Printf("GetStoredRefreshToken error: %v", err)
-			respondWithError(w, http.StatusUnauthorized, "User ID is invalid.")
-			return
-		}
-
-		ok = token.VerifyRefreshToken(storedToken, providedToken)
-		if !ok {
-			log.Printf("VerifyRefreshToken error.")
-			respondWithError(w, http.StatusUnauthorized, "Refresh token is invalid.")
-			return
-		}
-
-		refreshToken, err := token.CreateRefreshToken(h.TokenRepo, params.UserID)
-		if err != nil {
-			log.Printf("CreateRefreshToken error: %v", err)
-			respondWithError(w, http.StatusUnauthorized, "")
-			return
-		}
-
-		jwToken, err := token.CreateJWT(params.UserID, 0)
-		if err != nil {
-			log.Printf("JWT creation failed: %v", err)
-			respondWithError(w, http.StatusInternalServerError, "")
-			return
-		}
-
-		payload := &ReturnVals{
-			ID:           params.UserID,
-			JWToken:      jwToken,
-			RefreshToken: refreshToken,
-		}
-		respondWithJSON(w, http.StatusOK, payload)
+	providedToken := r.Context().Value(middleware.ContextKeyTokenKey).(string)
+	params, ok := r.Context().Value(middleware.ContextKeyParams).(middleware.AcceptedVals)
+	if !ok {
+		respondWithError(w, http.StatusBadRequest, "Invalid request parameters")
 		return
 	}
+
+	storedToken, err := token.GetStoredRefreshToken(h.TokenRepo, params.UserID)
+	if err != nil {
+		log.Printf("GetStoredRefreshToken error: %v", err)
+		respondWithError(w, http.StatusUnauthorized, "User ID is invalid.")
+		return
+	}
+
+	ok = token.VerifyRefreshToken(storedToken, providedToken)
+	if !ok {
+		log.Printf("VerifyRefreshToken error.")
+		respondWithError(w, http.StatusUnauthorized, "Refresh token is invalid.")
+		return
+	}
+
+	refreshToken, err := token.CreateRefreshToken(h.TokenRepo, params.UserID)
+	if err != nil {
+		log.Printf("CreateRefreshToken error: %v", err)
+		respondWithError(w, http.StatusUnauthorized, "")
+		return
+	}
+
+	jwToken, err := token.CreateJWT(params.UserID, 0)
+	if err != nil {
+		log.Printf("JWT creation failed: %v", err)
+		respondWithError(w, http.StatusInternalServerError, "")
+		return
+	}
+
+	payload := &ReturnVals{
+		ID:           params.UserID,
+		JWToken:      jwToken,
+		RefreshToken: refreshToken,
+	}
+	respondWithJSON(w, http.StatusOK, payload)
+	return
 }
 
 func getPathID(r *http.Request) (int, error) {
