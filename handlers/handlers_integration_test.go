@@ -229,6 +229,21 @@ func Test_ConversationsHandler_Post_Integration(t *testing.T) {
 			headerValue:    "Bearer " + jwtoken,
 			expectedStatus: http.StatusBadRequest,
 			respBody: handlers.ReturnVals{
+				Error: "Missing ID",
+			},
+			DBCheck: false,
+		},
+		{
+			name:   "CreateConversation_IncorrectInterviewID",
+			method: "POST",
+			url:    testutil.TestServerURL + "/api/conversations/2",
+			reqBody: `{
+				"message" : "I have been a TSE for 5 years."
+			}`,
+			headerKey:      "Authorization",
+			headerValue:    "Bearer " + jwtoken,
+			expectedStatus: http.StatusBadRequest,
+			respBody: handlers.ReturnVals{
 				Error: "Invalid ID",
 			},
 			DBCheck: false,

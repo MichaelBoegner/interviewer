@@ -183,7 +183,7 @@ func (h *Handler) ConversationsHandler(w http.ResponseWriter, r *http.Request) {
 	InterviewID, err := getPathID(r)
 	if err != nil {
 		log.Printf("PathID error: %v\n", err)
-		respondWithError(w, http.StatusBadRequest, "Invalid ID")
+		respondWithError(w, http.StatusBadRequest, "Missing ID")
 		return
 	}
 
@@ -193,7 +193,7 @@ func (h *Handler) ConversationsHandler(w http.ResponseWriter, r *http.Request) {
 	interviewReturned, err := interview.GetInterview(h.InterviewRepo, InterviewID)
 	if err != nil {
 		log.Printf("GetInterview error: %v\n", err)
-		respondWithError(w, http.StatusBadRequest, "Invalid interview_id")
+		respondWithError(w, http.StatusBadRequest, "Invalid ID")
 		return
 	}
 
