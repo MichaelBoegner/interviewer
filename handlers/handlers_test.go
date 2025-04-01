@@ -501,7 +501,7 @@ func createJWT(id, expires int) (string, error) {
 	token = jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	signedToken, err := token.SignedString(key)
 	if err != nil {
-		log.Fatalf("Bad SignedString: %s", err)
+		log.Printf("Bad SignedString: %s", err)
 		return "", err
 	}
 

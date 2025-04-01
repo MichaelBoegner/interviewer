@@ -163,16 +163,9 @@ func (h *Handler) InterviewsHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	// POST start a resource instance of an interview and return the first question
 	case http.MethodPost:
-		token, ok := r.Context().Value(middleware.ContextKeyTokenKey).(string)
+		userID, ok := r.Context().Value(middleware.ContextKeyTokenParams).(int)
 		if !ok {
-			respondWithError(w, http.StatusBadRequest, "Invalid request parameters")
-			return
-		}
-
-		userID, err := middleware.VerifyToken(token)
-		if err != nil {
-			log.Printf("Supplied token returns error: %v", err)
-			respondWithError(w, http.StatusUnauthorized, "Unauthorized")
+			respondWithError(w, http.StatusBadRequest, "Invalid userID")
 			return
 		}
 

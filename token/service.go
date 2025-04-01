@@ -63,6 +63,7 @@ func ExtractUserIDFromToken(tokenString string) (int, error) {
 		return []byte(jwtSecret), nil
 	})
 	if err != nil {
+		log.Printf("ParseWithClaims failing: %v", err)
 		return 0, err
 	}
 

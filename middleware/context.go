@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -43,16 +42,15 @@ type UpdateConversation struct {
 type ContextKey string
 
 const (
-	ContextKeyParams   ContextKey = "params"
-	ContextKeyTokenKey ContextKey = "tokenKey"
+	ContextKeyParams      ContextKey = "params"
+	ContextKeyTokenKey    ContextKey = "tokenKey"
+	ContextKeyTokenParams ContextKey = "tokenParams"
 )
 
 func GetContext(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Extract token from Authorization header
 		tokenParts := strings.Split(r.Header.Get("Authorization"), " ")
-		//DEBUG
-		fmt.Printf("\n\ntokenParts: %v\n\n", tokenParts)
 
 		var tokenKey string
 		if len(tokenParts) < 2 {
@@ -61,8 +59,18 @@ func GetContext(next http.Handler) http.Handler {
 			tokenKey = tokenParts[1]
 		}
 
+		if tokenKey == "" {
+			log.Printf("Token missing")
+			respondWithError(w, http.StatusUnauthorized, "Unauthorized")
+			return
+		}
+
+		var (
+			userID int
+			err    error
+		)
 		if isAccessToken(tokenKey) {
-			_, err := VerifyToken(tokenKey)
+			userID, err = VerifyToken(tokenKey)
 			if err != nil {
 				log.Printf("Supplied token returns error: %v", err)
 				respondWithError(w, http.StatusUnauthorized, "Unauthorized")
@@ -70,14 +78,11 @@ func GetContext(next http.Handler) http.Handler {
 			}
 		}
 
-		// Read the request body into a byte slice
 		body, err := io.ReadAll(r.Body)
 		if err != nil {
 			respondWithError(w, http.StatusBadRequest, "Failed to read request body")
 			return
 		}
-
-		// Recreate the request body for the handler (as it is read-only once consumed)
 		r.Body = io.NopCloser(bytes.NewBuffer(body))
 
 		// Decode the body into UpdateConversation or AcceptedVals struct
@@ -107,6 +112,7 @@ func GetContext(next http.Handler) http.Handler {
 		// Set extracted data in context for access by handlers
 		ctx := r.Context()
 		ctx = context.WithValue(ctx, ContextKeyTokenKey, tokenKey)
+		ctx = context.WithValue(ctx, ContextKeyTokenParams, userID)
 		ctx = context.WithValue(ctx, ContextKeyParams, params)
 
 		// Pass along the request with the new context to the handler

@@ -28,7 +28,7 @@ func CreateTestUserAndJWT() (string, int) {
 
 	userResp, _, err := testRequests("POST", TestServerURL+"/api/users/", reqBodyUser)
 	if err != nil {
-		log.Fatalf("CreateTestUserAndJWT user creation failed: %v", err)
+		log.Printf("CreateTestUserAndJWT user creation failed: %v", err)
 	}
 
 	type UserResponse struct {
@@ -48,7 +48,7 @@ func CreateTestUserAndJWT() (string, int) {
 
 	loginResp, _, err := testRequests("POST", TestServerURL+"/api/auth/login", reqBodyLogin)
 	if err != nil {
-		log.Fatalf("CreateTestUserAndJWT JWT creation failed: %v", err)
+		log.Printf("CreateTestUserAndJWT JWT creation failed: %v", err)
 	}
 
 	type AuthResponse struct {
@@ -66,7 +66,7 @@ func CreateTestUserAndJWT() (string, int) {
 	//test userID extracted
 	userID, err = token.ExtractUserIDFromToken(jwt)
 	if err != nil {
-		log.Fatalf("CreateTestUserandJWT userID extraction failed: %v", err)
+		log.Printf("CreateTestUserandJWT userID extraction failed: %v", err)
 	}
 
 	return jwt, userID
@@ -77,21 +77,21 @@ func testRequests(method, url string, reqBody *strings.Reader) ([]byte, int, err
 
 	req, err := http.NewRequest(method, url, reqBody)
 	if err != nil {
-		log.Fatalf("CreateTestUserAndJWT user creation failed: %v", err)
+		log.Printf("CreateTestUserAndJWT user creation failed: %v", err)
 		return nil, 0, err
 	}
 	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Fatalf("Request to create test user failed: %v", err)
+		log.Printf("Request to create test user failed: %v", err)
 		return nil, resp.StatusCode, err
 	}
 	defer resp.Body.Close()
 
 	bodyBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
-		log.Fatalf("Reading response failed: %v", err)
+		log.Printf("Reading response failed: %v", err)
 		return nil, resp.StatusCode, err
 	}
 
@@ -119,7 +119,7 @@ func CreateTestJWT(id, expires int) string {
 
 	s, err := token.SignedString(key)
 	if err != nil {
-		log.Fatalf("Bad SignedString: %s", err)
+		log.Printf("SignedString failed: %s", err)
 		return ""
 	}
 
