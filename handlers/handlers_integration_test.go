@@ -32,6 +32,7 @@ func Test_InterviewsHandler_Post_Integration(t *testing.T) {
 				InterviewID:   1,
 				FirstQuestion: "Tell me a little bit about your work history.",
 			},
+			DBCheck: true,
 			Interview: &interview.Interview{
 				Id:              1,
 				UserId:          1,
@@ -45,7 +46,6 @@ func Test_InterviewsHandler_Post_Integration(t *testing.T) {
 				FirstQuestion:   "Tell me a little bit about your work history.",
 				Subtopic:        "None",
 			},
-			DBCheck: true,
 		},
 		{
 			name:           "CreateInterview_MissingBearer&Token",
@@ -112,7 +112,7 @@ func Test_InterviewsHandler_Post_Integration(t *testing.T) {
 
 			// Assert Response
 			if respCode != tc.expectedStatus {
-				t.Fatalf("[%s]expected status %d, got %d\n", tc.name, tc.expectedStatus, respCode)
+				t.Fatalf("[%s] expected status %d, got %d\n", tc.name, tc.expectedStatus, respCode)
 			}
 
 			expected := tc.respBody
@@ -159,6 +159,80 @@ func Test_ConversationsHandler_Post_Integration(t *testing.T) {
 			DBCheck:      true,
 			Conversation: mocks.TestCreatedConversation,
 		},
+		{
+			name:   "CreateConversation_MissingBearer&Token",
+			method: "POST",
+			url:    testutil.TestServerURL + "/api/conversations/1",
+			reqBody: `{
+				"message" : "I have been a TSE for 5 years."
+			}`,
+			headerKey:      "Authorization",
+			expectedStatus: http.StatusUnauthorized,
+			respBody: handlers.ReturnVals{
+				Error: "Unauthorized",
+			},
+			DBCheck: false,
+		},
+		{
+			name:   "CreateConversation_MissingToken",
+			method: "POST",
+			url:    testutil.TestServerURL + "/api/conversations/1",
+			reqBody: `{
+				"message" : "I have been a TSE for 5 years."
+			}`,
+			headerKey:      "Authorization",
+			headerValue:    "Bearer ",
+			expectedStatus: http.StatusUnauthorized,
+			respBody: handlers.ReturnVals{
+				Error: "Unauthorized",
+			},
+			DBCheck: false,
+		},
+		{
+			name:   "CreateConversation_MalformedHeaderValue",
+			method: "POST",
+			url:    testutil.TestServerURL + "/api/conversations/1",
+			reqBody: `{
+				"message" : "I have been a TSE for 5 years."
+			}`,
+			headerKey:      "Authorization",
+			headerValue:    "as9d8f7as09d87",
+			expectedStatus: http.StatusUnauthorized,
+			respBody: handlers.ReturnVals{
+				Error: "Unauthorized",
+			},
+			DBCheck: false,
+		},
+		{
+			name:   "CreateConversation_ExpiredToken",
+			method: "POST",
+			url:    testutil.TestServerURL + "/api/conversations/1",
+			reqBody: `{
+				"message" : "I have been a TSE for 5 years."
+			}`,
+			headerKey:      "Authorization",
+			headerValue:    "Bearer " + expiredJWT,
+			expectedStatus: http.StatusUnauthorized,
+			respBody: handlers.ReturnVals{
+				Error: "Unauthorized",
+			},
+			DBCheck: false,
+		},
+		{
+			name:   "CreateConversation_MissingIntervewID",
+			method: "POST",
+			url:    testutil.TestServerURL + "/api/conversations/",
+			reqBody: `{
+				"message" : "I have been a TSE for 5 years."
+			}`,
+			headerKey:      "Authorization",
+			headerValue:    "Bearer " + jwtoken,
+			expectedStatus: http.StatusCreated,
+			respBody: handlers.ReturnVals{
+				Conversation: mocks.TestCreatedConversation,
+			},
+			DBCheck: false,
+		},
 	}
 
 	for _, tc := range tests {
@@ -177,7 +251,7 @@ func Test_ConversationsHandler_Post_Integration(t *testing.T) {
 
 			// Assert Response
 			if respCode != tc.expectedStatus {
-				t.Fatalf("[%s]expected status %d, got %d\n", tc.name, tc.expectedStatus, respCode)
+				t.Fatalf("[%s] expected status %d, got %d\n", tc.name, tc.expectedStatus, respCode)
 			}
 
 			expected := tc.respBody

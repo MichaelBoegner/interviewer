@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -50,6 +51,8 @@ func GetContext(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Extract token from Authorization header
 		tokenParts := strings.Split(r.Header.Get("Authorization"), " ")
+		//DEBUG
+		fmt.Printf("\n\ntokenParts: %v\n\n", tokenParts)
 
 		var tokenKey string
 		if len(tokenParts) < 2 {
