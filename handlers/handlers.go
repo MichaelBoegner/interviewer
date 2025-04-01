@@ -187,7 +187,7 @@ func (h *Handler) ConversationsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var conversationFromDatabase *conversation.Conversation
+	var conversationReturned *conversation.Conversation
 	exists := conversation.CheckForConversation(h.ConversationRepo, InterviewID)
 
 	interviewReturned, err := interview.GetInterview(h.InterviewRepo, InterviewID)
@@ -198,7 +198,7 @@ func (h *Handler) ConversationsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if !exists {
-		conversationFromDatabase, err = conversation.CreateConversation(
+		conversationReturned, err = conversation.CreateConversation(
 			h.ConversationRepo,
 			h.OpenAI,
 			InterviewID,
@@ -212,21 +212,21 @@ func (h *Handler) ConversationsHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	} else {
-		conversationFromDatabase, err = conversation.GetConversation(h.ConversationRepo, params.ConversationID)
+		conversationReturned, err = conversation.GetConversation(h.ConversationRepo, params.ConversationID)
 		if err != nil {
 			log.Printf("GetConversation error: %v", err)
 			respondWithError(w, http.StatusBadRequest, "Invalid ID.")
 			return
 		}
 
-		conversationFromDatabase, err = conversation.AppendConversation(
+		conversationReturned, err = conversation.AppendConversation(
 			h.ConversationRepo,
 			h.OpenAI,
-			conversationFromDatabase,
+			conversationReturned,
 			params.ConversationID,
-			conversationFromDatabase.CurrentTopic,
+			conversationReturned.CurrentTopic,
 			params.QuestionID,
-			conversationFromDatabase.CurrentQuestionNumber,
+			conversationReturned.CurrentQuestionNumber,
 			params.Message,
 			interviewReturned.Prompt)
 		if err != nil {
@@ -238,7 +238,7 @@ func (h *Handler) ConversationsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	payload := &ReturnVals{
-		Conversation: conversationFromDatabase,
+		Conversation: conversationReturned,
 	}
 	respondWithJSON(w, http.StatusCreated, payload)
 }
