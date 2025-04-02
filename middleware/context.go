@@ -38,6 +38,30 @@ const (
 	ContextKeyTokenParams ContextKey = "tokenParams"
 )
 
+func EnableCors(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		// In production, this should be a specific domain. For development, we check the environment
+		if os.Getenv("ENV") == "production" {
+			log.Println("Using production")
+			w.Header().Set("Access-Control-Allow-Origin", "https://interviewer-ui.vercel.app")
+		} else {
+			log.Println("NOT using production")
+			w.Header().Set("Access-Control-Allow-Origin", "http://localhost:5173")
+		}
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Authorization, Content-Type")
+		w.Header().Set("Access-Control-Allow-Credentials", "true")
+
+		if r.Method == "OPTIONS" {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}
+
 func GetContext(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var (
