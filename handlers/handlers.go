@@ -88,7 +88,7 @@ func (h *Handler) CreateUsersHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) GetUsersHandler(w http.ResponseWriter, r *http.Request) {
-	userID, err := getPathID(r)
+	userID, err := getPathID(r, "/api/users/")
 	if err != nil {
 		log.Printf("PathID error: %v\n", err)
 		respondWithError(w, http.StatusBadRequest, "Invalid ID.")
@@ -172,7 +172,7 @@ func (h *Handler) InterviewsHandler(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-func (h *Handler) ConversationsHandler(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) CreateConversationsHandler(w http.ResponseWriter, r *http.Request) {
 	params := &middleware.AcceptedVals{}
 	err := json.NewDecoder(r.Body).Decode(params)
 	if err != nil {
@@ -180,60 +180,82 @@ func (h *Handler) ConversationsHandler(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, http.StatusInternalServerError, "Internal Server Error")
 	}
 
-	InterviewID, err := getPathID(r)
+	interviewID, err := getPathID(r, "/api/conversations/create/")
 	if err != nil {
 		log.Printf("PathID error: %v\n", err)
 		respondWithError(w, http.StatusBadRequest, "Missing ID")
 		return
 	}
 
-	var conversationReturned *conversation.Conversation
-	exists := conversation.CheckForConversation(h.ConversationRepo, InterviewID)
-
-	interviewReturned, err := interview.GetInterview(h.InterviewRepo, InterviewID)
+	interviewReturned, err := interview.GetInterview(h.InterviewRepo, interviewID)
 	if err != nil {
 		log.Printf("GetInterview error: %v\n", err)
 		respondWithError(w, http.StatusBadRequest, "Invalid ID")
 		return
 	}
 
-	if !exists {
-		conversationReturned, err = conversation.CreateConversation(
-			h.ConversationRepo,
-			h.OpenAI,
-			InterviewID,
-			interviewReturned.Prompt,
-			interviewReturned.FirstQuestion,
-			interviewReturned.Subtopic,
-			params.Message)
-		if err != nil {
-			log.Printf("CreateConversation error: %v", err)
-			respondWithError(w, http.StatusBadRequest, "Invalid interview_id")
-			return
-		}
-	} else {
-		conversationReturned, err = conversation.GetConversation(h.ConversationRepo, params.ConversationID)
-		if err != nil {
-			log.Printf("GetConversation error: %v", err)
-			respondWithError(w, http.StatusBadRequest, "Invalid ID.")
-			return
-		}
+	conversationReturned, err := conversation.CreateConversation(
+		h.ConversationRepo,
+		h.OpenAI,
+		interviewID,
+		interviewReturned.Prompt,
+		interviewReturned.FirstQuestion,
+		interviewReturned.Subtopic,
+		params.Message)
+	if err != nil {
+		log.Printf("CreateConversation error: %v", err)
+		respondWithError(w, http.StatusBadRequest, "Invalid interview_id")
+		return
+	}
 
-		conversationReturned, err = conversation.AppendConversation(
-			h.ConversationRepo,
-			h.OpenAI,
-			conversationReturned,
-			conversationReturned.ID,
-			conversationReturned.CurrentTopic,
-			conversationReturned.CurrentQuestionNumber,
-			params.Message,
-			interviewReturned.Prompt)
-		if err != nil {
-			log.Printf("AppendConversation error: %v", err)
-			respondWithError(w, http.StatusBadRequest, "Invalid ID.")
-			return
-		}
+	payload := &ReturnVals{
+		Conversation: conversationReturned,
+	}
+	respondWithJSON(w, http.StatusCreated, payload)
+}
 
+func (h *Handler) AppendConversationsHandler(w http.ResponseWriter, r *http.Request) {
+	params := &middleware.AcceptedVals{}
+	err := json.NewDecoder(r.Body).Decode(params)
+	if err != nil {
+		log.Printf("Decoding params failed: %v", err)
+		respondWithError(w, http.StatusInternalServerError, "Internal Server Error")
+	}
+
+	interviewID, err := getPathID(r, "api/conversations/append/")
+	if err != nil {
+		log.Printf("PathID error: %v\n", err)
+		respondWithError(w, http.StatusBadRequest, "Missing ID")
+		return
+	}
+
+	interviewReturned, err := interview.GetInterview(h.InterviewRepo, interviewID)
+	if err != nil {
+		log.Printf("GetInterview error: %v\n", err)
+		respondWithError(w, http.StatusBadRequest, "Invalid ID")
+		return
+	}
+
+	conversationReturned, err := conversation.GetConversation(h.ConversationRepo, params.ConversationID)
+	if err != nil {
+		log.Printf("GetConversation error: %v", err)
+		respondWithError(w, http.StatusBadRequest, "Invalid ID.")
+		return
+	}
+
+	conversationReturned, err = conversation.AppendConversation(
+		h.ConversationRepo,
+		h.OpenAI,
+		conversationReturned,
+		conversationReturned.ID,
+		conversationReturned.CurrentTopic,
+		conversationReturned.CurrentQuestionNumber,
+		params.Message,
+		interviewReturned.Prompt)
+	if err != nil {
+		log.Printf("AppendConversation error: %v", err)
+		respondWithError(w, http.StatusBadRequest, "Invalid ID.")
+		return
 	}
 
 	payload := &ReturnVals{
@@ -288,15 +310,17 @@ func (h *Handler) RefreshTokensHandler(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-func getPathID(r *http.Request) (int, error) {
-	pathParts := strings.Split(r.URL.Path, "/")
-	if len(pathParts) < 4 || pathParts[3] == "" {
-		log.Printf("getPathID failed: len check")
-		err := errors.New("Missing url param")
+func getPathID(r *http.Request, prefix string) (int, error) {
+	path := strings.TrimPrefix(r.URL.Path, prefix)
+	path = strings.Trim(path, "/")
+
+	if path == "" {
+		log.Printf("getPathID returned empty string")
+		err := errors.New("Missing or invalid url param")
 		return 0, err
 	}
 
-	id, err := strconv.Atoi(pathParts[3])
+	id, err := strconv.Atoi(path)
 	if err != nil {
 		log.Printf("getPathID failed: %v", err)
 		return 0, err

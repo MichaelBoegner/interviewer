@@ -425,12 +425,12 @@ func TestConversationsHandler_Post(t *testing.T) {
 				ConversationRepo: mockConversationRepo,
 			}
 
-			w, req := setRequestAndWriter(http.MethodPost, "/api/conversations/1", tc)
+			w, req := setRequestAndWriter(http.MethodPost, "/api/conversations/create/1", tc)
 
 			req.Header.Set("Authorization", "Bearer "+tokenKey)
 
 			// Apply the middleware to the handler
-			handlerWithMiddleware := middleware.GetContext(http.HandlerFunc(handler.ConversationsHandler))
+			handlerWithMiddleware := middleware.GetContext(http.HandlerFunc(handler.CreateConversationsHandler))
 
 			// Act
 			handlerWithMiddleware.ServeHTTP(w, req)

@@ -39,7 +39,8 @@ func NewServer() *Server {
 
 	mux.Handle("/api/users/", middleware.GetContext(http.HandlerFunc(handler.GetUsersHandler)))
 	mux.Handle("/api/interviews", middleware.GetContext(http.HandlerFunc(handler.InterviewsHandler)))
-	mux.Handle("/api/conversations/", middleware.GetContext(http.HandlerFunc(handler.ConversationsHandler)))
+	mux.Handle("/api/conversations/create", middleware.GetContext(http.HandlerFunc(handler.CreateConversationsHandler)))
+	mux.Handle("/api/conversations/append", middleware.GetContext(http.HandlerFunc(handler.AppendConversationsHandler)))
 	mux.Handle("/api/auth/token", middleware.GetContext(http.HandlerFunc(handler.RefreshTokensHandler)))
 
 	return &Server{mux: mux}

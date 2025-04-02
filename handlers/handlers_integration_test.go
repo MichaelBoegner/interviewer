@@ -146,7 +146,7 @@ func Test_ConversationsHandler_Post_Integration(t *testing.T) {
 		{
 			name:   "CreateConversation_Success",
 			method: "POST",
-			url:    testutil.TestServerURL + "/api/conversations/1",
+			url:    testutil.TestServerURL + "/api/conversations/create/1",
 			reqBody: `{
 				"message" : "I have been a TSE for 5 years."
 			}`,
@@ -162,7 +162,7 @@ func Test_ConversationsHandler_Post_Integration(t *testing.T) {
 		{
 			name:   "CreateConversation_MissingBearer&Token",
 			method: "POST",
-			url:    testutil.TestServerURL + "/api/conversations/1",
+			url:    testutil.TestServerURL + "/api/conversations/create/1",
 			reqBody: `{
 				"message" : "I have been a TSE for 5 years."
 			}`,
@@ -176,7 +176,7 @@ func Test_ConversationsHandler_Post_Integration(t *testing.T) {
 		{
 			name:   "CreateConversation_MissingToken",
 			method: "POST",
-			url:    testutil.TestServerURL + "/api/conversations/1",
+			url:    testutil.TestServerURL + "/api/conversations/create/1",
 			reqBody: `{
 				"message" : "I have been a TSE for 5 years."
 			}`,
@@ -191,7 +191,7 @@ func Test_ConversationsHandler_Post_Integration(t *testing.T) {
 		{
 			name:   "CreateConversation_MalformedHeaderValue",
 			method: "POST",
-			url:    testutil.TestServerURL + "/api/conversations/1",
+			url:    testutil.TestServerURL + "/api/conversations/create/1",
 			reqBody: `{
 				"message" : "I have been a TSE for 5 years."
 			}`,
@@ -206,7 +206,7 @@ func Test_ConversationsHandler_Post_Integration(t *testing.T) {
 		{
 			name:   "CreateConversation_ExpiredToken",
 			method: "POST",
-			url:    testutil.TestServerURL + "/api/conversations/1",
+			url:    testutil.TestServerURL + "/api/conversations/create/1",
 			reqBody: `{
 				"message" : "I have been a TSE for 5 years."
 			}`,
@@ -221,7 +221,7 @@ func Test_ConversationsHandler_Post_Integration(t *testing.T) {
 		{
 			name:   "CreateConversation_MissingIntervewID",
 			method: "POST",
-			url:    testutil.TestServerURL + "/api/conversations/",
+			url:    testutil.TestServerURL + "/api/conversations/create/",
 			reqBody: `{
 				"message" : "I have been a TSE for 5 years."
 			}`,
@@ -236,7 +236,7 @@ func Test_ConversationsHandler_Post_Integration(t *testing.T) {
 		{
 			name:   "CreateConversation_IncorrectInterviewID",
 			method: "POST",
-			url:    testutil.TestServerURL + "/api/conversations/2",
+			url:    testutil.TestServerURL + "/api/conversations/create/2",
 			reqBody: `{
 				"message" : "I have been a TSE for 5 years."
 			}`,
