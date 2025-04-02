@@ -154,10 +154,10 @@ func Test_ConversationsHandler_Post_Integration(t *testing.T) {
 			headerValue:    "Bearer " + jwtoken,
 			expectedStatus: http.StatusCreated,
 			respBody: handlers.ReturnVals{
-				Conversation: mocks.TestCreatedConversation,
+				Conversation: mocks.CreatedConversationMock,
 			},
 			DBCheck:      true,
-			Conversation: mocks.TestCreatedConversation,
+			Conversation: mocks.CreatedConversationMock,
 		},
 		{
 			name:   "CreateConversation_MissingBearer&Token",

@@ -173,7 +173,7 @@ func (h *Handler) InterviewsHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) ConversationsHandler(w http.ResponseWriter, r *http.Request) {
-	params := &middleware.UpdateConversation{}
+	params := &middleware.AcceptedVals{}
 	err := json.NewDecoder(r.Body).Decode(params)
 	if err != nil {
 		log.Printf("Decoding params failed: %v", err)
@@ -223,9 +223,8 @@ func (h *Handler) ConversationsHandler(w http.ResponseWriter, r *http.Request) {
 			h.ConversationRepo,
 			h.OpenAI,
 			conversationReturned,
-			params.ConversationID,
+			conversationReturned.ID,
 			conversationReturned.CurrentTopic,
-			params.QuestionID,
 			conversationReturned.CurrentQuestionNumber,
 			params.Message,
 			interviewReturned.Prompt)

@@ -116,7 +116,7 @@ func AppendConversation(
 	repo ConversationRepo,
 	openAI chatgpt.AIClient,
 	conversation *Conversation,
-	conversationID, topicID, questionID, questionNumber int,
+	conversationID, topicID, questionNumber int,
 	message, prompt string) (*Conversation, error) {
 
 	if conversation.ID != conversationID {

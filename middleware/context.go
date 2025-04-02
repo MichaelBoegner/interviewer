@@ -15,26 +15,19 @@ import (
 )
 
 type AcceptedVals struct {
-	UserID       int                        `json:"user_id"`
-	InterviewID  int                        `json:"interview_id"`
-	Username     string                     `json:"username"`
-	Password     string                     `json:"password"`
-	Email        string                     `json:"email"`
-	AccessToken  string                     `json:"access_token"`
-	Message      string                     `json:"message,omitempty"`
-	Conversation *conversation.Conversation `json:"conversation,omitempty"`
+	UserID         int                        `json:"user_id,omitempty"`
+	InterviewID    int                        `json:"interview_id,omitempty"`
+	ConversationID int                        `json:"conversation_id,omitempty"`
+	Username       string                     `json:"username,omitempty"`
+	Password       string                     `json:"password,omitempty"`
+	Email          string                     `json:"email,omitempty"`
+	AccessToken    string                     `json:"access_token,omitempty"`
+	Message        string                     `json:"message,omitempty"`
+	Conversation   *conversation.Conversation `json:"conversation,omitempty"`
 }
 
 type returnVals struct {
 	Error string `json:"error,omitempty"`
-}
-
-type UpdateConversation struct {
-	ConversationID int    `json:"conversation_id"`
-	TopicID        int    `json:"topic_id"`
-	QuestionID     int    `json:"question_id"`
-	QuestionNumber int    `json:"question_number"`
-	Message        string `json:"message"`
 }
 
 type ContextKey string
