@@ -36,17 +36,24 @@ func (b *ConversationBuilder) WithTopic(name string, id int) *ConversationBuilde
 	return b
 }
 
-func (b *ConversationBuilder) WithQuestion(topicID, qNum int, prompt string, messages []conversation.Message) *ConversationBuilder {
+func (b *ConversationBuilder) WithQuestion(topicID, questionNumber int, prompt string) *ConversationBuilder {
+	messages := []conversation.Message{}
 	topic := b.convo.Topics[topicID]
-	topic.Questions[qNum] = &conversation.Question{
+	topic.Questions[questionNumber] = &conversation.Question{
 		ConversationID: b.convo.ID,
 		TopicID:        topicID,
-		QuestionNumber: qNum,
+		QuestionNumber: questionNumber,
 		Prompt:         prompt,
 		CreatedAt:      time.Now().UTC(),
 		Messages:       messages,
 	}
 	b.convo.Topics[topicID] = topic
+	return b
+}
+
+func (b *ConversationBuilder) WithMessage(topicID, questionNumber int, message []conversation.Message) *ConversationBuilder {
+	b.convo.Topics[topicID].Questions[questionNumber].Messages = append(b.convo.Topics[topicID].Questions[questionNumber].Messages, message...)
+
 	return b
 }
 
