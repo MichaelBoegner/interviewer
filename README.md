@@ -109,7 +109,7 @@ The backend is structured using a layered architecture:
 │         │                                  │         │                       │         │
 └────┬────┘                                  └────┬────┘                       └────┬────┘
      │                                            │                                 │
-     │ POST /api/users (Register)                │                                 │
+     │ POST /api/users (Register)                 │                                 │
      │───────────────────────────────────────────►│                                 │
      │                                            │                                 │
      │                                            │ Store User                      │
