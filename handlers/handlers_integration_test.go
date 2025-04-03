@@ -294,7 +294,6 @@ func Test_CreateConversationsHandler_Post_Integration(t *testing.T) {
 }
 
 func Test_AppendConversationsHandler_Post_Integration(t *testing.T) {
-	t.Skip("testing changes")
 	tests := []TestCase{
 		{
 			name:   "AppendConversation_Success",
@@ -308,10 +307,10 @@ func Test_AppendConversationsHandler_Post_Integration(t *testing.T) {
 			headerValue:    "Bearer " + jwtoken,
 			expectedStatus: http.StatusCreated,
 			respBody: handlers.ReturnVals{
-				Conversation: mocks.CreatedConversationMock,
+				Conversation: testutil.NewAppendedConversationMock(),
 			},
 			DBCheck:      false,
-			Conversation: mocks.CreatedConversationMock,
+			Conversation: testutil.NewAppendedConversationMock(),
 		},
 		{
 			name:   "AppendConversation_MissingBearer&Token",
