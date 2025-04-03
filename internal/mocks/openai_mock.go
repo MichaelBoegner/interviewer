@@ -10,7 +10,6 @@ import (
 )
 
 var (
-	responseConversationCreated     *chatgpt.ChatGPTResponse
 	responseConversationMockCreated string
 	CreatedConversationMock         *conversation.Conversation
 	now                             = time.Now().UTC()
@@ -25,9 +24,6 @@ var (
 		NextSubtopic: "General Background",
 		CreatedAt:    now,
 	}
-)
-
-func init() {
 	responseConversationCreated = &chatgpt.ChatGPTResponse{
 		Topic:        "Introduction",
 		Subtopic:     "General Background",
@@ -39,7 +35,9 @@ func init() {
 		NextSubtopic: "General Engineering Experience",
 		CreatedAt:    now,
 	}
+)
 
+func init() {
 	responseConversationMarshal, err := json.Marshal(responseConversationCreated)
 	if err != nil {
 		log.Fatalf("MarshalResponses failed: %v", err)
