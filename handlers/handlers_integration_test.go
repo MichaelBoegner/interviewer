@@ -139,8 +139,7 @@ func Test_InterviewsHandler_Post_Integration(t *testing.T) {
 		})
 	}
 }
-
-func Test_ConversationsHandler_Post_Integration(t *testing.T) {
+func Test_CreateConversationsHandler_Post_Integration(t *testing.T) {
 
 	tests := []TestCase{
 		{
@@ -238,6 +237,167 @@ func Test_ConversationsHandler_Post_Integration(t *testing.T) {
 			method: "POST",
 			url:    testutil.TestServerURL + "/api/conversations/create/2",
 			reqBody: `{
+				"message" : "I have been a TSE for 5 years."
+			}`,
+			headerKey:      "Authorization",
+			headerValue:    "Bearer " + jwtoken,
+			expectedStatus: http.StatusBadRequest,
+			respBody: handlers.ReturnVals{
+				Error: "Invalid ID",
+			},
+			DBCheck: false,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			// Act
+			resp, respCode, err := testRequests(t, tc.headerKey, tc.headerValue, tc.method, tc.url, strings.NewReader(tc.reqBody))
+			if err != nil {
+				log.Fatalf("TestRequest for interview creation failed: %v", err)
+			}
+
+			respUnmarshalled := &handlers.ReturnVals{}
+			err = json.Unmarshal(resp, respUnmarshalled)
+			if err != nil {
+				t.Fatalf("failed to unmarshal response: %v", err)
+			}
+
+			// Assert Response
+			if respCode != tc.expectedStatus {
+				t.Fatalf("[%s] expected status %d, got %d\n", tc.name, tc.expectedStatus, respCode)
+			}
+
+			expected := tc.respBody
+			got := *respUnmarshalled
+
+			if diff := cmp.Diff(expected, got, cmpopts.EquateApproxTime(time.Second)); diff != "" {
+				t.Errorf("Mismatch (-expected +got):\n%s", diff)
+			}
+
+			// Assert Database
+			if tc.DBCheck {
+				conversation, err := conversation.GetConversation(Handler.ConversationRepo, got.Conversation.ID)
+				if err != nil {
+					t.Fatalf("Assert Database: GetConversation failing: %v", err)
+				}
+
+				expectedDB := tc.Conversation
+				gotDB := conversation
+
+				if diff := cmp.Diff(expectedDB, gotDB, cmpopts.EquateApproxTime(time.Second)); diff != "" {
+					t.Errorf("Mismatch (-expected +got):\n%s", diff)
+				}
+			}
+		})
+	}
+}
+
+func Test_AppendConversationsHandler_Post_Integration(t *testing.T) {
+	t.Skip("testing changes")
+	tests := []TestCase{
+		{
+			name:   "AppendConversation_Success",
+			method: "POST",
+			url:    testutil.TestServerURL + "/api/conversations/append/1",
+			reqBody: `{
+				"conversation_id" : 1,
+				"message" : "I built a mock interviewer app in Go."
+			}`,
+			headerKey:      "Authorization",
+			headerValue:    "Bearer " + jwtoken,
+			expectedStatus: http.StatusCreated,
+			respBody: handlers.ReturnVals{
+				Conversation: mocks.CreatedConversationMock,
+			},
+			DBCheck:      false,
+			Conversation: mocks.CreatedConversationMock,
+		},
+		{
+			name:   "AppendConversation_MissingBearer&Token",
+			method: "POST",
+			url:    testutil.TestServerURL + "/api/conversations/append/1",
+			reqBody: `{
+				"conversation_id" : 1,
+				"message" : "I have been a TSE for 5 years."
+			}`,
+			headerKey:      "Authorization",
+			expectedStatus: http.StatusUnauthorized,
+			respBody: handlers.ReturnVals{
+				Error: "Unauthorized",
+			},
+			DBCheck: false,
+		},
+		{
+			name:   "AppendConversation_MissingToken",
+			method: "POST",
+			url:    testutil.TestServerURL + "/api/conversations/append/1",
+			reqBody: `{
+				"conversation_id" : 1,
+				"message" : "I have been a TSE for 5 years."
+			}`,
+			headerKey:      "Authorization",
+			headerValue:    "Bearer ",
+			expectedStatus: http.StatusUnauthorized,
+			respBody: handlers.ReturnVals{
+				Error: "Unauthorized",
+			},
+			DBCheck: false,
+		},
+		{
+			name:   "AppendConversation_MalformedHeaderValue",
+			method: "POST",
+			url:    testutil.TestServerURL + "/api/conversations/append/1",
+			reqBody: `{
+				"conversation_id" : 1,
+				"message" : "I have been a TSE for 5 years."
+			}`,
+			headerKey:      "Authorization",
+			headerValue:    "as9d8f7as09d87",
+			expectedStatus: http.StatusUnauthorized,
+			respBody: handlers.ReturnVals{
+				Error: "Unauthorized",
+			},
+			DBCheck: false,
+		},
+		{
+			name:   "AppendConversation_ExpiredToken",
+			method: "POST",
+			url:    testutil.TestServerURL + "/api/conversations/append/1",
+			reqBody: `{
+				"conversation_id" : 1,
+				"message" : "I have been a TSE for 5 years."
+			}`,
+			headerKey:      "Authorization",
+			headerValue:    "Bearer " + expiredJWT,
+			expectedStatus: http.StatusUnauthorized,
+			respBody: handlers.ReturnVals{
+				Error: "Unauthorized",
+			},
+			DBCheck: false,
+		},
+		{
+			name:   "AppendConversation_MissingIntervewID",
+			method: "POST",
+			url:    testutil.TestServerURL + "/api/conversations/append/",
+			reqBody: `{
+				"conversation_id" : 1,
+				"message" : "I have been a TSE for 5 years."
+			}`,
+			headerKey:      "Authorization",
+			headerValue:    "Bearer " + jwtoken,
+			expectedStatus: http.StatusBadRequest,
+			respBody: handlers.ReturnVals{
+				Error: "Missing ID",
+			},
+			DBCheck: false,
+		},
+		{
+			name:   "AppendConversation_IncorrectInterviewID",
+			method: "POST",
+			url:    testutil.TestServerURL + "/api/conversations/append/2",
+			reqBody: `{
+				"conversation_id" : 1,
 				"message" : "I have been a TSE for 5 years."
 			}`,
 			headerKey:      "Authorization",

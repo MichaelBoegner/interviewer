@@ -222,7 +222,7 @@ func (h *Handler) AppendConversationsHandler(w http.ResponseWriter, r *http.Requ
 		respondWithError(w, http.StatusInternalServerError, "Internal Server Error")
 	}
 
-	interviewID, err := getPathID(r, "api/conversations/append/")
+	interviewID, err := getPathID(r, "/api/conversations/append/")
 	if err != nil {
 		log.Printf("PathID error: %v\n", err)
 		respondWithError(w, http.StatusBadRequest, "Missing ID")

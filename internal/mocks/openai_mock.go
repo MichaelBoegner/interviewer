@@ -10,11 +10,11 @@ import (
 )
 
 var (
-	responseConversation     *chatgpt.ChatGPTResponse
-	responseConversationMock string
-	CreatedConversationMock  *conversation.Conversation
-	now                      = time.Now().UTC()
-	responseInterview        = &chatgpt.ChatGPTResponse{
+	responseConversationCreated     *chatgpt.ChatGPTResponse
+	responseConversationMockCreated string
+	CreatedConversationMock         *conversation.Conversation
+	now                             = time.Now().UTC()
+	responseInterview               = &chatgpt.ChatGPTResponse{
 		Topic:        "None",
 		Subtopic:     "None",
 		Question:     "None",
@@ -28,7 +28,7 @@ var (
 )
 
 func init() {
-	responseConversation = &chatgpt.ChatGPTResponse{
+	responseConversationCreated = &chatgpt.ChatGPTResponse{
 		Topic:        "Introduction",
 		Subtopic:     "General Background",
 		Question:     "Tell me a little bit about your work history",
@@ -40,12 +40,12 @@ func init() {
 		CreatedAt:    now,
 	}
 
-	responseConversationMarshal, err := json.Marshal(responseConversation)
+	responseConversationMarshal, err := json.Marshal(responseConversationCreated)
 	if err != nil {
 		log.Fatalf("MarshalResponses failed: %v", err)
 	}
 
-	responseConversationMock = string(responseConversationMarshal)
+	responseConversationMockCreated = string(responseConversationMarshal)
 
 	CreatedConversationMock = &conversation.Conversation{
 		ID:                    1,
@@ -97,7 +97,7 @@ func init() {
 								TopicID:        1,
 								QuestionNumber: 1,
 								Author:         "interviewer",
-								Content:        responseConversationMock,
+								Content:        responseConversationMockCreated,
 								CreatedAt:      now,
 							},
 						},
@@ -146,5 +146,5 @@ func (m *MockOpenAIClient) GetChatGPTResponseInterview(prompt string) (*chatgpt.
 }
 
 func (m *MockOpenAIClient) GetChatGPTResponseConversation(conversationHistory []map[string]string) (*chatgpt.ChatGPTResponse, error) {
-	return responseConversation, nil
+	return responseConversationCreated, nil
 }
