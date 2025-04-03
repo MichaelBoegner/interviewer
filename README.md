@@ -155,12 +155,9 @@ The backend is structured using a layered architecture:
 
 #### Interviews
 - `POST /api/interviews` - Create a new interview
-- `GET /api/interviews` - List user's interviews
-- `GET /api/interviews/:id` - Get interview details
 
 #### Conversations
 - `POST /api/conversations/` - Create a new conversation
-- `GET /api/conversations/:id` - Get conversation details
 
 ## 🗄 Database Schema
 
