@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/michaelboegner/interviewer/conversation"
+	"github.com/michaelboegner/interviewer/internal/mocks"
 )
 
 type ConversationBuilder struct {
@@ -31,14 +32,16 @@ func (b *ConversationBuilder) WithTopic(name string, id int) *ConversationBuilde
 		ID:             id,
 		ConversationID: b.convo.ID,
 		Name:           name,
-		Questions:      make(map[int]*conversation.Question),
 	}
 	return b
 }
 
 func (b *ConversationBuilder) WithQuestion(topicID, questionNumber int, prompt string) *ConversationBuilder {
+	questions := make(map[int]*conversation.Question)
 	messages := []conversation.Message{}
 	topic := b.convo.Topics[topicID]
+	topic.Questions = questions
+
 	topic.Questions[questionNumber] = &conversation.Question{
 		ConversationID: b.convo.ID,
 		TopicID:        topicID,
@@ -59,4 +62,18 @@ func (b *ConversationBuilder) WithMessage(topicID, questionNumber int, message [
 
 func (b *ConversationBuilder) Build() *conversation.Conversation {
 	return b.convo
+}
+
+func NewCreatedConversationMock() *conversation.Conversation {
+	builder := NewConversationBuilder()
+	builder.WithTopic("Introduction", 1).
+		WithQuestion(1, 1, "Tell me a little bit about your work history.").
+		WithMessage(1, 1, mocks.MessagesCreatedConversation).
+		WithTopic("Coding", 2).
+		WithTopic("System Design", 3).
+		WithTopic("Databases and Data Management", 4).
+		WithTopic("Behavioral", 5).
+		WithTopic("General Backend Knowledge", 6)
+
+	return builder.Build()
 }

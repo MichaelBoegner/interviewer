@@ -7,12 +7,12 @@ import (
 
 	"github.com/michaelboegner/interviewer/chatgpt"
 	"github.com/michaelboegner/interviewer/conversation"
-	"github.com/michaelboegner/interviewer/internal/testutil"
 )
 
 var (
 	responseConversationMockCreated string
 	CreatedConversationMock         *conversation.Conversation
+	MessagesCreatedConversation     []conversation.Message
 	now                             = time.Now().UTC()
 	responseInterview               = &chatgpt.ChatGPTResponse{
 		Topic:        "None",
@@ -46,7 +46,7 @@ func init() {
 
 	responseConversationMockCreated = string(responseConversationMarshal)
 
-	messages := []conversation.Message{
+	MessagesCreatedConversation = []conversation.Message{
 		{
 			ConversationID: 1,
 			TopicID:        1,
@@ -80,17 +80,6 @@ func init() {
 			CreatedAt:      now,
 		},
 	}
-
-	builder := testutil.NewConversationBuilder()
-	builder.WithTopic("Introduction", 1).
-		WithQuestion(1, 1, "Tell me a little bit about your work history.").
-		WithMessage(1, 1, messages).
-		WithTopic("Coding", 1).
-		WithTopic("System Design", 1).
-		WithTopic("Databases and Data Management", 1).
-		WithTopic("General Backend Knowledge", 1)
-
-	CreatedConversationMock = builder.Build()
 
 }
 
