@@ -3,7 +3,6 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -59,7 +58,6 @@ type ReturnVals struct {
 }
 
 func (h *Handler) CreateUsersHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Printf("\n\nFiring CreateUsersHandler!?\n\n")
 	params := &middleware.AcceptedVals{}
 	err := json.NewDecoder(r.Body).Decode(params)
 	if err != nil {
@@ -90,7 +88,6 @@ func (h *Handler) CreateUsersHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) GetUsersHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Printf("\n\nFiring GetUSersHandler!?\n\n")
 	userID, err := getPathID(r, "/api/users/")
 	if err != nil {
 		log.Printf("PathID error: %v\n", err)
