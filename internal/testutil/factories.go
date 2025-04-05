@@ -93,9 +93,7 @@ func NewAppendedConversationMock() *conversation.Conversation {
 	builder := NewConversationBuilder()
 	builder.WithTopic("Introduction", 1).
 		WithQuestion(1, 1, "Tell me a little bit about your work history.").
-		WithMessage(1, 1, mocks.MessagesCreatedConversation).
-		WithQuestion(1, 2, "Can you tell me about your most recent backend project?").
-		WithMessage(1, 2, mocks.MessagesAppendedConversationTopic1).
+		WithMessage(1, 1, mocks.MessagesAppendedConversationTopic1).
 		WithTopic("Coding", 2).
 		WithQuestion(2, 1, "Can you write me a func to reverse a string?").
 		WithMessage(2, 1, mocks.MessagesAppendedConversationTopic2).

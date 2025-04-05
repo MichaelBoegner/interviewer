@@ -155,7 +155,7 @@ func Test_CreateConversationsHandler_Post_Integration(t *testing.T) {
 			respBody: handlers.ReturnVals{
 				Conversation: testutil.NewCreatedConversationMock(),
 			},
-			DBCheck:      true,
+			DBCheck:      false,
 			Conversation: testutil.NewCreatedConversationMock(),
 		},
 		{

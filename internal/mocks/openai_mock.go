@@ -95,7 +95,7 @@ func init() {
 		{
 			ConversationID: 1,
 			TopicID:        1,
-			QuestionNumber: 1,
+			QuestionNumber: 2,
 			Author:         "interviewer",
 			Content:        responseConversationMockCreated,
 			CreatedAt:      now,
@@ -130,7 +130,7 @@ func init() {
 		{
 			ConversationID: 1,
 			TopicID:        1,
-			QuestionNumber: 1,
+			QuestionNumber: 2,
 			Author:         "interviewer",
 			Content:        responseConversationMockCreated,
 			CreatedAt:      now,
@@ -138,7 +138,7 @@ func init() {
 		{
 			ConversationID: 1,
 			TopicID:        1,
-			QuestionNumber: 1,
+			QuestionNumber: 2,
 			Author:         "user",
 			Content:        "I built a mock interviewer app in Go.",
 			CreatedAt:      now,
@@ -148,7 +148,7 @@ func init() {
 	MessagesAppendedConversationTopic2 = []conversation.Message{
 		{
 			ConversationID: 1,
-			TopicID:        1,
+			TopicID:        2,
 			QuestionNumber: 1,
 			Author:         "interviewer",
 			Content:        responseConversationMockAppended,
