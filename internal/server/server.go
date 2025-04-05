@@ -34,10 +34,10 @@ func NewServer() *Server {
 
 	handler := handlers.NewHandler(interviewRepo, userRepo, tokenRepo, conversationRepo, openAI)
 
-	mux.Handle("/api/users", http.HandlerFunc(handler.CreateUsersHandler))
+	mux.Handle("/api/users/", http.HandlerFunc(handler.CreateUsersHandler))
 	mux.Handle("/api/auth/login", http.HandlerFunc(handler.LoginHandler))
 
-	mux.Handle("/api/users/", middleware.GetContext(http.HandlerFunc(handler.GetUsersHandler)))
+	mux.Handle("/api/users/{id}", middleware.GetContext(http.HandlerFunc(handler.GetUsersHandler)))
 	mux.Handle("/api/interviews", middleware.GetContext(http.HandlerFunc(handler.InterviewsHandler)))
 	mux.Handle("/api/conversations/create", middleware.GetContext(http.HandlerFunc(handler.CreateConversationsHandler)))
 	mux.Handle("/api/conversations/append", middleware.GetContext(http.HandlerFunc(handler.AppendConversationsHandler)))

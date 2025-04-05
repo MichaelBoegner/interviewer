@@ -2,7 +2,6 @@ package mocks
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"time"
 
@@ -11,13 +10,14 @@ import (
 )
 
 var (
-	responseConversationMockCreated  string
-	responseConversationMockAppended string
-	CreatedConversationMock          *conversation.Conversation
-	MessagesCreatedConversation      []conversation.Message
-	MessagesAppendedConversation     []conversation.Message
-	now                              = time.Now().UTC()
-	responseInterview                = &chatgpt.ChatGPTResponse{
+	responseConversationMockCreated    string
+	responseConversationMockAppended   string
+	CreatedConversationMock            *conversation.Conversation
+	MessagesCreatedConversation        []conversation.Message
+	MessagesAppendedConversationTopic1 []conversation.Message
+	MessagesAppendedConversationTopic2 []conversation.Message
+	now                                = time.Now().UTC()
+	responseInterview                  = &chatgpt.ChatGPTResponse{
 		Topic:        "None",
 		Subtopic:     "None",
 		Question:     "None",
@@ -102,7 +102,7 @@ func init() {
 		},
 	}
 
-	MessagesAppendedConversation = []conversation.Message{
+	MessagesAppendedConversationTopic1 = []conversation.Message{
 		{
 			ConversationID: 1,
 			TopicID:        1,
@@ -143,6 +143,9 @@ func init() {
 			Content:        "I built a mock interviewer app in Go.",
 			CreatedAt:      now,
 		},
+	}
+
+	MessagesAppendedConversationTopic2 = []conversation.Message{
 		{
 			ConversationID: 1,
 			TopicID:        1,
@@ -162,8 +165,6 @@ func (m *MockOpenAIClient) GetChatGPTResponseInterview(prompt string) (*chatgpt.
 }
 
 func (m *MockOpenAIClient) GetChatGPTResponseConversation(conversationHistory []map[string]string) (*chatgpt.ChatGPTResponse, error) {
-	//DEBUG
-	fmt.Printf("\n\nlen(conversationHistory): %v\n", len(conversationHistory))
 	if len(conversationHistory) == 3 {
 		return responseConversationCreated, nil
 	}

@@ -36,11 +36,14 @@ func (b *ConversationBuilder) WithTopic(name string, id int) *ConversationBuilde
 }
 
 func (b *ConversationBuilder) WithQuestion(topicID, questionNumber int, prompt string) *ConversationBuilder {
-	questions := make(map[int]*conversation.Question)
+
 	messages := []conversation.Message{}
 	topic := b.convo.Topics[topicID]
 	topic.ConversationID = b.convo.ID
-	topic.Questions = questions
+	if topic.Questions == nil {
+		questions := make(map[int]*conversation.Question)
+		topic.Questions = questions
+	}
 
 	topic.Questions[questionNumber] = &conversation.Question{
 		ConversationID: b.convo.ID,
@@ -92,9 +95,11 @@ func NewAppendedConversationMock() *conversation.Conversation {
 		WithQuestion(1, 1, "Tell me a little bit about your work history.").
 		WithMessage(1, 1, mocks.MessagesCreatedConversation).
 		WithQuestion(1, 2, "Can you tell me about your most recent backend project?").
-		WithMessage(1, 2, mocks.MessagesAppendedConversation).
-		WithCurrents(2, 1, "String Alogrithms").
+		WithMessage(1, 2, mocks.MessagesAppendedConversationTopic1).
 		WithTopic("Coding", 2).
+		WithQuestion(2, 1, "Can you write me a func to reverse a string?").
+		WithMessage(2, 1, mocks.MessagesAppendedConversationTopic2).
+		WithCurrents(2, 1, "String Alogrithms").
 		WithTopic("System Design", 3).
 		WithTopic("Databases and Data Management", 4).
 		WithTopic("Behavioral", 5).
