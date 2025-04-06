@@ -11,6 +11,7 @@
 ## 📋 Contents
 
 - [Overview](#-overview)
+- [Learning Log](#-learning-log)
 - [Recorded Demo](#-recorded-demo)
 - [System Architecture](#-system-architecture)
 - [Key Features](#-key-features)
@@ -38,6 +39,14 @@ The application was built with a focus on:
 - **Scalability**: Designed for horizontal scaling with stateless API design
 - **Security**: Implementing industry-standard JWT authentication with refresh token rotation
 - **Maintainability**: Modular code structure with reusable components
+
+## 🧠 Learning Log
+
+I maintain a [daily learning log](./learninglog/) as part of this project to document the challenges I face, the questions I ask, and the solutions I implement. It offers a window into how I think, debug, and grow as a backend engineer.
+
+> 💡 If you're a hiring manager, this log is a great way to see my real-time problem-solving process and technical progression in context.
+
+📂 [Browse the learning log →](./learninglog/)
 
 ## 🎥 Recorded Demo
 - The frontend is located here: [https://github.com/michaelboegner/interviewer-ui](https://github.com/michaelboegner/interviewer-ui). 
