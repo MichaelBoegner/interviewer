@@ -233,7 +233,7 @@ func (repo *Repository) CreateMessages(conversation *Conversation, messages []Me
 	return nil
 }
 
-func (repo *Repository) AddMessage(conversationID, topic_id, questionNumber int, message *Message) (int, error) {
+func (repo *Repository) AddMessage(conversationID, topic_id, questionNumber int, message Message) (int, error) {
 	query := `
 			INSERT INTO messages (conversation_id, topic_id, question_number, author, content, created_at) 
 			VALUES ($1, $2, $3, $4, $5, $6) 
