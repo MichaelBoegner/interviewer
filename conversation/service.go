@@ -64,18 +64,9 @@ func CreateConversation(
 		return nil, err
 	}
 
-	conversationHistory, err := getConversationHistory(conversation)
+	chatGPTResponse, chatGPTResponseString, err := getChatGPTResponses(conversation, openAI)
 	if err != nil {
-		return nil, err
-	}
-	chatGPTResponse, err := openAI.GetChatGPTResponseConversation(conversationHistory)
-	if err != nil {
-		log.Printf("getNextQuestion failing")
-		return nil, err
-	}
-	chatGPTResponseString, err := ChatGPTResponseToString(chatGPTResponse)
-	if err != nil {
-		log.Printf("Marshalled response err: %v", err)
+		log.Printf("getChatGPTResponses failed: %v", err)
 		return nil, err
 	}
 
@@ -129,18 +120,9 @@ func AppendConversation(
 	}
 	conversation.Topics[topicID].Questions[questionNumber].Messages = append(conversation.Topics[topicID].Questions[questionNumber].Messages, messageUser)
 
-	conversationHistory, err := getConversationHistory(conversation)
+	chatGPTResponse, chatGPTResponseString, err := getChatGPTResponses(conversation, openAI)
 	if err != nil {
-		return nil, err
-	}
-	chatGPTResponse, err := openAI.GetChatGPTResponseConversation(conversationHistory)
-	if err != nil {
-		log.Printf("getNextQuestion err: %v", err)
-		return nil, err
-	}
-	chatGPTResponseString, err := ChatGPTResponseToString(chatGPTResponse)
-	if err != nil {
-		log.Printf("Marshalled response err: %v", err)
+		log.Printf("getChatGPTResponses failed: %v", err)
 		return nil, err
 	}
 
@@ -188,9 +170,8 @@ func AppendConversation(
 		topic := conversation.Topics[nextTopicID]
 		topic.ConversationID = conversationID
 
-		messageFirstQuestion := newMessage(conversationID, conversation.CurrentTopic, resetQuestionNumber, Interviewer, chatGPTResponseString)
 		messages := []Message{
-			messageFirstQuestion,
+			newMessage(conversationID, conversation.CurrentTopic, resetQuestionNumber, Interviewer, chatGPTResponseString),
 		}
 		question := newQuestion(conversationID, topicID, questionNumber, messages)
 
@@ -203,7 +184,7 @@ func AppendConversation(
 		if err != nil {
 			log.Printf("AddQuestion in AppendConversation err: %v", err)
 		}
-		_, err = repo.AddMessage(conversationID, nextTopicID, resetQuestionNumber, messageFirstQuestion)
+		_, err = repo.AddMessage(conversationID, nextTopicID, resetQuestionNumber, messages[0])
 		if err != nil {
 			return nil, err
 		}
@@ -238,6 +219,26 @@ func AppendConversation(
 	}
 
 	return conversation, nil
+}
+
+func getChatGPTResponses(conversation *Conversation, openAI chatgpt.AIClient) (*chatgpt.ChatGPTResponse, string, error) {
+	conversationHistory, err := getConversationHistory(conversation)
+	if err != nil {
+		log.Printf("getConversationHistory failed: %v", err)
+		return nil, "", err
+	}
+	chatGPTResponse, err := openAI.GetChatGPTResponseConversation(conversationHistory)
+	if err != nil {
+		log.Printf("getNextQuestion failing")
+		return nil, "", err
+	}
+	chatGPTResponseString, err := ChatGPTResponseToString(chatGPTResponse)
+	if err != nil {
+		log.Printf("Marshalled response err: %v", err)
+		return nil, "", err
+	}
+
+	return chatGPTResponse, chatGPTResponseString, nil
 }
 
 func GetConversation(repo ConversationRepo, conversationID int) (*Conversation, error) {
