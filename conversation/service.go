@@ -203,7 +203,6 @@ func AppendConversation(
 		if err != nil {
 			log.Printf("AddQuestion in AppendConversation err: %v", err)
 		}
-
 		_, err = repo.AddMessage(conversationID, nextTopicID, resetQuestionNumber, messageFirstQuestion)
 		if err != nil {
 			return nil, err
