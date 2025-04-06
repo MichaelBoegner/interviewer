@@ -252,9 +252,6 @@ func (h *Handler) AppendConversationsHandler(w http.ResponseWriter, r *http.Requ
 		h.ConversationRepo,
 		h.OpenAI,
 		conversationReturned,
-		conversationReturned.ID,
-		conversationReturned.CurrentTopic,
-		conversationReturned.CurrentQuestionNumber,
 		params.Message,
 		interviewReturned.Prompt)
 	if err != nil {
