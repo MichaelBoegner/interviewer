@@ -73,19 +73,20 @@ func CreateConversation(
 	}
 
 	conversation.CurrentQuestionNumber++
-	questionNumber = conversation.CurrentQuestionNumber
+	questionNumber++
 	_, err = repo.UpdateConversationCurrents(conversationID, topicID, questionNumber, chatGPTResponse.NextSubtopic)
 	if err != nil {
 		log.Printf("UpdateConversationTopic error: %v", err)
 		return nil, err
 	}
 
-	messages = []Message{}
+	messages = []Message{
+		newMessage(conversationID, topicID, questionNumber, Interviewer, chatGPTResponseString),
+	}
 	conversation.Topics[topicID].Questions[questionNumber] = newQuestion(conversationID, topicID, questionNumber, messages)
-	messageNextQuestion := newMessage(conversationID, topicID, questionNumber, Interviewer, chatGPTResponseString)
 
 	topic = conversation.Topics[topicID]
-	topic.Questions[questionNumber].Messages = append(topic.Questions[questionNumber].Messages, messageNextQuestion)
+	topic.Questions[questionNumber].Messages = append(topic.Questions[questionNumber].Messages, messages...)
 	conversation.Topics[topicID] = topic
 
 	_, err = repo.AddQuestion(conversation.Topics[topicID].Questions[questionNumber])
@@ -93,7 +94,7 @@ func CreateConversation(
 		log.Printf("AddQuestion in AppendConversation err: %v", err)
 		return nil, err
 	}
-	_, err = repo.AddMessage(conversationID, topicID, questionNumber, messageNextQuestion)
+	_, err = repo.AddMessage(conversationID, topicID, questionNumber, messages[0])
 	if err != nil {
 		log.Printf("AddMessage in AppendConversation err: %v", err)
 		return nil, err
@@ -197,7 +198,7 @@ func AppendConversation(
 
 	if incrementQuestion {
 		conversation.CurrentQuestionNumber++
-		questionNumber = conversation.CurrentQuestionNumber
+		questionNumber++
 		_, err := repo.UpdateConversationCurrents(conversationID, topicID, questionNumber, chatGPTResponse.NextSubtopic)
 		if err != nil {
 			log.Printf("UpdateConversationTopic error: %v", err)
@@ -207,15 +208,15 @@ func AppendConversation(
 		conversation.Topics[topicID].Questions[questionNumber] = newQuestion(conversationID, topicID, questionNumber, messages)
 	}
 
-	messageNextQuestion := newMessage(conversationID, topicID, questionNumber, Interviewer, chatGPTResponseString)
-	conversation.Topics[topicID].Questions[questionNumber].Messages = append(conversation.Topics[topicID].Questions[questionNumber].Messages, messageNextQuestion)
+	messageInterviewer := newMessage(conversationID, topicID, questionNumber, Interviewer, chatGPTResponseString)
+	conversation.Topics[topicID].Questions[questionNumber].Messages = append(conversation.Topics[topicID].Questions[questionNumber].Messages, messageInterviewer)
 
 	_, err = repo.AddQuestion(conversation.Topics[topicID].Questions[questionNumber])
 	if err != nil {
 		log.Printf("AddQuestion in AppendConversation err: %v", err)
 		return nil, err
 	}
-	_, err = repo.AddMessage(conversationID, topicID, questionNumber, messageNextQuestion)
+	_, err = repo.AddMessage(conversationID, topicID, questionNumber, messageInterviewer)
 	if err != nil {
 		log.Printf("AddMessage in AppendConversation err: %v", err)
 		return nil, err
