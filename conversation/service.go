@@ -34,6 +34,9 @@ func CreateConversation(
 		UpdatedAt:             now,
 	}
 
+	topicID := conversation.CurrentTopic
+	questionNumber := conversation.CurrentQuestionNumber
+
 	conversationID, err := repo.CreateConversation(conversation)
 	if err != nil {
 		log.Printf("CreateConversation failing: %v", err)
@@ -49,16 +52,15 @@ func CreateConversation(
 	topic := conversation.Topics[conversation.CurrentTopic]
 	topic.ConversationID = conversationID
 	messages := []Message{
-		newMessage(conversationID, conversation.CurrentTopic, conversation.CurrentQuestionNumber, System, prompt),
-		newMessage(conversationID, conversation.CurrentTopic, conversation.CurrentQuestionNumber, Interviewer, firstQuestion),
-		newMessage(conversationID, conversation.CurrentTopic, conversation.CurrentQuestionNumber, User, message),
+		newMessage(conversationID, topicID, questionNumber, System, prompt),
+		newMessage(conversationID, topicID, questionNumber, Interviewer, firstQuestion),
+		newMessage(conversationID, topicID, questionNumber, User, message),
 	}
-	question := newQuestion(conversationID, conversation.CurrentTopic, conversation.CurrentQuestionNumber, messages)
 	topic.Questions = make(map[int]*Question)
-	topic.Questions[conversation.CurrentQuestionNumber] = question
-	conversation.Topics[conversation.CurrentTopic] = topic
+	topic.Questions[questionNumber] = newQuestion(conversationID, topicID, questionNumber, messages)
+	conversation.Topics[topicID] = topic
 
-	err = repo.CreateMessages(conversation, question.Messages)
+	err = repo.CreateMessages(conversation, messages)
 	if err != nil {
 		log.Printf("repo.CreateMessages failing")
 		return nil, err
@@ -71,26 +73,27 @@ func CreateConversation(
 	}
 
 	conversation.CurrentQuestionNumber++
-	_, err = repo.UpdateConversationCurrents(conversation.ID, conversation.CurrentTopic, conversation.CurrentQuestionNumber, chatGPTResponse.NextSubtopic)
+	questionNumber = conversation.CurrentQuestionNumber
+	_, err = repo.UpdateConversationCurrents(conversationID, topicID, questionNumber, chatGPTResponse.NextSubtopic)
 	if err != nil {
 		log.Printf("UpdateConversationTopic error: %v", err)
 		return nil, err
 	}
 
 	messages = []Message{}
-	conversation.Topics[conversation.CurrentTopic].Questions[conversation.CurrentQuestionNumber] = newQuestion(conversationID, conversation.CurrentTopic, conversation.CurrentQuestionNumber, messages)
-	messageNextQuestion := newMessage(conversationID, conversation.CurrentTopic, conversation.CurrentQuestionNumber, Interviewer, chatGPTResponseString)
+	conversation.Topics[topicID].Questions[questionNumber] = newQuestion(conversationID, topicID, questionNumber, messages)
+	messageNextQuestion := newMessage(conversationID, topicID, questionNumber, Interviewer, chatGPTResponseString)
 
-	topic = conversation.Topics[conversation.CurrentTopic]
-	topic.Questions[conversation.CurrentQuestionNumber].Messages = append(topic.Questions[conversation.CurrentQuestionNumber].Messages, messageNextQuestion)
-	conversation.Topics[conversation.CurrentTopic] = topic
+	topic = conversation.Topics[topicID]
+	topic.Questions[questionNumber].Messages = append(topic.Questions[questionNumber].Messages, messageNextQuestion)
+	conversation.Topics[topicID] = topic
 
-	_, err = repo.AddQuestion(conversation.Topics[conversation.CurrentTopic].Questions[conversation.CurrentQuestionNumber])
+	_, err = repo.AddQuestion(conversation.Topics[topicID].Questions[questionNumber])
 	if err != nil {
 		log.Printf("AddQuestion in AppendConversation err: %v", err)
 		return nil, err
 	}
-	_, err = repo.AddMessage(conversationID, conversation.CurrentTopic, conversation.CurrentQuestionNumber, messageNextQuestion)
+	_, err = repo.AddMessage(conversationID, topicID, questionNumber, messageNextQuestion)
 	if err != nil {
 		log.Printf("AddMessage in AppendConversation err: %v", err)
 		return nil, err
@@ -194,7 +197,7 @@ func AppendConversation(
 
 	if incrementQuestion {
 		conversation.CurrentQuestionNumber++
-		questionNumber++
+		questionNumber = conversation.CurrentQuestionNumber
 		_, err := repo.UpdateConversationCurrents(conversationID, topicID, questionNumber, chatGPTResponse.NextSubtopic)
 		if err != nil {
 			log.Printf("UpdateConversationTopic error: %v", err)
