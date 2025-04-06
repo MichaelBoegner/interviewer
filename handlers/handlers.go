@@ -227,6 +227,11 @@ func (h *Handler) AppendConversationsHandler(w http.ResponseWriter, r *http.Requ
 		respondWithError(w, http.StatusInternalServerError, "Internal Server Error")
 	}
 
+	if params.Message == "" {
+		log.Printf("messageUserResponse is nil")
+		respondWithError(w, http.StatusBadRequest, "Missing message")
+	}
+
 	interviewID, err := getPathID(r, "/api/conversations/append/")
 	if err != nil {
 		log.Printf("PathID error: %v\n", err)
@@ -244,7 +249,7 @@ func (h *Handler) AppendConversationsHandler(w http.ResponseWriter, r *http.Requ
 	conversationReturned, err := conversation.GetConversation(h.ConversationRepo, params.ConversationID)
 	if err != nil {
 		log.Printf("GetConversation error: %v", err)
-		respondWithError(w, http.StatusBadRequest, "Invalid ID.")
+		respondWithError(w, http.StatusBadRequest, "Invalid ID")
 		return
 	}
 

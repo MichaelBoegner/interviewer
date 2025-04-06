@@ -24,11 +24,6 @@ func CreateConversation(
 	message string) (*Conversation, error) {
 	now := time.Now().UTC()
 
-	if message == "" {
-		log.Printf("messageUserResponse is nil")
-		return nil, errors.New("messageUserResponse cannot be nil")
-	}
-
 	conversation := &Conversation{
 		InterviewID:           interviewID,
 		Topics:                PredefinedTopics,
