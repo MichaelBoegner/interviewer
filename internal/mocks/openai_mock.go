@@ -10,14 +10,14 @@ import (
 )
 
 var (
-	responseConversationMockCreated    string
-	responseConversationMockAppended   string
-	CreatedConversationMock            *conversation.Conversation
-	MessagesCreatedConversation        []conversation.Message
-	MessagesAppendedConversationTopic1 []conversation.Message
-	MessagesAppendedConversationTopic2 []conversation.Message
-	now                                = time.Now().UTC()
-	responseInterview                  = &chatgpt.ChatGPTResponse{
+	responseConversationMockCreated  string
+	responseConversationMockAppended string
+	CreatedConversationMock          *conversation.Conversation
+	MessagesCreatedConversationT1Q1  []conversation.Message
+	MessagesCreatedConversationT1Q2  []conversation.Message
+	MessagesAppendedConversationT2Q1 []conversation.Message
+	now                              = time.Now().UTC()
+	responseInterview                = &chatgpt.ChatGPTResponse{
 		Topic:        "None",
 		Subtopic:     "None",
 		Question:     "None",
@@ -67,7 +67,7 @@ func init() {
 
 	responseConversationMockAppended = string(responseConversationAppendedMarshal)
 
-	MessagesCreatedConversation = []conversation.Message{
+	MessagesCreatedConversationT1Q1 = []conversation.Message{
 		{
 			ConversationID: 1,
 			TopicID:        1,
@@ -90,43 +90,11 @@ func init() {
 			QuestionNumber: 1,
 			Author:         "user",
 			Content:        "I have been a TSE for 5 years.",
-			CreatedAt:      now,
-		},
-		{
-			ConversationID: 1,
-			TopicID:        1,
-			QuestionNumber: 2,
-			Author:         "interviewer",
-			Content:        responseConversationMockCreated,
 			CreatedAt:      now,
 		},
 	}
 
-	MessagesAppendedConversationTopic1 = []conversation.Message{
-		{
-			ConversationID: 1,
-			TopicID:        1,
-			QuestionNumber: 1,
-			Author:         "system",
-			Content:        TestPrompt,
-			CreatedAt:      now,
-		},
-		{
-			ConversationID: 1,
-			TopicID:        1,
-			QuestionNumber: 1,
-			Author:         "interviewer",
-			Content:        "Tell me a little bit about your work history.",
-			CreatedAt:      now,
-		},
-		{
-			ConversationID: 1,
-			TopicID:        1,
-			QuestionNumber: 1,
-			Author:         "user",
-			Content:        "I have been a TSE for 5 years.",
-			CreatedAt:      now,
-		},
+	MessagesCreatedConversationT1Q2 = []conversation.Message{
 		{
 			ConversationID: 1,
 			TopicID:        1,
@@ -145,7 +113,15 @@ func init() {
 		},
 	}
 
-	MessagesAppendedConversationTopic2 = []conversation.Message{
+	MessagesAppendedConversationT2Q1 = []conversation.Message{
+		{
+			ConversationID: 1,
+			TopicID:        2,
+			QuestionNumber: 1,
+			Author:         "system",
+			Content:        TestPrompt,
+			CreatedAt:      now,
+		},
 		{
 			ConversationID: 1,
 			TopicID:        2,

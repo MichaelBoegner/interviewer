@@ -29,7 +29,7 @@ func CreateConversation(
 		return nil, errors.New("messageUserResponse cannot be nil")
 	}
 
-	const (
+	var (
 		questionNumber = 1
 		topicID        = 1
 	)
@@ -82,6 +82,12 @@ func CreateConversation(
 
 	conversation.Topics[1] = topic
 
+	err = repo.CreateMessages(conversation, question.Messages)
+	if err != nil {
+		log.Printf("repo.CreateMessages failing")
+		return nil, err
+	}
+
 	conversationHistory, err := getConversationHistory(conversation)
 	if err != nil {
 		return nil, err
@@ -99,13 +105,41 @@ func CreateConversation(
 		return nil, err
 	}
 
+	// DEBUG
+	conversation.CurrentQuestionNumber++
+	_, err = repo.UpdateConversationCurrents(conversation.ID, conversation.CurrentTopic, conversation.CurrentQuestionNumber, chatGPTResponse.NextSubtopic)
+	if err != nil {
+		log.Printf("UpdateConversationTopic error: %v", err)
+		return nil, err
+	}
+
+	questionNumber += 1
+
+	if conversation.Topics[topicID].Questions[questionNumber] == nil {
+		conversation.Topics[topicID].Questions[questionNumber] = &Question{
+			ConversationID: conversation.ID,
+			TopicID:        topicID,
+			QuestionNumber: questionNumber,
+			Messages:       []Message{},
+			CreatedAt:      time.Now().UTC(),
+		}
+	}
+	//DEBUG
+
+	messageNextQuestion := newMessage(conversationID, conversation.CurrentTopic, questionNumber, Interviewer, chatGPTResponseString)
 	topic = conversation.Topics[topicID]
-	topic.Questions[questionNumber].Messages = append(topic.Questions[1].Messages, *newMessage(conversationID, topicID, questionNumber, Interviewer, chatGPTResponseString))
+	topic.Questions[questionNumber].Messages = append(topic.Questions[questionNumber].Messages, *messageNextQuestion)
 	conversation.Topics[topicID] = topic
 
-	err = repo.CreateMessages(conversation, question.Messages)
+	_, err = repo.AddQuestion(conversation.Topics[topicID].Questions[questionNumber])
 	if err != nil {
-		log.Printf("repo.CreateMessages failing")
+		log.Printf("AddQuestion in AppendConversation err: %v", err)
+		return nil, err
+	}
+
+	_, err = repo.AddMessage(conversationID, conversation.CurrentTopic, questionNumber, messageNextQuestion)
+	if err != nil {
+		log.Printf("AddMessage in AppendConversation err: %v", err)
 		return nil, err
 	}
 

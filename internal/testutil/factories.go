@@ -79,7 +79,9 @@ func NewCreatedConversationMock() *conversation.Conversation {
 	builder := NewConversationBuilder()
 	builder.WithTopic("Introduction", 1).
 		WithQuestion(1, 1, "Tell me a little bit about your work history.").
-		WithMessage(1, 1, mocks.MessagesCreatedConversation).
+		WithMessage(1, 1, mocks.MessagesCreatedConversationT1Q1).
+		WithQuestion(1, 2, "Tell me a little bit about your work history.").
+		WithMessage(1, 2, mocks.MessagesCreatedConversationT1Q2).
 		WithTopic("Coding", 2).
 		WithTopic("System Design", 3).
 		WithTopic("Databases and Data Management", 4).
@@ -91,17 +93,7 @@ func NewCreatedConversationMock() *conversation.Conversation {
 
 func NewAppendedConversationMock() *conversation.Conversation {
 	builder := NewConversationBuilder()
-	builder.WithTopic("Introduction", 1).
-		WithQuestion(1, 1, "Tell me a little bit about your work history.").
-		WithMessage(1, 1, mocks.MessagesAppendedConversationTopic1).
-		WithTopic("Coding", 2).
-		WithQuestion(2, 1, "Can you write me a func to reverse a string?").
-		WithMessage(2, 1, mocks.MessagesAppendedConversationTopic2).
-		WithCurrents(2, 1, "String Alogrithms").
-		WithTopic("System Design", 3).
-		WithTopic("Databases and Data Management", 4).
-		WithTopic("Behavioral", 5).
-		WithTopic("General Backend Knowledge", 6)
-
+	builder.WithQuestion(2, 1, "Can you write me a func to reverse a string?").
+		WithMessage(2, 1, mocks.MessagesAppendedConversationT2Q1)
 	return builder.Build()
 }
