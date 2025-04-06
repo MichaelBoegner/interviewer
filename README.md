@@ -156,7 +156,7 @@ The backend is structured using a layered architecture:
 
 #### User Management
 - `POST /api/users` - Register a new user
-- `GET /api/users/:id` - Get user profile
+- `GET /api/users/{id}` - Get user profile
 
 #### Authentication
 - `POST /api/auth/login` - User login
@@ -166,7 +166,8 @@ The backend is structured using a layered architecture:
 - `POST /api/interviews` - Create a new interview
 
 #### Conversations
-- `POST /api/conversations/` - Create a new conversation
+- `POST /api/conversations/create` - Create a new conversation
+- `POST /api/conversations/append` - Append an existing conversation
 
 ## 🗄 Database Schema
 
