@@ -140,7 +140,7 @@ func Test_InterviewsHandler_Integration(t *testing.T) {
 	}
 }
 func Test_CreateConversationsHandler_Integration(t *testing.T) {
-
+	newCreatedConversationMock := conversationBuilder.NewCreatedConversationMock()
 	tests := []TestCase{
 		{
 			name:   "CreateConversation_Success",
@@ -153,10 +153,10 @@ func Test_CreateConversationsHandler_Integration(t *testing.T) {
 			headerValue:    "Bearer " + jwtoken,
 			expectedStatus: http.StatusCreated,
 			respBody: handlers.ReturnVals{
-				Conversation: conversationBuilder.NewCreatedConversationMock(),
+				Conversation: newCreatedConversationMock,
 			},
-			DBCheck:      false,
-			Conversation: conversationBuilder.NewCreatedConversationMock(),
+			DBCheck:      true,
+			Conversation: newCreatedConversationMock,
 		},
 		{
 			name:   "CreateConversation_MissingBearer&Token",
@@ -294,6 +294,7 @@ func Test_CreateConversationsHandler_Integration(t *testing.T) {
 }
 
 func Test_AppendConversationsHandler_Integration(t *testing.T) {
+	newAppendedConversationMock := conversationBuilder.NewAppendedConversationMock()
 	tests := []TestCase{
 		{
 			name:   "AppendConversation_Success",
@@ -307,10 +308,10 @@ func Test_AppendConversationsHandler_Integration(t *testing.T) {
 			headerValue:    "Bearer " + jwtoken,
 			expectedStatus: http.StatusCreated,
 			respBody: handlers.ReturnVals{
-				Conversation: conversationBuilder.NewAppendedConversationMock(),
+				Conversation: newAppendedConversationMock,
 			},
 			DBCheck:      false,
-			Conversation: conversationBuilder.NewAppendedConversationMock(),
+			Conversation: newAppendedConversationMock,
 		},
 		{
 			name:   "AppendConversation_MissingBearer&Token",

@@ -18,7 +18,7 @@ func NewConversationBuilder() *ConversationBuilder {
 			ID:                    1,
 			InterviewID:           1,
 			CurrentTopic:          1,
-			CurrentSubtopic:       "None",
+			CurrentSubtopic:       "Subtopic2",
 			CurrentQuestionNumber: 2,
 			CreatedAt:             now,
 			UpdatedAt:             now,
@@ -57,8 +57,8 @@ func (b *ConversationBuilder) WithQuestion(topicID, questionNumber int, prompt s
 	return b
 }
 
-func (b *ConversationBuilder) WithMessage(topicID, questionNumber int, message []conversation.Message) *ConversationBuilder {
-	b.Convo.Topics[topicID].Questions[questionNumber].Messages = append(b.Convo.Topics[topicID].Questions[questionNumber].Messages, message...)
+func (b *ConversationBuilder) WithMessage(topicID, questionNumber int, messages []conversation.Message) *ConversationBuilder {
+	b.Convo.Topics[topicID].Questions[questionNumber].Messages = append(b.Convo.Topics[topicID].Questions[questionNumber].Messages, messages...)
 
 	return b
 }

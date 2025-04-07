@@ -73,6 +73,7 @@ func CreateConversation(
 	}
 
 	conversation.CurrentQuestionNumber++
+	conversation.CurrentSubtopic = chatGPTResponse.NextSubtopic
 	questionNumber++
 	_, err = repo.UpdateConversationCurrents(conversationID, topicID, questionNumber, chatGPTResponse.NextSubtopic)
 	if err != nil {
