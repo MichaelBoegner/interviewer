@@ -23,31 +23,31 @@ var (
 		Question:     "None",
 		Score:        0,
 		Feedback:     "None",
-		NextQuestion: "Tell me a little bit about your work history.",
+		NextQuestion: "Question1",
 		NextTopic:    "Introduction",
-		NextSubtopic: "General Background",
+		NextSubtopic: "Subtopic1",
 		CreatedAt:    now,
 	}
 	responseConversationCreated = &chatgpt.ChatGPTResponse{
 		Topic:        "Introduction",
-		Subtopic:     "General Background",
-		Question:     "Tell me a little bit about your work history",
+		Subtopic:     "Subtopic1",
+		Question:     "Question1",
 		Score:        10,
-		Feedback:     "Sounds like you have a good deal of problem solving experience.",
-		NextQuestion: "Can you tell me about your most recent backend project?",
+		Feedback:     "Feedback1",
+		NextQuestion: "Question2",
 		NextTopic:    "Introduction",
-		NextSubtopic: "General Engineering Experience",
+		NextSubtopic: "Subtopic2",
 		CreatedAt:    now,
 	}
 	responseConversationAppended = &chatgpt.ChatGPTResponse{
 		Topic:        "Introduction",
-		Subtopic:     "General Engineering Experience",
-		Question:     "Can you tell me about your most recent backend project?",
+		Subtopic:     "Subtopic2",
+		Question:     "Question2",
 		Score:        10,
-		Feedback:     "Great job building something more than just a toy project!",
-		NextQuestion: "Can you write me a func to reverse a string?",
+		Feedback:     "Feedback2",
+		NextQuestion: "Question3",
 		NextTopic:    "Coding",
-		NextSubtopic: "String Alogrithms",
+		NextSubtopic: "Subtopic3",
 		CreatedAt:    now,
 	}
 )
@@ -81,7 +81,7 @@ func init() {
 			TopicID:        1,
 			QuestionNumber: 1,
 			Author:         "interviewer",
-			Content:        "Tell me a little bit about your work history.",
+			Content:        "Question1",
 			CreatedAt:      now,
 		},
 		{
@@ -89,7 +89,7 @@ func init() {
 			TopicID:        1,
 			QuestionNumber: 1,
 			Author:         "user",
-			Content:        "I have been a TSE for 5 years.",
+			Content:        "Answer1",
 			CreatedAt:      now,
 		},
 	}
@@ -103,34 +103,26 @@ func init() {
 			Content:        responseConversationMockCreated,
 			CreatedAt:      now,
 		},
-		{
-			ConversationID: 1,
-			TopicID:        1,
-			QuestionNumber: 2,
-			Author:         "user",
-			Content:        "I built a mock interviewer app in Go.",
-			CreatedAt:      now,
-		},
 	}
 
-	MessagesAppendedConversationT2Q1 = []conversation.Message{
-		{
-			ConversationID: 1,
-			TopicID:        2,
-			QuestionNumber: 1,
-			Author:         "system",
-			Content:        TestPrompt,
-			CreatedAt:      now,
-		},
-		{
-			ConversationID: 1,
-			TopicID:        2,
-			QuestionNumber: 1,
-			Author:         "interviewer",
-			Content:        responseConversationMockAppended,
-			CreatedAt:      now,
-		},
-	}
+	// MessagesAppendedConversationT2Q1 = []conversation.Message{
+	// 	{
+	// 		ConversationID: 1,
+	// 		TopicID:        2,
+	// 		QuestionNumber: 1,
+	// 		Author:         "system",
+	// 		Content:        TestPrompt,
+	// 		CreatedAt:      now,
+	// 	},
+	// 	{
+	// 		ConversationID: 1,
+	// 		TopicID:        2,
+	// 		QuestionNumber: 1,
+	// 		Author:         "interviewer",
+	// 		Content:        responseConversationMockAppended,
+	// 		CreatedAt:      now,
+	// 	},
+	// }
 
 }
 

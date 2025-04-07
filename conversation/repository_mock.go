@@ -67,7 +67,7 @@ func (repo *MockRepo) CreateMessages(conversation *Conversation, messages []Mess
 	return nil
 }
 
-func (repo *MockRepo) AddMessage(conversationID, topic_id, questionNumber int, message *Message) (int, error) {
+func (repo *MockRepo) AddMessage(conversationID, topic_id, questionNumber int, message Message) (int, error) {
 	return 3, nil
 }
 

@@ -19,7 +19,7 @@ func NewConversationBuilder() *ConversationBuilder {
 			InterviewID:           1,
 			CurrentTopic:          1,
 			CurrentSubtopic:       "None",
-			CurrentQuestionNumber: 1,
+			CurrentQuestionNumber: 2,
 			CreatedAt:             now,
 			UpdatedAt:             now,
 			Topics:                make(map[int]conversation.Topic),
@@ -78,9 +78,9 @@ func (b *ConversationBuilder) Build() *conversation.Conversation {
 func NewCreatedConversationMock() *conversation.Conversation {
 	builder := NewConversationBuilder()
 	builder.WithTopic("Introduction", 1).
-		WithQuestion(1, 1, "Tell me a little bit about your work history.").
+		WithQuestion(1, 1, "Question1").
 		WithMessage(1, 1, mocks.MessagesCreatedConversationT1Q1).
-		WithQuestion(1, 2, "Tell me a little bit about your work history.").
+		WithQuestion(1, 2, "Question2").
 		WithMessage(1, 2, mocks.MessagesCreatedConversationT1Q2).
 		WithTopic("Coding", 2).
 		WithTopic("System Design", 3).

@@ -3,7 +3,6 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -177,15 +176,12 @@ func (h *Handler) CreateConversationsHandler(w http.ResponseWriter, r *http.Requ
 	params := &middleware.AcceptedVals{}
 	err := json.NewDecoder(r.Body).Decode(params)
 	if err != nil {
-		//DEBUG
-		fmt.Printf("\n\nparmas: %v\n", params)
 		log.Printf("Decoding params failed: %v", err)
 		respondWithError(w, http.StatusInternalServerError, "Internal Server Error")
 	}
 
 	interviewID, err := getPathID(r, "/api/conversations/create/")
-	//DEBUG
-	fmt.Printf("\n\ninterviewID: %v\n", interviewID)
+
 	if err != nil {
 		log.Printf("PathID error: %v\n", err)
 		respondWithError(w, http.StatusBadRequest, "Missing ID")
