@@ -18,7 +18,7 @@ import (
 	"github.com/michaelboegner/interviewer/interview"
 )
 
-func Test_InterviewsHandler_Post_Integration(t *testing.T) {
+func Test_InterviewsHandler_Integration(t *testing.T) {
 	tests := []TestCase{
 		{
 			name:           "CreateInterview_Success",
@@ -139,7 +139,7 @@ func Test_InterviewsHandler_Post_Integration(t *testing.T) {
 		})
 	}
 }
-func Test_CreateConversationsHandler_Post_Integration(t *testing.T) {
+func Test_CreateConversationsHandler_Integration(t *testing.T) {
 
 	tests := []TestCase{
 		{
@@ -293,7 +293,7 @@ func Test_CreateConversationsHandler_Post_Integration(t *testing.T) {
 	}
 }
 
-func Test_AppendConversationsHandler_Post_Integration(t *testing.T) {
+func Test_AppendConversationsHandler_Integration(t *testing.T) {
 	t.Skip("DEBUG: Fixing factories for create first")
 	tests := []TestCase{
 		{
