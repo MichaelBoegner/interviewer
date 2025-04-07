@@ -249,7 +249,7 @@ func (h *Handler) AppendConversationsHandler(w http.ResponseWriter, r *http.Requ
 	conversationReturned, err := conversation.GetConversation(h.ConversationRepo, params.ConversationID)
 	if err != nil {
 		log.Printf("GetConversation error: %v", err)
-		respondWithError(w, http.StatusBadRequest, "Invalid ID")
+		respondWithError(w, http.StatusBadRequest, "Invalid ID.")
 		return
 	}
 

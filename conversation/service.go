@@ -163,9 +163,9 @@ func AppendConversation(
 		resetQuestionNumber := 1
 		conversation.CurrentTopic = nextTopicID
 		conversation.CurrentSubtopic = chatGPTResponse.NextSubtopic
-		conversation.CurrentQuestionNumber = 1
+		conversation.CurrentQuestionNumber = resetQuestionNumber
 
-		_, err := repo.UpdateConversationCurrents(conversationID, conversation.CurrentTopic, conversation.CurrentQuestionNumber, conversation.CurrentSubtopic)
+		_, err := repo.UpdateConversationCurrents(conversationID, nextTopicID, resetQuestionNumber, chatGPTResponse.NextSubtopic)
 		if err != nil {
 			log.Printf("UpdateConversationTopic error: %v", err)
 			return nil, err
@@ -175,9 +175,9 @@ func AppendConversation(
 		topic.ConversationID = conversationID
 
 		messages := []Message{
-			newMessage(conversationID, conversation.CurrentTopic, resetQuestionNumber, Interviewer, chatGPTResponseString),
+			newMessage(conversationID, nextTopicID, resetQuestionNumber, Interviewer, chatGPTResponseString),
 		}
-		question := newQuestion(conversationID, topicID, questionNumber, messages)
+		question := newQuestion(conversationID, nextTopicID, resetQuestionNumber, messages)
 
 		topic.Questions = make(map[int]*Question)
 		topic.Questions[resetQuestionNumber] = question
