@@ -30,7 +30,7 @@ func Test_InterviewsHandler_Integration(t *testing.T) {
 			expectedStatus: http.StatusCreated,
 			respBody: handlers.ReturnVals{
 				InterviewID:   1,
-				FirstQuestion: "Tell me a little bit about your work history.",
+				FirstQuestion: "Question1",
 			},
 			DBCheck: true,
 			Interview: &interview.Interview{
@@ -43,7 +43,7 @@ func Test_InterviewsHandler_Integration(t *testing.T) {
 				Score:           100,
 				Language:        "Python",
 				Prompt:          mocks.TestPrompt,
-				FirstQuestion:   "Tell me a little bit about your work history.",
+				FirstQuestion:   "Question1",
 				Subtopic:        "None",
 			},
 		},
@@ -153,10 +153,10 @@ func Test_CreateConversationsHandler_Integration(t *testing.T) {
 			headerValue:    "Bearer " + jwtoken,
 			expectedStatus: http.StatusCreated,
 			respBody: handlers.ReturnVals{
-				Conversation: testutil.NewCreatedConversationMock(),
+				Conversation: conversationBuilder.NewCreatedConversationMock(),
 			},
 			DBCheck:      false,
-			Conversation: testutil.NewCreatedConversationMock(),
+			Conversation: conversationBuilder.NewCreatedConversationMock(),
 		},
 		{
 			name:   "CreateConversation_MissingBearer&Token",
@@ -294,7 +294,6 @@ func Test_CreateConversationsHandler_Integration(t *testing.T) {
 }
 
 func Test_AppendConversationsHandler_Integration(t *testing.T) {
-	t.Skip("DEBUG: Fixing factories for create first")
 	tests := []TestCase{
 		{
 			name:   "AppendConversation_Success",
@@ -302,16 +301,16 @@ func Test_AppendConversationsHandler_Integration(t *testing.T) {
 			url:    testutil.TestServerURL + "/api/conversations/append/1",
 			reqBody: `{
 				"conversation_id" : 1,
-				"message" : "I built a mock interviewer app in Go."
+				"message" : "Answer2"
 			}`,
 			headerKey:      "Authorization",
 			headerValue:    "Bearer " + jwtoken,
 			expectedStatus: http.StatusCreated,
 			respBody: handlers.ReturnVals{
-				Conversation: testutil.NewAppendedConversationMock(),
+				Conversation: conversationBuilder.NewAppendedConversationMock(),
 			},
 			DBCheck:      false,
-			Conversation: testutil.NewAppendedConversationMock(),
+			Conversation: conversationBuilder.NewAppendedConversationMock(),
 		},
 		{
 			name:   "AppendConversation_MissingBearer&Token",
@@ -319,7 +318,7 @@ func Test_AppendConversationsHandler_Integration(t *testing.T) {
 			url:    testutil.TestServerURL + "/api/conversations/append/1",
 			reqBody: `{
 				"conversation_id" : 1,
-				"message" : "I have been a TSE for 5 years."
+				"message" : "Answer2"
 			}`,
 			headerKey:      "Authorization",
 			expectedStatus: http.StatusUnauthorized,
@@ -334,7 +333,7 @@ func Test_AppendConversationsHandler_Integration(t *testing.T) {
 			url:    testutil.TestServerURL + "/api/conversations/append/1",
 			reqBody: `{
 				"conversation_id" : 1,
-				"message" : "I have been a TSE for 5 years."
+				"message" : "Answer2"
 			}`,
 			headerKey:      "Authorization",
 			headerValue:    "Bearer ",
@@ -350,7 +349,7 @@ func Test_AppendConversationsHandler_Integration(t *testing.T) {
 			url:    testutil.TestServerURL + "/api/conversations/append/1",
 			reqBody: `{
 				"conversation_id" : 1,
-				"message" : "I have been a TSE for 5 years."
+				"message" : "Answer2"
 			}`,
 			headerKey:      "Authorization",
 			headerValue:    "as9d8f7as09d87",
@@ -366,7 +365,7 @@ func Test_AppendConversationsHandler_Integration(t *testing.T) {
 			url:    testutil.TestServerURL + "/api/conversations/append/1",
 			reqBody: `{
 				"conversation_id" : 1,
-				"message" : "I have been a TSE for 5 years."
+				"message" : "Answer2"
 			}`,
 			headerKey:      "Authorization",
 			headerValue:    "Bearer " + expiredJWT,
@@ -382,7 +381,7 @@ func Test_AppendConversationsHandler_Integration(t *testing.T) {
 			url:    testutil.TestServerURL + "/api/conversations/append/",
 			reqBody: `{
 				"conversation_id" : 1,
-				"message" : "I have been a TSE for 5 years."
+				"message" : "Answer2"
 			}`,
 			headerKey:      "Authorization",
 			headerValue:    "Bearer " + jwtoken,
@@ -398,7 +397,7 @@ func Test_AppendConversationsHandler_Integration(t *testing.T) {
 			url:    testutil.TestServerURL + "/api/conversations/append/2",
 			reqBody: `{
 				"conversation_id" : 1,
-				"message" : "I have been a TSE for 5 years."
+				"message" : "Answer2"
 			}`,
 			headerKey:      "Authorization",
 			headerValue:    "Bearer " + jwtoken,

@@ -41,10 +41,11 @@ type TestCase struct {
 }
 
 var (
-	Handler    *handlers.Handler
-	jwtoken    string
-	expiredJWT string
-	userID     int
+	Handler             *handlers.Handler
+	jwtoken             string
+	expiredJWT          string
+	userID              int
+	conversationBuilder *testutil.ConversationBuilder
 )
 
 func TestMain(m *testing.M) {
@@ -68,6 +69,7 @@ func TestMain(m *testing.M) {
 
 	jwtoken, userID = testutil.CreateTestUserAndJWT()
 	expiredJWT = testutil.CreateTestJWT(userID, -1)
+	conversationBuilder = testutil.NewConversationBuilder()
 
 	code := m.Run()
 

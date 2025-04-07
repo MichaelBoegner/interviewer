@@ -10,14 +10,15 @@ import (
 )
 
 var (
-	responseConversationMockCreated  string
-	responseConversationMockAppended string
-	CreatedConversationMock          *conversation.Conversation
-	MessagesCreatedConversationT1Q1  []conversation.Message
-	MessagesCreatedConversationT1Q2  []conversation.Message
-	MessagesAppendedConversationT2Q1 []conversation.Message
-	now                              = time.Now().UTC()
-	responseInterview                = &chatgpt.ChatGPTResponse{
+	responseConversationMockCreated   string
+	responseConversationMockAppended  string
+	CreatedConversationMock           *conversation.Conversation
+	MessagesCreatedConversationT1Q1   []conversation.Message
+	MessagesCreatedConversationT1Q2   []conversation.Message
+	MessagesCreatedConversationT1Q2A2 []conversation.Message
+	MessagesAppendedConversationT2Q1  []conversation.Message
+	now                               = time.Now().UTC()
+	responseInterview                 = &chatgpt.ChatGPTResponse{
 		Topic:        "None",
 		Subtopic:     "None",
 		Question:     "None",
@@ -45,9 +46,9 @@ var (
 		Question:     "Question2",
 		Score:        10,
 		Feedback:     "Feedback2",
-		NextQuestion: "Question3",
+		NextQuestion: "Question1",
 		NextTopic:    "Coding",
-		NextSubtopic: "Subtopic3",
+		NextSubtopic: "Subtopic1",
 		CreatedAt:    now,
 	}
 )
@@ -105,24 +106,35 @@ func init() {
 		},
 	}
 
-	// MessagesAppendedConversationT2Q1 = []conversation.Message{
-	// 	{
-	// 		ConversationID: 1,
-	// 		TopicID:        2,
-	// 		QuestionNumber: 1,
-	// 		Author:         "system",
-	// 		Content:        TestPrompt,
-	// 		CreatedAt:      now,
-	// 	},
-	// 	{
-	// 		ConversationID: 1,
-	// 		TopicID:        2,
-	// 		QuestionNumber: 1,
-	// 		Author:         "interviewer",
-	// 		Content:        responseConversationMockAppended,
-	// 		CreatedAt:      now,
-	// 	},
-	// }
+	MessagesCreatedConversationT1Q2A2 = []conversation.Message{
+		{
+			ConversationID: 1,
+			TopicID:        1,
+			QuestionNumber: 2,
+			Author:         "user",
+			Content:        "Answer2",
+			CreatedAt:      now,
+		},
+	}
+
+	MessagesAppendedConversationT2Q1 = []conversation.Message{
+		{
+			ConversationID: 1,
+			TopicID:        2,
+			QuestionNumber: 1,
+			Author:         "system",
+			Content:        TestPrompt,
+			CreatedAt:      now,
+		},
+		{
+			ConversationID: 1,
+			TopicID:        2,
+			QuestionNumber: 1,
+			Author:         "interviewer",
+			Content:        responseConversationMockAppended,
+			CreatedAt:      now,
+		},
+	}
 
 }
 

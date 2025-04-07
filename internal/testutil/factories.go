@@ -8,13 +8,13 @@ import (
 )
 
 type ConversationBuilder struct {
-	convo *conversation.Conversation
+	Convo *conversation.Conversation
 }
 
 func NewConversationBuilder() *ConversationBuilder {
 	now := time.Now().UTC()
 	return &ConversationBuilder{
-		convo: &conversation.Conversation{
+		Convo: &conversation.Conversation{
 			ID:                    1,
 			InterviewID:           1,
 			CurrentTopic:          1,
@@ -28,7 +28,7 @@ func NewConversationBuilder() *ConversationBuilder {
 }
 
 func (b *ConversationBuilder) WithTopic(name string, id int) *ConversationBuilder {
-	b.convo.Topics[id] = conversation.Topic{
+	b.Convo.Topics[id] = conversation.Topic{
 		ID:   id,
 		Name: name,
 	}
@@ -38,46 +38,41 @@ func (b *ConversationBuilder) WithTopic(name string, id int) *ConversationBuilde
 func (b *ConversationBuilder) WithQuestion(topicID, questionNumber int, prompt string) *ConversationBuilder {
 
 	messages := []conversation.Message{}
-	topic := b.convo.Topics[topicID]
-	topic.ConversationID = b.convo.ID
+	topic := b.Convo.Topics[topicID]
+	topic.ConversationID = b.Convo.ID
 	if topic.Questions == nil {
 		questions := make(map[int]*conversation.Question)
 		topic.Questions = questions
 	}
 
 	topic.Questions[questionNumber] = &conversation.Question{
-		ConversationID: b.convo.ID,
+		ConversationID: b.Convo.ID,
 		TopicID:        topicID,
 		QuestionNumber: questionNumber,
 		Prompt:         prompt,
 		CreatedAt:      time.Now().UTC(),
 		Messages:       messages,
 	}
-	b.convo.Topics[topicID] = topic
+	b.Convo.Topics[topicID] = topic
 	return b
 }
 
 func (b *ConversationBuilder) WithMessage(topicID, questionNumber int, message []conversation.Message) *ConversationBuilder {
-	b.convo.Topics[topicID].Questions[questionNumber].Messages = append(b.convo.Topics[topicID].Questions[questionNumber].Messages, message...)
+	b.Convo.Topics[topicID].Questions[questionNumber].Messages = append(b.Convo.Topics[topicID].Questions[questionNumber].Messages, message...)
 
 	return b
 }
 
 func (b *ConversationBuilder) WithCurrents(currentTopic, currentQuestionNumber int, currentSubtopic string) *ConversationBuilder {
-	b.convo.CurrentTopic = currentTopic
-	b.convo.CurrentSubtopic = currentSubtopic
-	b.convo.CurrentQuestionNumber = currentQuestionNumber
+	b.Convo.CurrentTopic = currentTopic
+	b.Convo.CurrentSubtopic = currentSubtopic
+	b.Convo.CurrentQuestionNumber = currentQuestionNumber
 
 	return b
 }
 
-func (b *ConversationBuilder) Build() *conversation.Conversation {
-	return b.convo
-}
-
-func NewCreatedConversationMock() *conversation.Conversation {
-	builder := NewConversationBuilder()
-	builder.WithTopic("Introduction", 1).
+func (b *ConversationBuilder) NewCreatedConversationMock() *conversation.Conversation {
+	b.WithTopic("Introduction", 1).
 		WithQuestion(1, 1, "Question1").
 		WithMessage(1, 1, mocks.MessagesCreatedConversationT1Q1).
 		WithQuestion(1, 2, "Question2").
@@ -88,12 +83,13 @@ func NewCreatedConversationMock() *conversation.Conversation {
 		WithTopic("Behavioral", 5).
 		WithTopic("General Backend Knowledge", 6)
 
-	return builder.Build()
+	return b.Convo
 }
 
-func NewAppendedConversationMock() *conversation.Conversation {
-	builder := NewConversationBuilder()
-	builder.WithQuestion(2, 1, "Can you write me a func to reverse a string?").
+func (b *ConversationBuilder) NewAppendedConversationMock() *conversation.Conversation {
+	b.WithCurrents(2, 1, "Subtopic1").
+		WithMessage(1, 2, mocks.MessagesCreatedConversationT1Q2A2).
+		WithQuestion(2, 1, "Question1").
 		WithMessage(2, 1, mocks.MessagesAppendedConversationT2Q1)
-	return builder.Build()
+	return b.Convo
 }
