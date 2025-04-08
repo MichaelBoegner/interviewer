@@ -310,7 +310,7 @@ func Test_AppendConversationsHandler_Integration(t *testing.T) {
 			headerValue:    "Bearer " + jwtoken,
 			expectedStatus: http.StatusCreated,
 			respBodyFunc:   conversationBuilder.NewAppendedConversationMock(),
-			DBCheck:        false,
+			DBCheck:        true,
 		},
 		{
 			name:   "AppendConversation_MissingBearer&Token",
@@ -418,9 +418,7 @@ func Test_AppendConversationsHandler_Integration(t *testing.T) {
 		// 	headerKey:      "Authorization",
 		// 	headerValue:    "Bearer " + jwtoken,
 		// 	expectedStatus: http.StatusCreated,
-		// 	respBody: handlers.ReturnVals{
-		// 		Conversation: conversationBuilder.NewIsFinishedConversationMock(),
-		// 	},
+		// 	respBodyFunc: conversationBuilder.NewIsFinishedConversationMock(),
 		// 	DBCheck: false,
 		// },
 	}
