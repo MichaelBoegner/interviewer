@@ -10,15 +10,16 @@ import (
 )
 
 var (
-	responseConversationMockCreated   string
-	responseConversationMockAppended  string
-	CreatedConversationMock           *conversation.Conversation
-	MessagesCreatedConversationT1Q1   []conversation.Message
-	MessagesCreatedConversationT1Q2   []conversation.Message
-	MessagesCreatedConversationT1Q2A2 []conversation.Message
-	MessagesAppendedConversationT2Q1  []conversation.Message
-	now                               = time.Now().UTC()
-	responseInterview                 = &chatgpt.ChatGPTResponse{
+	responseConversationMockCreated    string
+	responseConversationMockAppended   string
+	CreatedConversationMock            *conversation.Conversation
+	MessagesCreatedConversationT1Q1    []conversation.Message
+	MessagesCreatedConversationT1Q2    []conversation.Message
+	MessagesCreatedConversationT1Q2A2  []conversation.Message
+	MessagesAppendedConversationT2Q1   []conversation.Message
+	MessagesAppendedConversationT6Q1A1 []conversation.Message
+	now                                = time.Now().UTC()
+	responseInterview                  = &chatgpt.ChatGPTResponse{
 		Topic:        "None",
 		Subtopic:     "None",
 		Question:     "None",
@@ -49,6 +50,18 @@ var (
 		NextQuestion: "Question1",
 		NextTopic:    "Coding",
 		NextSubtopic: "Subtopic1",
+		CreatedAt:    now,
+	}
+
+	responseConversationIsFinished = &chatgpt.ChatGPTResponse{
+		Topic:        "General Backend Knowledge",
+		Subtopic:     "Subtopic1",
+		Question:     "Question1",
+		Score:        10,
+		Feedback:     "Feedback1",
+		NextQuestion: "Question2",
+		NextTopic:    "General Backend Knowledge",
+		NextSubtopic: "Subtopic2",
 		CreatedAt:    now,
 	}
 )
@@ -128,6 +141,17 @@ func init() {
 		},
 	}
 
+	MessagesAppendedConversationT6Q1A1 = []conversation.Message{
+		{
+			ConversationID: 1,
+			TopicID:        6,
+			QuestionNumber: 1,
+			Author:         "user",
+			Content:        "Answer1",
+			CreatedAt:      now,
+		},
+	}
+
 }
 
 type MockOpenAIClient struct{}
@@ -139,7 +163,9 @@ func (m *MockOpenAIClient) GetChatGPTResponseInterview(prompt string) (*chatgpt.
 func (m *MockOpenAIClient) GetChatGPTResponseConversation(conversationHistory []map[string]string) (*chatgpt.ChatGPTResponse, error) {
 	if len(conversationHistory) == 3 {
 		return responseConversationCreated, nil
+	} else if len(conversationHistory) == 6 {
+		return responseConversationAppended, nil
 	}
 
-	return responseConversationAppended, nil
+	return responseConversationIsFinished, nil
 }

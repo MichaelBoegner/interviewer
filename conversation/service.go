@@ -337,10 +337,8 @@ func getConversationHistory(conversation *Conversation) ([]map[string]string, er
 		return nil, errors.New("no questions found in conversation")
 	}
 
-	// Iterate through all questions within the current topic
 	for _, question := range topic.Questions {
 		for i, message := range question.Messages {
-			// Skip the system prompt message (only if it's the very first message in the first question)
 			if conversation.CurrentTopic == 1 && conversation.CurrentQuestionNumber == 1 && i == 0 {
 				continue
 			}

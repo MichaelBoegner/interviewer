@@ -35,6 +35,7 @@ type TestCase struct {
 	expectedStatus int
 	expectError    bool
 	respBody       handlers.ReturnVals
+	respBodyFunc   func() handlers.ReturnVals
 	DBCheck        bool
 	Interview      *interview.Interview
 	Conversation   *conversation.Conversation

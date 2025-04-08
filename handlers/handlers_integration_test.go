@@ -140,7 +140,6 @@ func Test_InterviewsHandler_Integration(t *testing.T) {
 	}
 }
 func Test_CreateConversationsHandler_Integration(t *testing.T) {
-	newCreatedConversationMock := conversationBuilder.NewCreatedConversationMock()
 	tests := []TestCase{
 		{
 			name:   "CreateConversation_Success",
@@ -152,11 +151,8 @@ func Test_CreateConversationsHandler_Integration(t *testing.T) {
 			headerKey:      "Authorization",
 			headerValue:    "Bearer " + jwtoken,
 			expectedStatus: http.StatusCreated,
-			respBody: handlers.ReturnVals{
-				Conversation: newCreatedConversationMock,
-			},
-			DBCheck:      true,
-			Conversation: newCreatedConversationMock,
+			respBodyFunc:   conversationBuilder.NewCreatedConversationMock(),
+			DBCheck:        true,
 		},
 		{
 			name:   "CreateConversation_MissingBearer&Token",
@@ -268,7 +264,13 @@ func Test_CreateConversationsHandler_Integration(t *testing.T) {
 				t.Fatalf("[%s] expected status %d, got %d\n", tc.name, tc.expectedStatus, respCode)
 			}
 
-			expected := tc.respBody
+			var expected handlers.ReturnVals
+
+			if tc.respBodyFunc != nil {
+				expected = tc.respBodyFunc()
+			} else {
+				expected = tc.respBody
+			}
 			got := *respUnmarshalled
 
 			if diff := cmp.Diff(expected, got, cmpopts.EquateApproxTime(time.Second)); diff != "" {
@@ -282,7 +284,7 @@ func Test_CreateConversationsHandler_Integration(t *testing.T) {
 					t.Fatalf("Assert Database: GetConversation failing: %v", err)
 				}
 
-				expectedDB := tc.Conversation
+				expectedDB := expected.Conversation
 				gotDB := conversation
 
 				if diff := cmp.Diff(expectedDB, gotDB, cmpopts.EquateApproxTime(time.Second)); diff != "" {
@@ -294,7 +296,7 @@ func Test_CreateConversationsHandler_Integration(t *testing.T) {
 }
 
 func Test_AppendConversationsHandler_Integration(t *testing.T) {
-	newAppendedConversationMock := conversationBuilder.NewAppendedConversationMock()
+	// t.Skip()
 	tests := []TestCase{
 		{
 			name:   "AppendConversation_Success",
@@ -307,11 +309,8 @@ func Test_AppendConversationsHandler_Integration(t *testing.T) {
 			headerKey:      "Authorization",
 			headerValue:    "Bearer " + jwtoken,
 			expectedStatus: http.StatusCreated,
-			respBody: handlers.ReturnVals{
-				Conversation: newAppendedConversationMock,
-			},
-			DBCheck:      false,
-			Conversation: newAppendedConversationMock,
+			respBodyFunc:   conversationBuilder.NewAppendedConversationMock(),
+			DBCheck:        false,
 		},
 		{
 			name:   "AppendConversation_MissingBearer&Token",
@@ -408,6 +407,22 @@ func Test_AppendConversationsHandler_Integration(t *testing.T) {
 			},
 			DBCheck: false,
 		},
+		// {
+		// 	name:   "AppendConversation_isFinished",
+		// 	method: "POST",
+		// 	url:    testutil.TestServerURL + "/api/conversations/append/1",
+		// 	reqBody: `{
+		// 		"conversation_id" : 1,
+		// 		"message" : "Answer1"
+		// 	}`,
+		// 	headerKey:      "Authorization",
+		// 	headerValue:    "Bearer " + jwtoken,
+		// 	expectedStatus: http.StatusCreated,
+		// 	respBody: handlers.ReturnVals{
+		// 		Conversation: conversationBuilder.NewIsFinishedConversationMock(),
+		// 	},
+		// 	DBCheck: false,
+		// },
 	}
 
 	for _, tc := range tests {
@@ -429,7 +444,12 @@ func Test_AppendConversationsHandler_Integration(t *testing.T) {
 				t.Fatalf("[%s] expected status %d, got %d\n", tc.name, tc.expectedStatus, respCode)
 			}
 
-			expected := tc.respBody
+			var expected handlers.ReturnVals
+			if tc.respBodyFunc != nil {
+				expected = tc.respBodyFunc()
+			} else {
+				expected = tc.respBody
+			}
 			got := *respUnmarshalled
 
 			if diff := cmp.Diff(expected, got, cmpopts.EquateApproxTime(time.Second)); diff != "" {
@@ -443,7 +463,7 @@ func Test_AppendConversationsHandler_Integration(t *testing.T) {
 					t.Fatalf("Assert Database: GetConversation failing: %v", err)
 				}
 
-				expectedDB := tc.Conversation
+				expectedDB := expected.Conversation
 				gotDB := conversation
 
 				if diff := cmp.Diff(expectedDB, gotDB, cmpopts.EquateApproxTime(time.Second)); diff != "" {

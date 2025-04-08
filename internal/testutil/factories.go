@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/michaelboegner/interviewer/conversation"
+	"github.com/michaelboegner/interviewer/handlers"
 	"github.com/michaelboegner/interviewer/internal/mocks"
 )
 
@@ -71,25 +72,36 @@ func (b *ConversationBuilder) WithCurrents(currentTopic, currentQuestionNumber i
 	return b
 }
 
-func (b *ConversationBuilder) NewCreatedConversationMock() *conversation.Conversation {
-	b.WithTopic("Introduction", 1).
-		WithQuestion(1, 1, "Question1").
-		WithMessage(1, 1, mocks.MessagesCreatedConversationT1Q1).
-		WithQuestion(1, 2, "Question2").
-		WithMessage(1, 2, mocks.MessagesCreatedConversationT1Q2).
-		WithTopic("Coding", 2).
-		WithTopic("System Design", 3).
-		WithTopic("Databases and Data Management", 4).
-		WithTopic("Behavioral", 5).
-		WithTopic("General Backend Knowledge", 6)
-
-	return b.Convo
+func (b *ConversationBuilder) NewCreatedConversationMock() func() handlers.ReturnVals {
+	return func() handlers.ReturnVals {
+		b.WithTopic("Introduction", 1).
+			WithQuestion(1, 1, "Question1").
+			WithMessage(1, 1, mocks.MessagesCreatedConversationT1Q1).
+			WithQuestion(1, 2, "Question2").
+			WithMessage(1, 2, mocks.MessagesCreatedConversationT1Q2).
+			WithTopic("Coding", 2).
+			WithTopic("System Design", 3).
+			WithTopic("Databases and Data Management", 4).
+			WithTopic("Behavioral", 5).
+			WithTopic("General Backend Knowledge", 6)
+		return handlers.ReturnVals{Conversation: b.Convo}
+	}
 }
 
-func (b *ConversationBuilder) NewAppendedConversationMock() *conversation.Conversation {
-	b.WithCurrents(2, 1, "Subtopic1").
-		WithMessage(1, 2, mocks.MessagesCreatedConversationT1Q2A2).
-		WithQuestion(2, 1, "Question1").
-		WithMessage(2, 1, mocks.MessagesAppendedConversationT2Q1)
+func (b *ConversationBuilder) NewAppendedConversationMock() func() handlers.ReturnVals {
+	return func() handlers.ReturnVals {
+		b.WithCurrents(2, 1, "Subtopic1").
+			WithMessage(1, 2, mocks.MessagesCreatedConversationT1Q2A2).
+			WithQuestion(2, 1, "Question1").
+			WithMessage(2, 1, mocks.MessagesAppendedConversationT2Q1)
+		return handlers.ReturnVals{Conversation: b.Convo}
+	}
+}
+
+func (b *ConversationBuilder) NewIsFinishedConversationMock() *conversation.Conversation {
+	b.WithCurrents(0, 0, "Finished").
+		WithQuestion(6, 1, "Question1").
+		WithMessage(6, 1, mocks.MessagesAppendedConversationT6Q1A1)
+
 	return b.Convo
 }
