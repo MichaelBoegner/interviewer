@@ -18,9 +18,9 @@ func NewMockRepo() *MockRepo {
 	}
 }
 
-func (m *MockRepo) CreateUser(user *User) error {
+func (m *MockRepo) CreateUser(user *User) (int, error) {
 	m.Users[0] = *user
-	return nil
+	return 1, nil
 }
 
 func (m *MockRepo) GetUser(user *User) (*User, error) {

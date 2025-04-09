@@ -55,6 +55,7 @@ type ReturnVals struct {
 	Error          string                     `json:"error,omitempty"`
 	Users          map[int]user.User          `json:"users,omitempty"`
 	Conversation   *conversation.Conversation `json:"conversation,omitempty"`
+	User           *user.User                 `json:"user,omitempty"`
 }
 
 func (h *Handler) CreateUsersHandler(w http.ResponseWriter, r *http.Request) {
@@ -80,6 +81,7 @@ func (h *Handler) CreateUsersHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	payload := &ReturnVals{
+		UserID:   user.ID,
 		Username: user.Username,
 		Email:    user.Email,
 	}

@@ -37,6 +37,7 @@ type TestCase struct {
 	DBCheck        bool
 	Interview      *interview.Interview
 	Conversation   *conversation.Conversation
+	User           *user.User
 }
 
 var (
@@ -59,7 +60,6 @@ func TestMain(m *testing.M) {
 	log.Println("Initializing test server...")
 	Handler = testutil.InitTestServer()
 
-	// 🚨 Check `TestServerURL` before running any tests
 	if testutil.TestServerURL == "" {
 		log.Fatal("TestMain: TestServerURL is empty! The server did not start properly.")
 	}
@@ -91,10 +91,16 @@ func Test_CreateUsersHandler_Integration(t *testing.T) {
 			}`,
 			expectedStatus: http.StatusCreated,
 			respBody: handlers.ReturnVals{
+				UserID:   2,
 				Username: "test",
 				Email:    "test@test.com",
 			},
-			DBCheck: false,
+			DBCheck: true,
+			User: &user.User{
+				ID:       2,
+				Username: "test",
+				Email:    "test@test.com",
+			},
 		},
 	}
 
@@ -128,14 +134,14 @@ func Test_CreateUsersHandler_Integration(t *testing.T) {
 			if tc.DBCheck {
 				user, err := user.GetUser(Handler.UserRepo, got.UserID)
 				if err != nil {
-					t.Fatalf("Assert Database: GetConversation failing: %v", err)
+					t.Fatalf("Assert Database: GetUser failing: %v", err)
 				}
 
-				expectedDB := expected
+				expectedDB := tc.User
 				gotDB := user
 
 				if diff := cmp.Diff(expectedDB, gotDB, cmpopts.EquateApproxTime(time.Second)); diff != "" {
-					t.Errorf("Mismatch (-expected +got):\n%s", diff)
+					t.Errorf("DB Mismatch (-expected +got):\n%s", diff)
 				}
 			}
 		})

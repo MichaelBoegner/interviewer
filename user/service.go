@@ -25,11 +25,12 @@ func CreateUser(repo UserRepo, username, email, password string) (*User, error) 
 		UpdatedAt: now,
 	}
 
-	err = repo.CreateUser(user)
+	id, err := repo.CreateUser(user)
 	if err != nil {
 		log.Printf("CreateUser failing: %v", err)
 		return nil, err
 	}
+	user.ID = id
 
 	return user, nil
 	// For preventing user creation in deployment:

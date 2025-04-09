@@ -3,6 +3,7 @@ package user
 import (
 	"database/sql"
 	"log"
+	"time"
 )
 
 type Repository struct {
@@ -15,22 +16,31 @@ func NewRepository(db *sql.DB) *Repository {
 	}
 }
 
-func (repo *Repository) CreateUser(user *User) error {
-	_, err := repo.DB.Exec(
-		"INSERT INTO users (username, password, email, created_at, updated_at) "+
-			"VALUES ($1, $2, $3, $4, $5)",
+func (repo *Repository) CreateUser(user *User) (int, error) {
+	var id int
+	now := time.Now().UTC()
+
+	query := `
+		INSERT INTO users (username, password, email, created_at, updated_at) 
+		VALUES ($1, $2, $3, $4, $5)
+		RETURNING id
+	`
+
+	err := repo.DB.QueryRow(query,
 		user.Username,
 		user.Password,
 		user.Email,
-		user.CreatedAt,
-		user.UpdatedAt,
-	)
-	if err != nil {
-		log.Printf("Error: %v\n", err)
-		return err
+		now,
+		now,
+	).Scan(&id)
+	if err == sql.ErrNoRows {
+		return 0, err
+	} else if err != nil {
+		log.Printf("CreateUser failed: %v\n", err)
+		return 0, err
 	}
 
-	return nil
+	return id, nil
 }
 
 func (repo *Repository) GetPasswordandID(username string) (int, string, error) {
