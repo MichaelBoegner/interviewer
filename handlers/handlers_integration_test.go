@@ -19,6 +19,7 @@ import (
 	"github.com/michaelboegner/interviewer/internal/testutil"
 	"github.com/michaelboegner/interviewer/interview"
 	"github.com/michaelboegner/interviewer/middleware"
+	"github.com/michaelboegner/interviewer/user"
 )
 
 type TestCase struct {
@@ -75,6 +76,70 @@ func TestMain(m *testing.M) {
 	testutil.StopTestServer()
 
 	os.Exit(code)
+}
+
+func Test_CreateUsersHandler_Integration(t *testing.T) {
+	tests := []TestCase{
+		{
+			name:   "CreateUser_Success",
+			method: "POST",
+			url:    testutil.TestServerURL + "/api/users/",
+			reqBody: `{
+				"username": "test",
+				"email" : "test@test.com",
+				"password" : "test"
+			}`,
+			expectedStatus: http.StatusCreated,
+			respBody: handlers.ReturnVals{
+				Username: "test",
+				Email:    "test@test.com",
+			},
+			DBCheck: false,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			// Act
+			resp, respCode, err := testRequests(t, tc.headerKey, tc.headerValue, tc.method, tc.url, strings.NewReader(tc.reqBody))
+			if err != nil {
+				log.Fatalf("TestRequest for interview creation failed: %v", err)
+			}
+
+			respUnmarshalled := &handlers.ReturnVals{}
+			err = json.Unmarshal(resp, respUnmarshalled)
+			if err != nil {
+				t.Fatalf("failed to unmarshal response: %v", err)
+			}
+
+			// Assert Response
+			if respCode != tc.expectedStatus {
+				t.Fatalf("[%s] expected status %d, got %d\n", tc.name, tc.expectedStatus, respCode)
+			}
+
+			expected := tc.respBody
+			got := *respUnmarshalled
+
+			if diff := cmp.Diff(expected, got, cmpopts.EquateApproxTime(time.Second)); diff != "" {
+				t.Errorf("Mismatch (-expected +got):\n%s", diff)
+			}
+
+			// Assert Database
+			if tc.DBCheck {
+				user, err := user.GetUser(Handler.UserRepo, got.UserID)
+				if err != nil {
+					t.Fatalf("Assert Database: GetConversation failing: %v", err)
+				}
+
+				expectedDB := expected
+				gotDB := user
+
+				if diff := cmp.Diff(expectedDB, gotDB, cmpopts.EquateApproxTime(time.Second)); diff != "" {
+					t.Errorf("Mismatch (-expected +got):\n%s", diff)
+				}
+			}
+		})
+	}
 }
 
 func Test_InterviewsHandler_Integration(t *testing.T) {
@@ -355,7 +420,6 @@ func Test_CreateConversationsHandler_Integration(t *testing.T) {
 }
 
 func Test_AppendConversationsHandler_Integration(t *testing.T) {
-	// t.Skip()
 	tests := []TestCase{
 		{
 			name:   "AppendConversation_Success",

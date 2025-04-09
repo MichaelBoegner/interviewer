@@ -26,7 +26,7 @@ func CreateTestUserAndJWT() (string, int) {
 		"password":"test"
 	}`)
 
-	userResp, _, err := testRequests("POST", TestServerURL+"/api/users", reqBodyUser)
+	userResp, _, err := testRequests("POST", TestServerURL+"/api/users/", reqBodyUser)
 	if err != nil {
 		log.Printf("CreateTestUserAndJWT user creation failed: %v", err)
 	}
