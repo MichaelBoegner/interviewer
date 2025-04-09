@@ -5,18 +5,77 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"os"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/joho/godotenv"
 	"github.com/michaelboegner/interviewer/conversation"
 	"github.com/michaelboegner/interviewer/handlers"
 	"github.com/michaelboegner/interviewer/internal/mocks"
 	"github.com/michaelboegner/interviewer/internal/testutil"
 	"github.com/michaelboegner/interviewer/interview"
+	"github.com/michaelboegner/interviewer/middleware"
 )
+
+type TestCase struct {
+	name           string
+	method         string
+	url            string
+	reqBody        string
+	headerKey      string
+	headerValue    string
+	params         middleware.AcceptedVals
+	expectedStatus int
+	expectError    bool
+	respBody       handlers.ReturnVals
+	respBodyFunc   func() handlers.ReturnVals
+	DBCheck        bool
+	Interview      *interview.Interview
+	Conversation   *conversation.Conversation
+}
+
+var (
+	Handler             *handlers.Handler
+	jwtoken             string
+	expiredJWT          string
+	userID              int
+	conversationBuilder *testutil.ConversationBuilder
+)
+
+func TestMain(m *testing.M) {
+	log.SetFlags(log.LstdFlags | log.Llongfile)
+
+	log.Println("Loading environment variables...")
+	err := godotenv.Load("../.env.test")
+	if err != nil {
+		log.Fatalf("Error loading .env.test file: %v", err)
+	}
+
+	log.Println("Initializing test server...")
+	Handler = testutil.InitTestServer()
+
+	// 🚨 Check `TestServerURL` before running any tests
+	if testutil.TestServerURL == "" {
+		log.Fatal("TestMain: TestServerURL is empty! The server did not start properly.")
+	}
+
+	log.Printf("TestMain: Test server started successfully at: %s", testutil.TestServerURL)
+
+	jwtoken, userID = testutil.CreateTestUserAndJWT()
+	expiredJWT = testutil.CreateTestJWT(userID, -1)
+	conversationBuilder = testutil.NewConversationBuilder()
+
+	code := m.Run()
+
+	log.Println("Stopping test server...")
+	testutil.StopTestServer()
+
+	os.Exit(code)
+}
 
 func Test_InterviewsHandler_Integration(t *testing.T) {
 	tests := []TestCase{
