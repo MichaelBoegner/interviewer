@@ -407,20 +407,20 @@ func Test_AppendConversationsHandler_Integration(t *testing.T) {
 			},
 			DBCheck: false,
 		},
-		// {
-		// 	name:   "AppendConversation_isFinished",
-		// 	method: "POST",
-		// 	url:    testutil.TestServerURL + "/api/conversations/append/1",
-		// 	reqBody: `{
-		// 		"conversation_id" : 1,
-		// 		"message" : "Answer1"
-		// 	}`,
-		// 	headerKey:      "Authorization",
-		// 	headerValue:    "Bearer " + jwtoken,
-		// 	expectedStatus: http.StatusCreated,
-		// 	respBodyFunc: conversationBuilder.NewIsFinishedConversationMock(),
-		// 	DBCheck: false,
-		// },
+		{
+			name:   "AppendConversation_isFinished",
+			method: "POST",
+			url:    testutil.TestServerURL + "/api/conversations/append/1",
+			reqBody: `{
+				"conversation_id" : 1,
+				"message" : "Answer1"
+			}`,
+			headerKey:      "Authorization",
+			headerValue:    "Bearer " + jwtoken,
+			expectedStatus: http.StatusCreated,
+			respBodyFunc:   conversationBuilder.NewIsFinishedConversationMock(),
+			DBCheck:        false,
+		},
 	}
 
 	for _, tc := range tests {

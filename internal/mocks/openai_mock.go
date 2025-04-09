@@ -3,12 +3,17 @@ package mocks
 import (
 	"encoding/json"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/michaelboegner/interviewer/chatgpt"
 	"github.com/michaelboegner/interviewer/conversation"
 )
 
+// TODO: This is a janky implementation with no long term scalability, at least not without a high amount of redundancies.
+// Message creation should be automated in some manner and the mock chatGPT response logic doesn't allow for easy scalability.
+// Also, since we are only mocking create, append, and isFinished, the tested convo structure isn't realistic, though it still proves correct functionality.
+// Will come back to this after finishing overall testing structure, CI/CD, and AWS deployment.
 var (
 	responseConversationMockCreated    string
 	responseConversationMockAppended   string
@@ -17,9 +22,12 @@ var (
 	MessagesCreatedConversationT1Q2    []conversation.Message
 	MessagesCreatedConversationT1Q2A2  []conversation.Message
 	MessagesAppendedConversationT2Q1   []conversation.Message
+	MessagesAppendedConversationT2Q1A1 []conversation.Message
+	MessagesAppendedConversationT2Q2   []conversation.Message
 	MessagesAppendedConversationT6Q1A1 []conversation.Message
-	now                                = time.Now().UTC()
-	responseInterview                  = &chatgpt.ChatGPTResponse{
+
+	now               = time.Now().UTC()
+	responseInterview = &chatgpt.ChatGPTResponse{
 		Topic:        "None",
 		Subtopic:     "None",
 		Question:     "None",
@@ -67,19 +75,20 @@ var (
 )
 
 func init() {
-	responseConversationCreatedMarshal, err := json.Marshal(responseConversationCreated)
+	responseConversationMockCreated, err := MarshalAndString(responseConversationCreated)
 	if err != nil {
-		log.Fatalf("MarshalResponses failed: %v", err)
+		log.Fatalf("MarshalAndString failed: %v", err)
 	}
 
-	responseConversationMockCreated = string(responseConversationCreatedMarshal)
-
-	responseConversationAppendedMarshal, err := json.Marshal(responseConversationAppended)
+	responseConversationMockAppended, err := MarshalAndString(responseConversationAppended)
 	if err != nil {
-		log.Fatalf("MarshalResponses failed: %v", err)
+		log.Fatalf("MarshalAndString failed: %v", err)
 	}
 
-	responseConversationMockAppended = string(responseConversationAppendedMarshal)
+	responseConversationMockIsFinished, err := MarshalAndString(responseConversationIsFinished)
+	if err != nil {
+		log.Fatalf("MarshalAndString failed: %v", err)
+	}
 
 	MessagesCreatedConversationT1Q1 = []conversation.Message{
 		{
@@ -141,6 +150,28 @@ func init() {
 		},
 	}
 
+	MessagesAppendedConversationT2Q1A1 = []conversation.Message{
+		{
+			ConversationID: 1,
+			TopicID:        2,
+			QuestionNumber: 1,
+			Author:         "user",
+			Content:        "Answer1",
+			CreatedAt:      now,
+		},
+	}
+
+	MessagesAppendedConversationT2Q2 = []conversation.Message{
+		{
+			ConversationID: 1,
+			TopicID:        0,
+			QuestionNumber: 1,
+			Author:         "interviewer",
+			Content:        responseConversationMockIsFinished,
+			CreatedAt:      now,
+		},
+	}
+
 	MessagesAppendedConversationT6Q1A1 = []conversation.Message{
 		{
 			ConversationID: 1,
@@ -161,11 +192,21 @@ func (m *MockOpenAIClient) GetChatGPTResponseInterview(prompt string) (*chatgpt.
 }
 
 func (m *MockOpenAIClient) GetChatGPTResponseConversation(conversationHistory []map[string]string) (*chatgpt.ChatGPTResponse, error) {
-	if len(conversationHistory) == 3 {
+	if len(conversationHistory) == 3 && !strings.Contains(conversationHistory[1]["content"], "Coding") {
 		return responseConversationCreated, nil
 	} else if len(conversationHistory) == 6 {
 		return responseConversationAppended, nil
 	}
 
 	return responseConversationIsFinished, nil
+}
+
+func MarshalAndString(chatGPTResponse *chatgpt.ChatGPTResponse) (string, error) {
+	chatGPTResponseMarshal, err := json.Marshal(chatGPTResponse)
+	if err != nil {
+		log.Fatalf("MarshalResponses failed: %v", err)
+		return "", nil
+	}
+
+	return string(chatGPTResponseMarshal), nil
 }
