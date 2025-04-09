@@ -102,6 +102,33 @@ func Test_CreateUsersHandler_Integration(t *testing.T) {
 				Email:    "test@test.com",
 			},
 		},
+		{
+			name:   "CreateUser_MissingUsername",
+			method: "POST",
+			url:    testutil.TestServerURL + "/api/users/",
+			reqBody: `{
+				"email" : "test@test.com",
+				"password" : "test"
+			}`,
+			expectedStatus: http.StatusBadRequest,
+			respBody: handlers.ReturnVals{
+				Error: "Username, Email, and Password required",
+			},
+		},
+		{
+			name:   "CreateUser_DuplicateEmail",
+			method: "POST",
+			url:    testutil.TestServerURL + "/api/users/",
+			reqBody: `{
+				"username": "test1",
+				"email": "test@test.com",
+				"password": "test"
+			}`,
+			expectedStatus: http.StatusConflict,
+			respBody: handlers.ReturnVals{
+				Error: "Email or username already exists",
+			},
+		},
 	}
 
 	for _, tc := range tests {
