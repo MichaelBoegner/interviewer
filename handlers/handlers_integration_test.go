@@ -85,20 +85,20 @@ func Test_CreateUsersHandler_Integration(t *testing.T) {
 			method: "POST",
 			url:    testutil.TestServerURL + "/api/users/",
 			reqBody: `{
-				"username": "test",
+				"username": "test2",
 				"email" : "test@test.com",
 				"password" : "test"
 			}`,
 			expectedStatus: http.StatusCreated,
 			respBody: handlers.ReturnVals{
 				UserID:   2,
-				Username: "test",
+				Username: "test2",
 				Email:    "test@test.com",
 			},
 			DBCheck: true,
 			User: &user.User{
 				ID:       2,
-				Username: "test",
+				Username: "test2",
 				Email:    "test@test.com",
 			},
 		},
@@ -120,7 +120,7 @@ func Test_CreateUsersHandler_Integration(t *testing.T) {
 			method: "POST",
 			url:    testutil.TestServerURL + "/api/users/",
 			reqBody: `{
-				"username": "test1",
+				"username": "test2",
 				"email": "test@test.com",
 				"password": "test"
 			}`,

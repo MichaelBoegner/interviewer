@@ -2,8 +2,11 @@ package user
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 	"time"
+
+	"github.com/lib/pq"
 )
 
 type Repository struct {
@@ -36,6 +39,18 @@ func (repo *Repository) CreateUser(user *User) (int, error) {
 	if err == sql.ErrNoRows {
 		return 0, err
 	} else if err != nil {
+
+		if pgErr, ok := err.(*pq.Error); ok && pgErr.Code == "23505" {
+			switch pgErr.Constraint {
+			case "users_email_key":
+				return 0, fmt.Errorf("%w: %s", ErrDuplicateEmail, pgErr.Message)
+			case "users_username_key":
+				return 0, fmt.Errorf("%w: %s", ErrDuplicateUsername, pgErr.Message)
+			default:
+				return 0, fmt.Errorf("%w: %s", ErrDuplicateUser, pgErr.Message)
+			}
+		}
+
 		log.Printf("CreateUser failed: %v\n", err)
 		return 0, err
 	}

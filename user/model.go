@@ -1,6 +1,9 @@
 package user
 
-import "time"
+import (
+	"errors"
+	"time"
+)
 
 type Users struct {
 	Users map[int]User
@@ -20,3 +23,9 @@ type UserRepo interface {
 	GetPasswordandID(username string) (int, string, error)
 	GetUser(user *User) (*User, error)
 }
+
+var (
+	ErrDuplicateEmail    = errors.New("duplicate email")
+	ErrDuplicateUsername = errors.New("duplicate username")
+	ErrDuplicateUser     = errors.New("duplicate user")
+)

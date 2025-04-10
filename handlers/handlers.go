@@ -71,9 +71,13 @@ func (h *Handler) CreateUsersHandler(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, http.StatusBadRequest, "Username, Email, and Password required")
 		return
 	}
-	user, err := user.CreateUser(h.UserRepo, params.Username, params.Email, params.Password)
+	userCreated, err := user.CreateUser(h.UserRepo, params.Username, params.Email, params.Password)
 	if err != nil {
 		log.Printf("CreateUser error: %v", err)
+		if errors.Is(err, user.ErrDuplicateEmail) || errors.Is(err, user.ErrDuplicateUsername) || errors.Is(err, user.ErrDuplicateUser) {
+			respondWithError(w, http.StatusConflict, "Email or username already exists")
+			return
+		}
 		// For preventing user creation in frontend.
 		// noNewUsers := fmt.Sprintf("%s", err)
 		respondWithError(w, http.StatusInternalServerError, "Internal Server Error")
@@ -81,9 +85,9 @@ func (h *Handler) CreateUsersHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	payload := &ReturnVals{
-		UserID:   user.ID,
-		Username: user.Username,
-		Email:    user.Email,
+		UserID:   userCreated.ID,
+		Username: userCreated.Username,
+		Email:    userCreated.Email,
 	}
 	respondWithJSON(w, http.StatusCreated, payload)
 	return
