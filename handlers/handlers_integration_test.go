@@ -2,6 +2,7 @@ package handlers_test
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -83,31 +84,31 @@ func Test_CreateUsersHandler_Integration(t *testing.T) {
 		{
 			name:   "CreateUser_Success",
 			method: "POST",
-			url:    testutil.TestServerURL + "/api/users/",
+			url:    testutil.TestServerURL + "/api/users",
 			reqBody: `{
-				"username": "test2",
-				"email" : "test2@test.com",
+				"username": "test",
+				"email" : "test@test.com",
 				"password" : "test"
 			}`,
 			expectedStatus: http.StatusCreated,
 			respBody: handlers.ReturnVals{
 				UserID:   2,
-				Username: "test2",
-				Email:    "test2@test.com",
+				Username: "test",
+				Email:    "test@test.com",
 			},
 			DBCheck: true,
 			User: &user.User{
 				ID:       2,
-				Username: "test2",
-				Email:    "test2@test.com",
+				Username: "test",
+				Email:    "test@test.com",
 			},
 		},
 		{
 			name:   "CreateUser_MissingUsername",
 			method: "POST",
-			url:    testutil.TestServerURL + "/api/users/",
+			url:    testutil.TestServerURL + "/api/users",
 			reqBody: `{
-				"email" : "test2@test.com",
+				"email" : "test@test.com",
 				"password" : "test"
 			}`,
 			expectedStatus: http.StatusBadRequest,
@@ -118,10 +119,10 @@ func Test_CreateUsersHandler_Integration(t *testing.T) {
 		{
 			name:   "CreateUser_DuplicateUsername",
 			method: "POST",
-			url:    testutil.TestServerURL + "/api/users/",
+			url:    testutil.TestServerURL + "/api/users",
 			reqBody: `{
-				"username": "test",
-				"email": "test2@test.com",
+				"username": "testUser",
+				"email": "test@test.com",
 				"password": "test"
 			}`,
 			expectedStatus: http.StatusConflict,
@@ -132,9 +133,9 @@ func Test_CreateUsersHandler_Integration(t *testing.T) {
 		{
 			name:   "CreateUser_MissingEmail",
 			method: "POST",
-			url:    testutil.TestServerURL + "/api/users/",
+			url:    testutil.TestServerURL + "/api/users",
 			reqBody: `{
-				"username" : "test2",
+				"username" : "test",
 				"password" : "test"
 			}`,
 			expectedStatus: http.StatusBadRequest,
@@ -145,10 +146,10 @@ func Test_CreateUsersHandler_Integration(t *testing.T) {
 		{
 			name:   "CreateUser_DuplicateEmail",
 			method: "POST",
-			url:    testutil.TestServerURL + "/api/users/",
+			url:    testutil.TestServerURL + "/api/users",
 			reqBody: `{
-				"username": "test2",
-				"email": "test@test.com",
+				"username": "test",
+				"email": "testUser@test.com",
 				"password": "test"
 			}`,
 			expectedStatus: http.StatusConflict,
@@ -159,10 +160,10 @@ func Test_CreateUsersHandler_Integration(t *testing.T) {
 		{
 			name:   "CreateUser_MissingPassword",
 			method: "POST",
-			url:    testutil.TestServerURL + "/api/users/",
+			url:    testutil.TestServerURL + "/api/users",
 			reqBody: `{
-				"username" : "test2",
-				"email": "test2@test.com",
+				"username" : "test",
+				"email": "test@test.com"
 			}`,
 			expectedStatus: http.StatusBadRequest,
 			respBody: handlers.ReturnVals{
@@ -178,6 +179,75 @@ func Test_CreateUsersHandler_Integration(t *testing.T) {
 			if err != nil {
 				log.Fatalf("TestRequest for interview creation failed: %v", err)
 			}
+
+			respUnmarshalled := &handlers.ReturnVals{}
+			err = json.Unmarshal(resp, respUnmarshalled)
+			if err != nil {
+				t.Fatalf("failed to unmarshal response: %v", err)
+			}
+
+			// Assert Response
+			if respCode != tc.expectedStatus {
+				t.Fatalf("[%s] expected status %d, got %d\n", tc.name, tc.expectedStatus, respCode)
+			}
+
+			expected := tc.respBody
+			got := *respUnmarshalled
+
+			if diff := cmp.Diff(expected, got, cmpopts.EquateApproxTime(time.Second)); diff != "" {
+				t.Errorf("Mismatch (-expected +got):\n%s", diff)
+			}
+
+			// Assert Database
+			if tc.DBCheck {
+				user, err := user.GetUser(Handler.UserRepo, got.UserID)
+				if err != nil {
+					t.Fatalf("Assert Database: GetUser failing: %v", err)
+				}
+
+				expectedDB := tc.User
+				gotDB := user
+
+				if diff := cmp.Diff(expectedDB, gotDB, cmpopts.EquateApproxTime(time.Second)); diff != "" {
+					t.Errorf("DB Mismatch (-expected +got):\n%s", diff)
+				}
+			}
+		})
+	}
+}
+
+func Test_GetUsersHandler_Integration(t *testing.T) {
+	t.Skip("TODO: refactor rest of tests to generate testuser/jwt in isolation. Current global dependency generation in Main is flaky")
+	tests := []TestCase{
+		{
+			name:           "GetUser_Success",
+			method:         "GET",
+			url:            testutil.TestServerURL + "/api/users/2",
+			expectedStatus: http.StatusOK,
+			respBody: handlers.ReturnVals{
+				UserID:   2,
+				Username: "test",
+				Email:    "test@test.com",
+			},
+			DBCheck: true,
+			User: &user.User{
+				ID:       2,
+				Username: "test",
+				Email:    "test@test.com",
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			// Act
+			resp, respCode, err := testRequests(t, tc.headerKey, tc.headerValue, tc.method, tc.url, strings.NewReader(tc.reqBody))
+			if err != nil {
+				log.Fatalf("TestRequest for interview creation failed: %v", err)
+			}
+
+			//DEBUG
+			fmt.Printf("\n\nresp: %s", resp)
 
 			respUnmarshalled := &handlers.ReturnVals{}
 			err = json.Unmarshal(resp, respUnmarshalled)

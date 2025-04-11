@@ -21,12 +21,12 @@ func CreateTestUserAndJWT() (string, int) {
 	)
 	//test user created
 	reqBodyUser := strings.NewReader(`{
-		"username":"test",
-		"email":"test@email.com",
+		"username":"testUser",
+		"email":"testUser@email.com",
 		"password":"test"
 	}`)
 
-	userResp, _, err := testRequests("POST", TestServerURL+"/api/users/", reqBodyUser)
+	userResp, _, err := testRequests("POST", TestServerURL+"/api/users", reqBodyUser)
 	if err != nil {
 		log.Printf("CreateTestUserAndJWT user creation failed: %v", err)
 	}
@@ -41,7 +41,7 @@ func CreateTestUserAndJWT() (string, int) {
 	//test jwt retrieved
 	reqBodyLogin := strings.NewReader(`
 		{
-			"username": "test",
+			"username": "testUser",
 			"password": "test"
 		}
 	`)

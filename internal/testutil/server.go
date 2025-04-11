@@ -40,10 +40,10 @@ func InitTestServer() *handlers.Handler {
 	handler := handlers.NewHandler(interviewRepo, userRepo, tokenRepo, conversationRepo, openAI)
 
 	TestMux = http.NewServeMux()
-	TestMux.Handle("/api/users/", http.HandlerFunc(handler.CreateUsersHandler))
+	TestMux.Handle("/api/users", http.HandlerFunc(handler.CreateUsersHandler))
 	TestMux.Handle("/api/auth/login", http.HandlerFunc(handler.LoginHandler))
 
-	TestMux.Handle("/api/users/{id}", middleware.GetContext(http.HandlerFunc(handler.GetUsersHandler)))
+	TestMux.Handle("/api/users/", middleware.GetContext(http.HandlerFunc(handler.GetUsersHandler)))
 	TestMux.Handle("/api/interviews", middleware.GetContext(http.HandlerFunc(handler.InterviewsHandler)))
 	TestMux.Handle("/api/conversations/create/", middleware.GetContext(http.HandlerFunc(handler.CreateConversationsHandler)))
 	TestMux.Handle("/api/conversations/append/", middleware.GetContext(http.HandlerFunc(handler.AppendConversationsHandler)))
