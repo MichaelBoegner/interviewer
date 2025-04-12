@@ -32,7 +32,7 @@ func NewServer() *Server {
 	conversationRepo := conversation.NewRepository(db)
 	openAI := &chatgpt.OpenAIClient{}
 
-	handler := handlers.NewHandler(interviewRepo, userRepo, tokenRepo, conversationRepo, openAI)
+	handler := handlers.NewHandler(interviewRepo, userRepo, tokenRepo, conversationRepo, openAI, db)
 
 	mux.Handle("/api/users", http.HandlerFunc(handler.CreateUsersHandler))
 	mux.Handle("/api/auth/login", http.HandlerFunc(handler.LoginHandler))

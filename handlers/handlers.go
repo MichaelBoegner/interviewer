@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"log"
@@ -22,6 +23,7 @@ type Handler struct {
 	ConversationRepo conversation.ConversationRepo
 	TokenRepo        token.TokenRepo
 	OpenAI           chatgpt.AIClient
+	DB               *sql.DB
 }
 
 func NewHandler(
@@ -29,13 +31,15 @@ func NewHandler(
 	userRepo user.UserRepo,
 	tokenRepo token.TokenRepo,
 	conversationRepo conversation.ConversationRepo,
-	openAI chatgpt.AIClient) *Handler {
+	openAI chatgpt.AIClient,
+	db *sql.DB) *Handler {
 	return &Handler{
 		InterviewRepo:    interviewRepo,
 		UserRepo:         userRepo,
 		TokenRepo:        tokenRepo,
 		ConversationRepo: conversationRepo,
 		OpenAI:           openAI,
+		DB:               db,
 	}
 }
 

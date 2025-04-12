@@ -1,6 +1,7 @@
 package testutil
 
 import (
+	"database/sql"
 	"encoding/json"
 	"io"
 	"log"
@@ -11,6 +12,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/michaelboegner/interviewer/handlers"
 	"github.com/michaelboegner/interviewer/token"
 )
 
@@ -19,51 +21,40 @@ func CreateTestUserAndJWT() (string, int) {
 		jwt    string
 		userID int
 	)
-	//test user created
+	//test user create
 	reqBodyUser := strings.NewReader(`{
-		"username":"testUser",
-		"email":"testUser@email.com",
+		"username":"test",
+		"email":"test@email.com",
 		"password":"test"
 	}`)
 
-	userResp, _, err := testRequests("POST", TestServerURL+"/api/users", reqBodyUser)
+	userResp, err := testRequests("", "", "POST", TestServerURL+"/api/users", reqBodyUser)
 	if err != nil {
 		log.Printf("CreateTestUserAndJWT user creation failed: %v", err)
 	}
 
-	type UserResponse struct {
-		UserID   int    `json:"user_id"`
-		Username string `json:"username"`
-	}
-	var user = &UserResponse{}
-	json.Unmarshal(userResp, user)
+	UserUnmarshaled := &handlers.ReturnVals{}
+	json.Unmarshal(userResp, UserUnmarshaled)
 
-	//test jwt retrieved
+	//test jwt retrieve
 	reqBodyLogin := strings.NewReader(`
 		{
-			"username": "testUser",
+			"username": "test",
 			"password": "test"
 		}
 	`)
 
-	loginResp, _, err := testRequests("POST", TestServerURL+"/api/auth/login", reqBodyLogin)
+	loginResp, err := testRequests("", "", "POST", TestServerURL+"/api/auth/login", reqBodyLogin)
 	if err != nil {
 		log.Printf("CreateTestUserAndJWT JWT creation failed: %v", err)
 	}
 
-	type AuthResponse struct {
-		UserID       int    `json:"user_id"`
-		Username     string `json:"username"`
-		JWToken      string `json:"jwtoken"`
-		RefreshToken string `json:"refresh_token"`
-	}
+	loginRespUnmarshaled := &handlers.ReturnVals{}
+	json.Unmarshal(loginResp, loginRespUnmarshaled)
 
-	var decodedLoginResp = &AuthResponse{}
-	json.Unmarshal(loginResp, decodedLoginResp)
+	jwt = loginRespUnmarshaled.JWToken
 
-	jwt = decodedLoginResp.JWToken
-
-	//test userID extracted
+	//test userID extract
 	userID, err = token.ExtractUserIDFromToken(jwt)
 	if err != nil {
 		log.Printf("CreateTestUserandJWT userID extraction failed: %v", err)
@@ -72,30 +63,50 @@ func CreateTestUserAndJWT() (string, int) {
 	return jwt, userID
 }
 
-func testRequests(method, url string, reqBody *strings.Reader) ([]byte, int, error) {
+func CreateTestInterview(jwt string) int {
+	reqBodyInterview := strings.NewReader(`{}`)
+
+	interviewResp, err := testRequests("Authorization", "Bearer "+jwt, "POST", TestServerURL+"/api/interviews", reqBodyInterview)
+	if err != nil {
+		log.Printf("CreateTestUserAndJWT JWT creation failed: %v", err)
+		return 0
+	}
+
+	interviewRespUnmarshaled := &handlers.ReturnVals{}
+	json.Unmarshal(interviewResp, interviewRespUnmarshaled)
+
+	interviewID := interviewRespUnmarshaled.InterviewID
+
+	return interviewID
+}
+
+func testRequests(headerKey, headerValue, method, url string, reqBody *strings.Reader) ([]byte, error) {
 	client := &http.Client{}
 
 	req, err := http.NewRequest(method, url, reqBody)
 	if err != nil {
 		log.Printf("CreateTestUserAndJWT user creation failed: %v", err)
-		return nil, 0, err
+		return nil, err
 	}
 	req.Header.Set("Content-Type", "application/json")
+	if headerKey != "" {
+		req.Header.Set(headerKey, headerValue)
+	}
 
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Printf("Request to create test user failed: %v", err)
-		return nil, resp.StatusCode, err
+		log.Printf("Request failed: %v", err)
+		return nil, err
 	}
 	defer resp.Body.Close()
 
 	bodyBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
 		log.Printf("Reading response failed: %v", err)
-		return nil, resp.StatusCode, err
+		return nil, err
 	}
 
-	return bodyBytes, resp.StatusCode, nil
+	return bodyBytes, nil
 }
 
 func CreateTestJWT(id, expires int) string {
@@ -124,4 +135,11 @@ func CreateTestJWT(id, expires int) string {
 	}
 
 	return s
+}
+
+func TruncateAllTables(db *sql.DB) error {
+	_, err := db.Exec(`
+		TRUNCATE users, interviews, conversations RESTART IDENTITY CASCADE;
+	`)
+	return err
 }

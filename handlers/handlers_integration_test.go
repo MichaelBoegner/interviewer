@@ -75,6 +75,11 @@ func TestMain(m *testing.M) {
 }
 
 func Test_CreateUsersHandler_Integration(t *testing.T) {
+	err := testutil.TruncateAllTables(Handler.DB)
+	if err != nil {
+		t.Fatalf("Failed to clean database: %v", err)
+	}
+
 	tests := []TestCase{
 		{
 			name:   "CreateUser_Success",
@@ -212,21 +217,30 @@ func Test_CreateUsersHandler_Integration(t *testing.T) {
 }
 
 func Test_GetUsersHandler_Integration(t *testing.T) {
-	t.Skip("TODO: refactor rest of tests to generate testuser/jwt in isolation. Current global dependency generation in Main is flaky")
+	t.Skip("TODO: Fix isolation issues with other tests.")
+	err := testutil.TruncateAllTables(Handler.DB)
+	if err != nil {
+		t.Fatalf("Failed to clean database: %v", err)
+	}
+
+	jwtoken, userID := testutil.CreateTestUserAndJWT()
+
 	tests := []TestCase{
 		{
 			name:           "GetUser_Success",
 			method:         "GET",
-			url:            testutil.TestServerURL + "/api/users/2",
+			url:            testutil.TestServerURL + fmt.Sprintf("/api/users/%d", userID),
+			headerKey:      "Authorization",
+			headerValue:    "Bearer " + jwtoken,
 			expectedStatus: http.StatusOK,
 			respBody: handlers.ReturnVals{
-				UserID:   2,
+				UserID:   userID,
 				Username: "test",
 				Email:    "test@test.com",
 			},
 			DBCheck: true,
 			User: &user.User{
-				ID:       2,
+				ID:       userID,
 				Username: "test",
 				Email:    "test@test.com",
 			},
@@ -281,6 +295,11 @@ func Test_GetUsersHandler_Integration(t *testing.T) {
 }
 
 func Test_InterviewsHandler_Integration(t *testing.T) {
+	err := testutil.TruncateAllTables(Handler.DB)
+	if err != nil {
+		t.Fatalf("Failed to clean database: %v", err)
+	}
+
 	jwtoken, userID := testutil.CreateTestUserAndJWT()
 	expiredJWT := testutil.CreateTestJWT(userID, -1)
 
@@ -405,14 +424,21 @@ func Test_InterviewsHandler_Integration(t *testing.T) {
 	}
 }
 func Test_CreateConversationsHandler_Integration(t *testing.T) {
+	err := testutil.TruncateAllTables(Handler.DB)
+	if err != nil {
+		t.Fatalf("Failed to clean database: %v", err)
+	}
+
 	jwtoken, userID := testutil.CreateTestUserAndJWT()
 	expiredJWT := testutil.CreateTestJWT(userID, -1)
+	interviewID := testutil.CreateTestInterview(jwtoken)
+	conversationsURL := testutil.TestServerURL + fmt.Sprintf("/api/conversations/create/%d", interviewID)
 
 	tests := []TestCase{
 		{
 			name:   "CreateConversation_Success",
 			method: "POST",
-			url:    testutil.TestServerURL + "/api/conversations/create/1",
+			url:    conversationsURL,
 			reqBody: `{
 				"message" : "Answer1"
 			}`,
@@ -425,7 +451,7 @@ func Test_CreateConversationsHandler_Integration(t *testing.T) {
 		{
 			name:   "CreateConversation_MissingBearer&Token",
 			method: "POST",
-			url:    testutil.TestServerURL + "/api/conversations/create/1",
+			url:    conversationsURL,
 			reqBody: `{
 				"message" : "Answer1"
 			}`,
@@ -439,7 +465,7 @@ func Test_CreateConversationsHandler_Integration(t *testing.T) {
 		{
 			name:   "CreateConversation_MissingToken",
 			method: "POST",
-			url:    testutil.TestServerURL + "/api/conversations/create/1",
+			url:    conversationsURL,
 			reqBody: `{
 				"message" : "Answer1"
 			}`,
@@ -454,7 +480,7 @@ func Test_CreateConversationsHandler_Integration(t *testing.T) {
 		{
 			name:   "CreateConversation_MalformedHeaderValue",
 			method: "POST",
-			url:    testutil.TestServerURL + "/api/conversations/create/1",
+			url:    conversationsURL,
 			reqBody: `{
 				"message" : "Answer1"
 			}`,
@@ -469,7 +495,7 @@ func Test_CreateConversationsHandler_Integration(t *testing.T) {
 		{
 			name:   "CreateConversation_ExpiredToken",
 			method: "POST",
-			url:    testutil.TestServerURL + "/api/conversations/create/1",
+			url:    conversationsURL,
 			reqBody: `{
 				"message" : "Answer1"
 			}`,
@@ -564,6 +590,11 @@ func Test_CreateConversationsHandler_Integration(t *testing.T) {
 }
 
 func Test_AppendConversationsHandler_Integration(t *testing.T) {
+	err := testutil.TruncateAllTables(Handler.DB)
+	if err != nil {
+		t.Fatalf("Failed to clean database: %v", err)
+	}
+
 	jwtoken, userID := testutil.CreateTestUserAndJWT()
 	expiredJWT := testutil.CreateTestJWT(userID, -1)
 

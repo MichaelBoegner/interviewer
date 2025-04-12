@@ -37,7 +37,7 @@ func InitTestServer() *handlers.Handler {
 	conversationRepo := conversation.NewRepository(db)
 	openAI := &mocks.MockOpenAIClient{}
 
-	handler := handlers.NewHandler(interviewRepo, userRepo, tokenRepo, conversationRepo, openAI)
+	handler := handlers.NewHandler(interviewRepo, userRepo, tokenRepo, conversationRepo, openAI, db)
 
 	TestMux = http.NewServeMux()
 	TestMux.Handle("/api/users", http.HandlerFunc(handler.CreateUsersHandler))
