@@ -111,7 +111,7 @@ func (h *Handler) GetUsersHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	payload := &ReturnVals{
-		ID:       user.ID,
+		UserID:   user.ID,
 		Username: user.Username,
 		Email:    user.Email,
 	}

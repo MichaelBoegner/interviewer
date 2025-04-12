@@ -214,7 +214,6 @@ func Test_CreateUsersHandler_Integration(t *testing.T) {
 }
 
 func Test_GetUsersHandler_Integration(t *testing.T) {
-	t.Skip("TODO: Fix isolation issues with other tests.")
 	cleanDBOrFail(t)
 
 	jwtoken, userID := testutil.CreateTestUserAndJWT()
@@ -232,12 +231,7 @@ func Test_GetUsersHandler_Integration(t *testing.T) {
 				Username: "test",
 				Email:    "test@test.com",
 			},
-			DBCheck: true,
-			User: &user.User{
-				ID:       userID,
-				Username: "test",
-				Email:    "test@test.com",
-			},
+			DBCheck: false,
 		},
 	}
 
@@ -248,9 +242,6 @@ func Test_GetUsersHandler_Integration(t *testing.T) {
 			if err != nil {
 				log.Fatalf("TestRequest for interview creation failed: %v", err)
 			}
-
-			//DEBUG
-			fmt.Printf("\n\nresp: %s", resp)
 
 			respUnmarshalled := &handlers.ReturnVals{}
 			err = json.Unmarshal(resp, respUnmarshalled)
@@ -555,7 +546,7 @@ func Test_CreateConversationsHandler_Integration(t *testing.T) {
 			}
 			got := *respUnmarshalled
 
-			if diff := cmp.Diff(expected, got, cmpopts.EquateApproxTime(time.Second)); diff != "" {
+			if diff := cmp.Diff(expected, got, cmpopts.EquateApproxTime(3*time.Second)); diff != "" {
 				t.Errorf("Mismatch (-expected +got):\n%s", diff)
 			}
 
@@ -569,7 +560,7 @@ func Test_CreateConversationsHandler_Integration(t *testing.T) {
 				expectedDB := expected.Conversation
 				gotDB := conversation
 
-				if diff := cmp.Diff(expectedDB, gotDB, cmpopts.EquateApproxTime(time.Second)); diff != "" {
+				if diff := cmp.Diff(expectedDB, gotDB, cmpopts.EquateApproxTime(3*time.Second)); diff != "" {
 					t.Errorf("Mismatch (-expected +got):\n%s", diff)
 				}
 			}

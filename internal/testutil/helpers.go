@@ -25,7 +25,7 @@ func CreateTestUserAndJWT() (string, int) {
 	//test user create
 	reqBodyUser := strings.NewReader(`{
 		"username":"test",
-		"email":"test@email.com",
+		"email":"test@test.com",
 		"password":"test"
 	}`)
 
