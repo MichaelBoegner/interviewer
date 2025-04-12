@@ -3,6 +3,7 @@ package testutil
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -44,15 +45,15 @@ func CreateTestUserAndJWT() (string, int) {
 		}
 	`)
 
-	loginResp, err := testRequests("", "", "POST", TestServerURL+"/api/auth/login", reqBodyLogin)
+	jwtResp, err := testRequests("", "", "POST", TestServerURL+"/api/auth/login", reqBodyLogin)
 	if err != nil {
 		log.Printf("CreateTestUserAndJWT JWT creation failed: %v", err)
 	}
 
-	loginRespUnmarshaled := &handlers.ReturnVals{}
-	json.Unmarshal(loginResp, loginRespUnmarshaled)
+	jwtRespUnmarshaled := &handlers.ReturnVals{}
+	json.Unmarshal(jwtResp, jwtRespUnmarshaled)
 
-	jwt = loginRespUnmarshaled.JWToken
+	jwt = jwtRespUnmarshaled.JWToken
 
 	//test userID extract
 	userID, err = token.ExtractUserIDFromToken(jwt)
@@ -66,18 +67,35 @@ func CreateTestUserAndJWT() (string, int) {
 func CreateTestInterview(jwt string) int {
 	reqBodyInterview := strings.NewReader(`{}`)
 
-	interviewResp, err := testRequests("Authorization", "Bearer "+jwt, "POST", TestServerURL+"/api/interviews", reqBodyInterview)
+	resp, err := testRequests("Authorization", "Bearer "+jwt, "POST", TestServerURL+"/api/interviews", reqBodyInterview)
 	if err != nil {
 		log.Printf("CreateTestUserAndJWT JWT creation failed: %v", err)
 		return 0
 	}
 
-	interviewRespUnmarshaled := &handlers.ReturnVals{}
-	json.Unmarshal(interviewResp, interviewRespUnmarshaled)
+	returnVals := &handlers.ReturnVals{}
+	json.Unmarshal(resp, returnVals)
 
-	interviewID := interviewRespUnmarshaled.InterviewID
+	return returnVals.InterviewID
+}
 
-	return interviewID
+func CreateTestConversation(jwt string, interviewID int) int {
+	reqBodyConversation := strings.NewReader(`{
+				"conversation_id" : 1,
+				"message" : "Answer1"
+			}`)
+	reqURL := TestServerURL + fmt.Sprintf("/api/conversations/create/%d", interviewID)
+
+	resp, err := testRequests("Authorization", "Bearer "+jwt, "POST", reqURL, reqBodyConversation)
+	if err != nil {
+		log.Printf("CreateTestUserAndJWT JWT creation failed: %v", err)
+		return 0
+	}
+
+	returnVals := &handlers.ReturnVals{}
+	json.Unmarshal(resp, returnVals)
+
+	return returnVals.Conversation.InterviewID
 }
 
 func testRequests(headerKey, headerValue, method, url string, reqBody *strings.Reader) ([]byte, error) {
@@ -109,7 +127,7 @@ func testRequests(headerKey, headerValue, method, url string, reqBody *strings.R
 	return bodyBytes, nil
 }
 
-func CreateTestJWT(id, expires int) string {
+func CreateTestExpiredJWT(id, expires int) string {
 	var token *jwt.Token
 	jwtSecret := os.Getenv("JWT_SECRET")
 	key := []byte(jwtSecret)

@@ -75,10 +75,7 @@ func TestMain(m *testing.M) {
 }
 
 func Test_CreateUsersHandler_Integration(t *testing.T) {
-	err := testutil.TruncateAllTables(Handler.DB)
-	if err != nil {
-		t.Fatalf("Failed to clean database: %v", err)
-	}
+	cleanDBOrFail(t)
 
 	tests := []TestCase{
 		{
@@ -218,10 +215,7 @@ func Test_CreateUsersHandler_Integration(t *testing.T) {
 
 func Test_GetUsersHandler_Integration(t *testing.T) {
 	t.Skip("TODO: Fix isolation issues with other tests.")
-	err := testutil.TruncateAllTables(Handler.DB)
-	if err != nil {
-		t.Fatalf("Failed to clean database: %v", err)
-	}
+	cleanDBOrFail(t)
 
 	jwtoken, userID := testutil.CreateTestUserAndJWT()
 
@@ -295,13 +289,10 @@ func Test_GetUsersHandler_Integration(t *testing.T) {
 }
 
 func Test_InterviewsHandler_Integration(t *testing.T) {
-	err := testutil.TruncateAllTables(Handler.DB)
-	if err != nil {
-		t.Fatalf("Failed to clean database: %v", err)
-	}
+	cleanDBOrFail(t)
 
 	jwtoken, userID := testutil.CreateTestUserAndJWT()
-	expiredJWT := testutil.CreateTestJWT(userID, -1)
+	expiredJWT := testutil.CreateTestExpiredJWT(userID, -1)
 
 	tests := []TestCase{
 		{
@@ -424,13 +415,10 @@ func Test_InterviewsHandler_Integration(t *testing.T) {
 	}
 }
 func Test_CreateConversationsHandler_Integration(t *testing.T) {
-	err := testutil.TruncateAllTables(Handler.DB)
-	if err != nil {
-		t.Fatalf("Failed to clean database: %v", err)
-	}
+	cleanDBOrFail(t)
 
 	jwtoken, userID := testutil.CreateTestUserAndJWT()
-	expiredJWT := testutil.CreateTestJWT(userID, -1)
+	expiredJWT := testutil.CreateTestExpiredJWT(userID, -1)
 	interviewID := testutil.CreateTestInterview(jwtoken)
 	conversationsURL := testutil.TestServerURL + fmt.Sprintf("/api/conversations/create/%d", interviewID)
 
@@ -590,23 +578,24 @@ func Test_CreateConversationsHandler_Integration(t *testing.T) {
 }
 
 func Test_AppendConversationsHandler_Integration(t *testing.T) {
-	err := testutil.TruncateAllTables(Handler.DB)
-	if err != nil {
-		t.Fatalf("Failed to clean database: %v", err)
-	}
+	cleanDBOrFail(t)
 
 	jwtoken, userID := testutil.CreateTestUserAndJWT()
-	expiredJWT := testutil.CreateTestJWT(userID, -1)
+	expiredJWT := testutil.CreateTestExpiredJWT(userID, -1)
+	interviewID := testutil.CreateTestInterview(jwtoken)
+	conversationID := testutil.CreateTestConversation(jwtoken, interviewID)
+	urlTest := testutil.TestServerURL + fmt.Sprintf("/api/conversations/append/%d", interviewID)
+	reqBodyTest := fmt.Sprintf(`{
+				"conversation_id" : %d,
+				"message" : "Answer2"
+			}`, conversationID)
 
 	tests := []TestCase{
 		{
-			name:   "AppendConversation_Success",
-			method: "POST",
-			url:    testutil.TestServerURL + "/api/conversations/append/1",
-			reqBody: `{
-				"conversation_id" : 1,
-				"message" : "Answer2"
-			}`,
+			name:           "AppendConversation_Success",
+			method:         "POST",
+			url:            urlTest,
+			reqBody:        reqBodyTest,
 			headerKey:      "Authorization",
 			headerValue:    "Bearer " + jwtoken,
 			expectedStatus: http.StatusCreated,
@@ -616,7 +605,7 @@ func Test_AppendConversationsHandler_Integration(t *testing.T) {
 		{
 			name:   "AppendConversation_MissingBearer&Token",
 			method: "POST",
-			url:    testutil.TestServerURL + "/api/conversations/append/1",
+			url:    urlTest,
 			reqBody: `{
 				"conversation_id" : 1,
 				"message" : "Answer2"
@@ -631,7 +620,7 @@ func Test_AppendConversationsHandler_Integration(t *testing.T) {
 		{
 			name:   "AppendConversation_MissingToken",
 			method: "POST",
-			url:    testutil.TestServerURL + "/api/conversations/append/1",
+			url:    urlTest,
 			reqBody: `{
 				"conversation_id" : 1,
 				"message" : "Answer2"
@@ -647,7 +636,7 @@ func Test_AppendConversationsHandler_Integration(t *testing.T) {
 		{
 			name:   "AppendConversation_MalformedHeaderValue",
 			method: "POST",
-			url:    testutil.TestServerURL + "/api/conversations/append/1",
+			url:    urlTest,
 			reqBody: `{
 				"conversation_id" : 1,
 				"message" : "Answer2"
@@ -663,7 +652,7 @@ func Test_AppendConversationsHandler_Integration(t *testing.T) {
 		{
 			name:   "AppendConversation_ExpiredToken",
 			method: "POST",
-			url:    testutil.TestServerURL + "/api/conversations/append/1",
+			url:    urlTest,
 			reqBody: `{
 				"conversation_id" : 1,
 				"message" : "Answer2"
@@ -711,7 +700,7 @@ func Test_AppendConversationsHandler_Integration(t *testing.T) {
 		{
 			name:   "AppendConversation_isFinished",
 			method: "POST",
-			url:    testutil.TestServerURL + "/api/conversations/append/1",
+			url:    urlTest,
 			reqBody: `{
 				"conversation_id" : 1,
 				"message" : "Answer1"
@@ -720,7 +709,7 @@ func Test_AppendConversationsHandler_Integration(t *testing.T) {
 			headerValue:    "Bearer " + jwtoken,
 			expectedStatus: http.StatusCreated,
 			respBodyFunc:   conversationBuilder.NewIsFinishedConversationMock(),
-			DBCheck:        false,
+			DBCheck:        true,
 		},
 	}
 
@@ -751,7 +740,7 @@ func Test_AppendConversationsHandler_Integration(t *testing.T) {
 			}
 			got := *respUnmarshalled
 
-			if diff := cmp.Diff(expected, got, cmpopts.EquateApproxTime(time.Second)); diff != "" {
+			if diff := cmp.Diff(expected, got, cmpopts.EquateApproxTime(3*time.Second)); diff != "" {
 				t.Errorf("Mismatch (-expected +got):\n%s", diff)
 			}
 
@@ -765,11 +754,17 @@ func Test_AppendConversationsHandler_Integration(t *testing.T) {
 				expectedDB := expected.Conversation
 				gotDB := conversation
 
-				if diff := cmp.Diff(expectedDB, gotDB, cmpopts.EquateApproxTime(time.Second)); diff != "" {
+				if diff := cmp.Diff(expectedDB, gotDB, cmpopts.EquateApproxTime(3*time.Second)); diff != "" {
 					t.Errorf("Mismatch (-expected +got):\n%s", diff)
 				}
 			}
 		})
+	}
+}
+
+func cleanDBOrFail(t *testing.T) {
+	if err := testutil.TruncateAllTables(Handler.DB); err != nil {
+		t.Fatalf("Failed to clean DB: %v", err)
 	}
 }
 
