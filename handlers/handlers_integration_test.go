@@ -43,9 +43,6 @@ type TestCase struct {
 
 var (
 	Handler             *handlers.Handler
-	jwtoken             string
-	expiredJWT          string
-	userID              int
 	conversationBuilder *testutil.ConversationBuilder
 )
 
@@ -67,8 +64,6 @@ func TestMain(m *testing.M) {
 
 	log.Printf("TestMain: Test server started successfully at: %s", testutil.TestServerURL)
 
-	jwtoken, userID = testutil.CreateTestUserAndJWT()
-	expiredJWT = testutil.CreateTestJWT(userID, -1)
 	conversationBuilder = testutil.NewConversationBuilder()
 
 	code := m.Run()
@@ -92,13 +87,13 @@ func Test_CreateUsersHandler_Integration(t *testing.T) {
 			}`,
 			expectedStatus: http.StatusCreated,
 			respBody: handlers.ReturnVals{
-				UserID:   2,
+				UserID:   1,
 				Username: "test",
 				Email:    "test@test.com",
 			},
 			DBCheck: true,
 			User: &user.User{
-				ID:       2,
+				ID:       1,
 				Username: "test",
 				Email:    "test@test.com",
 			},
@@ -286,6 +281,9 @@ func Test_GetUsersHandler_Integration(t *testing.T) {
 }
 
 func Test_InterviewsHandler_Integration(t *testing.T) {
+	jwtoken, userID := testutil.CreateTestUserAndJWT()
+	expiredJWT := testutil.CreateTestJWT(userID, -1)
+
 	tests := []TestCase{
 		{
 			name:           "CreateInterview_Success",
@@ -407,6 +405,9 @@ func Test_InterviewsHandler_Integration(t *testing.T) {
 	}
 }
 func Test_CreateConversationsHandler_Integration(t *testing.T) {
+	jwtoken, userID := testutil.CreateTestUserAndJWT()
+	expiredJWT := testutil.CreateTestJWT(userID, -1)
+
 	tests := []TestCase{
 		{
 			name:   "CreateConversation_Success",
@@ -563,6 +564,9 @@ func Test_CreateConversationsHandler_Integration(t *testing.T) {
 }
 
 func Test_AppendConversationsHandler_Integration(t *testing.T) {
+	jwtoken, userID := testutil.CreateTestUserAndJWT()
+	expiredJWT := testutil.CreateTestJWT(userID, -1)
+
 	tests := []TestCase{
 		{
 			name:   "AppendConversation_Success",
