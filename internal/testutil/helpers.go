@@ -29,13 +29,10 @@ func CreateTestUserAndJWT() (string, int) {
 		"password":"test"
 	}`)
 
-	userResp, err := testRequests("", "", "POST", TestServerURL+"/api/users", reqBodyUser)
+	_, err := testRequests("", "", "POST", TestServerURL+"/api/users", reqBodyUser)
 	if err != nil {
 		log.Printf("CreateTestUserAndJWT user creation failed: %v", err)
 	}
-
-	UserUnmarshaled := &handlers.ReturnVals{}
-	json.Unmarshal(userResp, UserUnmarshaled)
 
 	//test jwt retrieve
 	reqBodyLogin := strings.NewReader(`
@@ -45,15 +42,15 @@ func CreateTestUserAndJWT() (string, int) {
 		}
 	`)
 
-	jwtResp, err := testRequests("", "", "POST", TestServerURL+"/api/auth/login", reqBodyLogin)
+	resp, err := testRequests("", "", "POST", TestServerURL+"/api/auth/login", reqBodyLogin)
 	if err != nil {
 		log.Printf("CreateTestUserAndJWT JWT creation failed: %v", err)
 	}
 
-	jwtRespUnmarshaled := &handlers.ReturnVals{}
-	json.Unmarshal(jwtResp, jwtRespUnmarshaled)
+	returnVals := &handlers.ReturnVals{}
+	json.Unmarshal(resp, returnVals)
 
-	jwt = jwtRespUnmarshaled.JWToken
+	jwt = returnVals.JWToken
 
 	//test userID extract
 	userID, err = token.ExtractUserIDFromToken(jwt)
