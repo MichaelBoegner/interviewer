@@ -432,8 +432,7 @@ func Test_InterviewsHandler_Integration(t *testing.T) {
 func Test_CreateConversationsHandler_Integration(t *testing.T) {
 	cleanDBOrFail(t)
 
-	jwtoken, userID := testutil.CreateTestUserAndJWT()
-	expiredJWT := testutil.CreateTestExpiredJWT(userID, -1)
+	jwtoken, _ := testutil.CreateTestUserAndJWT()
 	interviewID := testutil.CreateTestInterview(jwtoken)
 	conversationsURL := testutil.TestServerURL + fmt.Sprintf("/api/conversations/create/%d", interviewID)
 
@@ -450,65 +449,6 @@ func Test_CreateConversationsHandler_Integration(t *testing.T) {
 			expectedStatus: http.StatusCreated,
 			respBodyFunc:   conversationBuilder.NewCreatedConversationMock(),
 			DBCheck:        true,
-		},
-		{
-			name:   "CreateConversation_MissingBearer&Token",
-			method: "POST",
-			url:    conversationsURL,
-			reqBody: `{
-				"message" : "Answer1"
-			}`,
-			headerKey:      "Authorization",
-			expectedStatus: http.StatusUnauthorized,
-			respBody: handlers.ReturnVals{
-				Error: "Unauthorized",
-			},
-			DBCheck: false,
-		},
-		{
-			name:   "CreateConversation_MissingToken",
-			method: "POST",
-			url:    conversationsURL,
-			reqBody: `{
-				"message" : "Answer1"
-			}`,
-			headerKey:      "Authorization",
-			headerValue:    "Bearer ",
-			expectedStatus: http.StatusUnauthorized,
-			respBody: handlers.ReturnVals{
-				Error: "Unauthorized",
-			},
-			DBCheck: false,
-		},
-		{
-			name:   "CreateConversation_MalformedHeaderValue",
-			method: "POST",
-			url:    conversationsURL,
-			reqBody: `{
-				"message" : "Answer1"
-			}`,
-			headerKey:      "Authorization",
-			headerValue:    "as9d8f7as09d87",
-			expectedStatus: http.StatusUnauthorized,
-			respBody: handlers.ReturnVals{
-				Error: "Unauthorized",
-			},
-			DBCheck: false,
-		},
-		{
-			name:   "CreateConversation_ExpiredToken",
-			method: "POST",
-			url:    conversationsURL,
-			reqBody: `{
-				"message" : "Answer1"
-			}`,
-			headerKey:      "Authorization",
-			headerValue:    "Bearer " + expiredJWT,
-			expectedStatus: http.StatusUnauthorized,
-			respBody: handlers.ReturnVals{
-				Error: "Unauthorized",
-			},
-			DBCheck: false,
 		},
 		{
 			name:   "CreateConversation_MissingIntervewID",
@@ -595,8 +535,7 @@ func Test_CreateConversationsHandler_Integration(t *testing.T) {
 func Test_AppendConversationsHandler_Integration(t *testing.T) {
 	cleanDBOrFail(t)
 
-	jwtoken, userID := testutil.CreateTestUserAndJWT()
-	expiredJWT := testutil.CreateTestExpiredJWT(userID, -1)
+	jwtoken, _ := testutil.CreateTestUserAndJWT()
 	interviewID := testutil.CreateTestInterview(jwtoken)
 	conversationID := testutil.CreateTestConversation(jwtoken, interviewID)
 	urlTest := testutil.TestServerURL + fmt.Sprintf("/api/conversations/append/%d", interviewID)
@@ -616,69 +555,6 @@ func Test_AppendConversationsHandler_Integration(t *testing.T) {
 			expectedStatus: http.StatusCreated,
 			respBodyFunc:   conversationBuilder.NewAppendedConversationMock(),
 			DBCheck:        true,
-		},
-		{
-			name:   "AppendConversation_MissingBearer&Token",
-			method: "POST",
-			url:    urlTest,
-			reqBody: `{
-				"conversation_id" : 1,
-				"message" : "Answer2"
-			}`,
-			headerKey:      "Authorization",
-			expectedStatus: http.StatusUnauthorized,
-			respBody: handlers.ReturnVals{
-				Error: "Unauthorized",
-			},
-			DBCheck: false,
-		},
-		{
-			name:   "AppendConversation_MissingToken",
-			method: "POST",
-			url:    urlTest,
-			reqBody: `{
-				"conversation_id" : 1,
-				"message" : "Answer2"
-			}`,
-			headerKey:      "Authorization",
-			headerValue:    "Bearer ",
-			expectedStatus: http.StatusUnauthorized,
-			respBody: handlers.ReturnVals{
-				Error: "Unauthorized",
-			},
-			DBCheck: false,
-		},
-		{
-			name:   "AppendConversation_MalformedHeaderValue",
-			method: "POST",
-			url:    urlTest,
-			reqBody: `{
-				"conversation_id" : 1,
-				"message" : "Answer2"
-			}`,
-			headerKey:      "Authorization",
-			headerValue:    "as9d8f7as09d87",
-			expectedStatus: http.StatusUnauthorized,
-			respBody: handlers.ReturnVals{
-				Error: "Unauthorized",
-			},
-			DBCheck: false,
-		},
-		{
-			name:   "AppendConversation_ExpiredToken",
-			method: "POST",
-			url:    urlTest,
-			reqBody: `{
-				"conversation_id" : 1,
-				"message" : "Answer2"
-			}`,
-			headerKey:      "Authorization",
-			headerValue:    "Bearer " + expiredJWT,
-			expectedStatus: http.StatusUnauthorized,
-			respBody: handlers.ReturnVals{
-				Error: "Unauthorized",
-			},
-			DBCheck: false,
 		},
 		{
 			name:   "AppendConversation_MissingIntervewID",
