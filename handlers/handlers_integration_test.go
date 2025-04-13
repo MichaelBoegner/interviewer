@@ -303,6 +303,73 @@ func Test_GetUsersHandler_Integration(t *testing.T) {
 	}
 }
 
+func Test_LoginHandler_Integration(t *testing.T) {
+	cleanDBOrFail(t)
+
+	jwtoken, userID := testutil.CreateTestUserAndJWT()
+
+	tests := []TestCase{
+		{
+			name:           "Login_Success",
+			method:         "POST",
+			url:            testutil.TestServerURL + "/api/auth/login",
+			expectedStatus: http.StatusOK,
+			reqBody: `{
+				"username" : "test",
+				"password" : "test"
+			}`,
+			respBody: handlers.ReturnVals{
+				UserID:   userID,
+				Username: "test",
+			},
+			DBCheck: false,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			// Act
+			resp, respCode, err := testRequests(t, tc.headerKey, tc.headerValue, tc.method, tc.url, strings.NewReader(tc.reqBody))
+			if err != nil {
+				log.Fatalf("TestRequest for interview creation failed: %v", err)
+			}
+
+			respUnmarshalled := &handlers.ReturnVals{}
+			err = json.Unmarshal(resp, respUnmarshalled)
+			if err != nil {
+				t.Fatalf("failed to unmarshal response: %v", err)
+			}
+
+			// Assert Response
+			if respCode != tc.expectedStatus {
+				t.Fatalf("[%s] expected status %d, got %d\n", tc.name, tc.expectedStatus, respCode)
+			}
+
+			expected := tc.respBody
+			got := *respUnmarshalled
+
+			if diff := cmp.Diff(expected, got, cmpopts.EquateApproxTime(time.Second)); diff != "" {
+				t.Errorf("Mismatch (-expected +got):\n%s", diff)
+			}
+
+			// Assert Database
+			if tc.DBCheck {
+				user, err := user.GetUser(Handler.UserRepo, got.UserID)
+				if err != nil {
+					t.Fatalf("Assert Database: GetUser failed: %v", err)
+				}
+
+				expectedDB := tc.User
+				gotDB := user
+
+				if diff := cmp.Diff(expectedDB, gotDB, cmpopts.EquateApproxTime(time.Second)); diff != "" {
+					t.Errorf("DB Mismatch (-expected +got):\n%s", diff)
+				}
+			}
+		})
+	}
+}
+
 func Test_InterviewsHandler_Integration(t *testing.T) {
 	cleanDBOrFail(t)
 
