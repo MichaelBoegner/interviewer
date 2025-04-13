@@ -34,7 +34,7 @@ func (c *OpenAIClient) GetChatGPTResponseInterview(prompt string) (*ChatGPTRespo
 
 	req, err := http.NewRequestWithContext(ctx, "POST", "https://api.openai.com/v1/chat/completions", bytes.NewBuffer(requestBody))
 	if err != nil {
-		log.Printf("NewRequestWithContext failing")
+		log.Printf("NewRequestWithContext failed: %v", err)
 		return nil, err
 	}
 
@@ -98,7 +98,7 @@ func (c *OpenAIClient) GetChatGPTResponseConversation(conversationHistory []map[
 
 	req, err := http.NewRequestWithContext(ctx, "POST", "https://api.openai.com/v1/chat/completions", bytes.NewBuffer(requestBody))
 	if err != nil {
-		log.Printf("NewRequestWithContext failing")
+		log.Printf("NewRequestWithContext failed: %v", err)
 		return nil, err
 	}
 

@@ -199,7 +199,7 @@ func Test_CreateUsersHandler_Integration(t *testing.T) {
 			if tc.DBCheck {
 				user, err := user.GetUser(Handler.UserRepo, got.UserID)
 				if err != nil {
-					t.Fatalf("Assert Database: GetUser failing: %v", err)
+					t.Fatalf("Assert Database: GetUser failed: %v", err)
 				}
 
 				expectedDB := tc.User
@@ -230,6 +230,18 @@ func Test_GetUsersHandler_Integration(t *testing.T) {
 				UserID:   userID,
 				Username: "test",
 				Email:    "test@test.com",
+			},
+			DBCheck: false,
+		},
+		{
+			name:           "GetUser_IncorrectID",
+			method:         "GET",
+			url:            testutil.TestServerURL + "/api/users/2",
+			headerKey:      "Authorization",
+			headerValue:    "Bearer " + jwtoken,
+			expectedStatus: http.StatusUnauthorized,
+			respBody: handlers.ReturnVals{
+				Error: "Invalid ID",
 			},
 			DBCheck: false,
 		},
@@ -265,7 +277,7 @@ func Test_GetUsersHandler_Integration(t *testing.T) {
 			if tc.DBCheck {
 				user, err := user.GetUser(Handler.UserRepo, got.UserID)
 				if err != nil {
-					t.Fatalf("Assert Database: GetUser failing: %v", err)
+					t.Fatalf("Assert Database: GetUser failed: %v", err)
 				}
 
 				expectedDB := tc.User
@@ -392,7 +404,7 @@ func Test_InterviewsHandler_Integration(t *testing.T) {
 			if tc.DBCheck {
 				interview, err := interview.GetInterview(Handler.InterviewRepo, respUnmarshalled.InterviewID)
 				if err != nil {
-					t.Fatalf("Assert Database: GetInterview failing: %v", err)
+					t.Fatalf("Assert Database: GetInterview failed: %v", err)
 				}
 
 				expectedDB := tc.Interview
@@ -554,7 +566,7 @@ func Test_CreateConversationsHandler_Integration(t *testing.T) {
 			if tc.DBCheck {
 				conversation, err := conversation.GetConversation(Handler.ConversationRepo, got.Conversation.ID)
 				if err != nil {
-					t.Fatalf("Assert Database: GetConversation failing: %v", err)
+					t.Fatalf("Assert Database: GetConversation failed: %v", err)
 				}
 
 				expectedDB := expected.Conversation
@@ -739,7 +751,7 @@ func Test_AppendConversationsHandler_Integration(t *testing.T) {
 			if tc.DBCheck {
 				conversation, err := conversation.GetConversation(Handler.ConversationRepo, got.Conversation.ID)
 				if err != nil {
-					t.Fatalf("Assert Database: GetConversation failing: %v", err)
+					t.Fatalf("Assert Database: GetConversation failed: %v", err)
 				}
 
 				expectedDB := expected.Conversation

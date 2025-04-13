@@ -86,7 +86,7 @@ func GetContext(next http.Handler) http.Handler {
 		if isAccessToken(tokenKey) {
 			userID, err = VerifyToken(tokenKey)
 			if err != nil {
-				log.Printf("Supplied token returns error: %v", err)
+				log.Printf("VerifyToken failed: %v", err)
 				respondWithError(w, http.StatusUnauthorized, "Unauthorized")
 				return
 			}

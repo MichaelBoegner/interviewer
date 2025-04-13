@@ -98,10 +98,23 @@ func (h *Handler) CreateUsersHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) GetUsersHandler(w http.ResponseWriter, r *http.Request) {
-	userID, err := getPathID(r, "/api/users/")
+	userID, ok := r.Context().Value(middleware.ContextKeyTokenParams).(int)
+	if !ok {
+		respondWithError(w, http.StatusBadRequest, "Invalid ID")
+		return
+	}
+
+	userIDParam, err := getPathID(r, "/api/users/")
 	if err != nil {
 		log.Printf("PathID error: %v\n", err)
-		respondWithError(w, http.StatusBadRequest, "Invalid ID.")
+		respondWithError(w, http.StatusBadRequest, "Invalid ID")
+		return
+	}
+
+	if userID != userIDParam {
+		log.Printf("UserID mismatch: %v vs. %v", userID, userIDParam)
+		respondWithError(w, http.StatusUnauthorized, "Invalid ID")
+		return
 	}
 
 	user, err := user.GetUser(h.UserRepo, userID)

@@ -27,7 +27,7 @@ func CreateUser(repo UserRepo, username, email, password string) (*User, error) 
 
 	id, err := repo.CreateUser(user)
 	if err != nil {
-		log.Printf("CreateUser failing: %v", err)
+		log.Printf("CreateUser failed: %v", err)
 		return nil, err
 	}
 	user.ID = id
@@ -65,7 +65,7 @@ func GetUser(repo UserRepo, userID int) (*User, error) {
 
 	userReturned, err := repo.GetUser(user)
 	if err != nil {
-		log.Printf("GetUser from database failed due to: %v", err)
+		log.Printf("GetUser failed: %v", err)
 		return nil, err
 	}
 	return userReturned, nil
