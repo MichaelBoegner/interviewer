@@ -245,6 +245,18 @@ func Test_GetUsersHandler_Integration(t *testing.T) {
 			},
 			DBCheck: false,
 		},
+		{
+			name:           "GetUser_MissingID",
+			method:         "GET",
+			url:            testutil.TestServerURL + "/api/users/",
+			headerKey:      "Authorization",
+			headerValue:    "Bearer " + jwtoken,
+			expectedStatus: http.StatusBadRequest,
+			respBody: handlers.ReturnVals{
+				Error: "UserID required",
+			},
+			DBCheck: false,
+		},
 	}
 
 	for _, tc := range tests {

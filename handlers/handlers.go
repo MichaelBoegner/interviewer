@@ -106,8 +106,8 @@ func (h *Handler) GetUsersHandler(w http.ResponseWriter, r *http.Request) {
 
 	userIDParam, err := getPathID(r, "/api/users/")
 	if err != nil {
-		log.Printf("PathID error: %v\n", err)
-		respondWithError(w, http.StatusBadRequest, "Invalid ID")
+		log.Printf("getPathID error: %v\n", err)
+		respondWithError(w, http.StatusBadRequest, "UserID required")
 		return
 	}
 
@@ -117,16 +117,16 @@ func (h *Handler) GetUsersHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := user.GetUser(h.UserRepo, userID)
+	userReturned, err := user.GetUser(h.UserRepo, userID)
 	if err != nil {
 		log.Printf("GetUsers error: %v", err)
 		return
 	}
 
 	payload := &ReturnVals{
-		UserID:   user.ID,
-		Username: user.Username,
-		Email:    user.Email,
+		UserID:   userReturned.ID,
+		Username: userReturned.Username,
+		Email:    userReturned.Email,
 	}
 
 	respondWithJSON(w, http.StatusOK, payload)
