@@ -51,7 +51,6 @@ type ReturnVals struct {
 	Body           string                     `json:"body,omitempty"`
 	Username       string                     `json:"username,omitempty"`
 	Email          string                     `json:"email,omitempty"`
-	Token          string                     `json:"token,omitempty"`
 	FirstQuestion  string                     `json:"first_question,omitempty"`
 	NextQuestion   string                     `json:"next_question,omitempty"`
 	JWToken        string                     `json:"jwtoken,omitempty"`

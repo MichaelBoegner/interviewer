@@ -20,6 +20,7 @@ import (
 	"github.com/michaelboegner/interviewer/internal/testutil"
 	"github.com/michaelboegner/interviewer/interview"
 	"github.com/michaelboegner/interviewer/middleware"
+	"github.com/michaelboegner/interviewer/token"
 	"github.com/michaelboegner/interviewer/user"
 )
 
@@ -306,7 +307,7 @@ func Test_GetUsersHandler_Integration(t *testing.T) {
 func Test_LoginHandler_Integration(t *testing.T) {
 	cleanDBOrFail(t)
 
-	jwtoken, userID := testutil.CreateTestUserAndJWT()
+	_, _ = testutil.CreateTestUserAndJWT()
 
 	tests := []TestCase{
 		{
@@ -318,11 +319,7 @@ func Test_LoginHandler_Integration(t *testing.T) {
 				"username" : "test",
 				"password" : "test"
 			}`,
-			respBody: handlers.ReturnVals{
-				UserID:   userID,
-				Username: "test",
-			},
-			DBCheck: false,
+			DBCheck: true,
 		},
 	}
 
@@ -345,22 +342,23 @@ func Test_LoginHandler_Integration(t *testing.T) {
 				t.Fatalf("[%s] expected status %d, got %d\n", tc.name, tc.expectedStatus, respCode)
 			}
 
-			expected := tc.respBody
-			got := *respUnmarshalled
+			if respUnmarshalled.JWToken == "" {
+				t.Fatalf("Expected access token, got empty string")
+			}
 
-			if diff := cmp.Diff(expected, got, cmpopts.EquateApproxTime(time.Second)); diff != "" {
-				t.Errorf("Mismatch (-expected +got):\n%s", diff)
+			if respUnmarshalled.RefreshToken == "" {
+				t.Fatalf("Expected refresh token, got empty string")
 			}
 
 			// Assert Database
 			if tc.DBCheck {
-				user, err := user.GetUser(Handler.UserRepo, got.UserID)
+				refreshToken, err := token.GetStoredRefreshToken(Handler.TokenRepo, respUnmarshalled.UserID)
 				if err != nil {
 					t.Fatalf("Assert Database: GetUser failed: %v", err)
 				}
 
-				expectedDB := tc.User
-				gotDB := user
+				expectedDB := respUnmarshalled.RefreshToken
+				gotDB := refreshToken
 
 				if diff := cmp.Diff(expectedDB, gotDB, cmpopts.EquateApproxTime(time.Second)); diff != "" {
 					t.Errorf("DB Mismatch (-expected +got):\n%s", diff)
