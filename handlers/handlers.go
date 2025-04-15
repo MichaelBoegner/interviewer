@@ -6,8 +6,6 @@ import (
 	"errors"
 	"log"
 	"net/http"
-	"strconv"
-	"strings"
 
 	"github.com/michaelboegner/interviewer/chatgpt"
 	"github.com/michaelboegner/interviewer/conversation"
@@ -66,24 +64,24 @@ func (h *Handler) CreateUsersHandler(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(params)
 	if err != nil {
 		log.Printf("Decoding params failed: %v", err)
-		respondWithError(w, http.StatusInternalServerError, "Internal Server Error")
+		RespondWithError(w, http.StatusInternalServerError, "Internal Server Error")
 	}
 
 	if params.Username == "" || params.Email == "" || params.Password == "" {
 		log.Printf("Missing params in usersHandler.")
-		respondWithError(w, http.StatusBadRequest, "Username, Email, and Password required")
+		RespondWithError(w, http.StatusBadRequest, "Username, Email, and Password required")
 		return
 	}
 	userCreated, err := user.CreateUser(h.UserRepo, params.Username, params.Email, params.Password)
 	if err != nil {
 		log.Printf("CreateUser error: %v", err)
 		if errors.Is(err, user.ErrDuplicateEmail) || errors.Is(err, user.ErrDuplicateUsername) || errors.Is(err, user.ErrDuplicateUser) {
-			respondWithError(w, http.StatusConflict, "Email or username already exists")
+			RespondWithError(w, http.StatusConflict, "Email or username already exists")
 			return
 		}
 		// For preventing user creation in frontend.
 		// noNewUsers := fmt.Sprintf("%s", err)
-		respondWithError(w, http.StatusInternalServerError, "Internal Server Error")
+		RespondWithError(w, http.StatusInternalServerError, "Internal Server Error")
 		return
 	}
 
@@ -92,27 +90,27 @@ func (h *Handler) CreateUsersHandler(w http.ResponseWriter, r *http.Request) {
 		Username: userCreated.Username,
 		Email:    userCreated.Email,
 	}
-	respondWithJSON(w, http.StatusCreated, payload)
+	RespondWithJSON(w, http.StatusCreated, payload)
 	return
 }
 
 func (h *Handler) GetUsersHandler(w http.ResponseWriter, r *http.Request) {
 	userID, ok := r.Context().Value(middleware.ContextKeyTokenParams).(int)
 	if !ok {
-		respondWithError(w, http.StatusBadRequest, "Invalid ID")
+		RespondWithError(w, http.StatusBadRequest, "Invalid ID")
 		return
 	}
 
-	userIDParam, err := getPathID(r, "/api/users/")
+	userIDParam, err := GetPathID(r, "/api/users/")
 	if err != nil {
-		log.Printf("getPathID error: %v\n", err)
-		respondWithError(w, http.StatusBadRequest, "UserID required")
+		log.Printf("GetPathID error: %v\n", err)
+		RespondWithError(w, http.StatusBadRequest, "UserID required")
 		return
 	}
 
 	if userID != userIDParam {
 		log.Printf("UserID mismatch: %v vs. %v", userID, userIDParam)
-		respondWithError(w, http.StatusUnauthorized, "Invalid ID")
+		RespondWithError(w, http.StatusUnauthorized, "Invalid ID")
 		return
 	}
 
@@ -128,7 +126,7 @@ func (h *Handler) GetUsersHandler(w http.ResponseWriter, r *http.Request) {
 		Email:    userReturned.Email,
 	}
 
-	respondWithJSON(w, http.StatusOK, payload)
+	RespondWithJSON(w, http.StatusOK, payload)
 	return
 }
 
@@ -137,12 +135,12 @@ func (h *Handler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(params)
 	if err != nil {
 		log.Printf("Decoding params failed: %v", err)
-		respondWithError(w, http.StatusInternalServerError, "Internal Server Error")
+		RespondWithError(w, http.StatusInternalServerError, "Internal Server Error")
 	}
 
 	if params.Username == "" || params.Password == "" {
 		log.Printf("Invalid username or password.")
-		respondWithError(w, http.StatusUnauthorized, "Invalid username or password.")
+		RespondWithError(w, http.StatusUnauthorized, "Invalid username or password.")
 		return
 
 	}
@@ -150,14 +148,14 @@ func (h *Handler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	jwToken, userID, err := user.LoginUser(h.UserRepo, params.Username, params.Password)
 	if err != nil {
 		log.Printf("LoginUser error: %v", err)
-		respondWithError(w, http.StatusUnauthorized, "Invalid username or password.")
+		RespondWithError(w, http.StatusUnauthorized, "Invalid username or password.")
 		return
 	}
 
 	refreshToken, err := token.CreateRefreshToken(h.TokenRepo, userID)
 	if err != nil {
 		log.Printf("RefreshToken error: %v", err)
-		respondWithError(w, http.StatusUnauthorized, "")
+		RespondWithError(w, http.StatusUnauthorized, "")
 		return
 	}
 
@@ -168,14 +166,14 @@ func (h *Handler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 		RefreshToken: refreshToken,
 	}
 
-	respondWithJSON(w, http.StatusOK, payload)
+	RespondWithJSON(w, http.StatusOK, payload)
 	return
 }
 
 func (h *Handler) InterviewsHandler(w http.ResponseWriter, r *http.Request) {
 	userID, ok := r.Context().Value(middleware.ContextKeyTokenParams).(int)
 	if !ok {
-		respondWithError(w, http.StatusBadRequest, "Invalid userID")
+		RespondWithError(w, http.StatusBadRequest, "Invalid userID")
 		return
 	}
 
@@ -190,7 +188,7 @@ func (h *Handler) InterviewsHandler(w http.ResponseWriter, r *http.Request) {
 		FirstQuestion: interviewStarted.FirstQuestion,
 	}
 
-	respondWithJSON(w, http.StatusCreated, payload)
+	RespondWithJSON(w, http.StatusCreated, payload)
 	return
 }
 
@@ -199,21 +197,21 @@ func (h *Handler) CreateConversationsHandler(w http.ResponseWriter, r *http.Requ
 	err := json.NewDecoder(r.Body).Decode(params)
 	if err != nil {
 		log.Printf("Decoding params failed: %v", err)
-		respondWithError(w, http.StatusInternalServerError, "Internal Server Error")
+		RespondWithError(w, http.StatusInternalServerError, "Internal Server Error")
 	}
 
-	interviewID, err := getPathID(r, "/api/conversations/create/")
+	interviewID, err := GetPathID(r, "/api/conversations/create/")
 
 	if err != nil {
 		log.Printf("PathID error: %v\n", err)
-		respondWithError(w, http.StatusBadRequest, "Missing ID")
+		RespondWithError(w, http.StatusBadRequest, "Missing ID")
 		return
 	}
 
 	interviewReturned, err := interview.GetInterview(h.InterviewRepo, interviewID)
 	if err != nil {
 		log.Printf("GetInterview error: %v\n", err)
-		respondWithError(w, http.StatusBadRequest, "Invalid ID")
+		RespondWithError(w, http.StatusBadRequest, "Invalid ID")
 		return
 	}
 
@@ -227,14 +225,14 @@ func (h *Handler) CreateConversationsHandler(w http.ResponseWriter, r *http.Requ
 		params.Message)
 	if err != nil {
 		log.Printf("CreateConversation error: %v", err)
-		respondWithError(w, http.StatusBadRequest, "Invalid interview_id")
+		RespondWithError(w, http.StatusBadRequest, "Invalid interview_id")
 		return
 	}
 
 	payload := &ReturnVals{
 		Conversation: conversationReturned,
 	}
-	respondWithJSON(w, http.StatusCreated, payload)
+	RespondWithJSON(w, http.StatusCreated, payload)
 }
 
 func (h *Handler) AppendConversationsHandler(w http.ResponseWriter, r *http.Request) {
@@ -242,32 +240,32 @@ func (h *Handler) AppendConversationsHandler(w http.ResponseWriter, r *http.Requ
 	err := json.NewDecoder(r.Body).Decode(params)
 	if err != nil {
 		log.Printf("Decoding params failed: %v", err)
-		respondWithError(w, http.StatusInternalServerError, "Internal Server Error")
+		RespondWithError(w, http.StatusInternalServerError, "Internal Server Error")
 	}
 
 	if params.Message == "" {
 		log.Printf("messageUserResponse is nil")
-		respondWithError(w, http.StatusBadRequest, "Missing message")
+		RespondWithError(w, http.StatusBadRequest, "Missing message")
 	}
 
-	interviewID, err := getPathID(r, "/api/conversations/append/")
+	interviewID, err := GetPathID(r, "/api/conversations/append/")
 	if err != nil {
 		log.Printf("PathID error: %v\n", err)
-		respondWithError(w, http.StatusBadRequest, "Missing ID")
+		RespondWithError(w, http.StatusBadRequest, "Missing ID")
 		return
 	}
 
 	interviewReturned, err := interview.GetInterview(h.InterviewRepo, interviewID)
 	if err != nil {
 		log.Printf("GetInterview error: %v\n", err)
-		respondWithError(w, http.StatusBadRequest, "Invalid ID")
+		RespondWithError(w, http.StatusBadRequest, "Invalid ID")
 		return
 	}
 
 	conversationReturned, err := conversation.GetConversation(h.ConversationRepo, params.ConversationID)
 	if err != nil {
 		log.Printf("GetConversation error: %v", err)
-		respondWithError(w, http.StatusBadRequest, "Invalid ID.")
+		RespondWithError(w, http.StatusBadRequest, "Invalid ID.")
 		return
 	}
 
@@ -279,14 +277,14 @@ func (h *Handler) AppendConversationsHandler(w http.ResponseWriter, r *http.Requ
 		interviewReturned.Prompt)
 	if err != nil {
 		log.Printf("AppendConversation error: %v", err)
-		respondWithError(w, http.StatusBadRequest, "Invalid ID.")
+		RespondWithError(w, http.StatusBadRequest, "Invalid ID.")
 		return
 	}
 
 	payload := &ReturnVals{
 		Conversation: conversationReturned,
 	}
-	respondWithJSON(w, http.StatusCreated, payload)
+	RespondWithJSON(w, http.StatusCreated, payload)
 }
 
 func (h *Handler) RefreshTokensHandler(w http.ResponseWriter, r *http.Request) {
@@ -295,34 +293,34 @@ func (h *Handler) RefreshTokensHandler(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(params)
 	if err != nil {
 		log.Printf("Decoding params failed: %v", err)
-		respondWithError(w, http.StatusInternalServerError, "Internal Server Error")
+		RespondWithError(w, http.StatusInternalServerError, "Internal Server Error")
 	}
 
 	storedToken, err := token.GetStoredRefreshToken(h.TokenRepo, params.UserID)
 	if err != nil {
 		log.Printf("GetStoredRefreshToken error: %v", err)
-		respondWithError(w, http.StatusUnauthorized, "User ID is invalid.")
+		RespondWithError(w, http.StatusUnauthorized, "User ID is invalid.")
 		return
 	}
 
 	ok := token.VerifyRefreshToken(storedToken, providedToken)
 	if !ok {
 		log.Printf("VerifyRefreshToken error.")
-		respondWithError(w, http.StatusUnauthorized, "Refresh token is invalid.")
+		RespondWithError(w, http.StatusUnauthorized, "Refresh token is invalid.")
 		return
 	}
 
 	refreshToken, err := token.CreateRefreshToken(h.TokenRepo, params.UserID)
 	if err != nil {
 		log.Printf("CreateRefreshToken error: %v", err)
-		respondWithError(w, http.StatusUnauthorized, "")
+		RespondWithError(w, http.StatusUnauthorized, "")
 		return
 	}
 
 	jwToken, err := token.CreateJWT(params.UserID, 0)
 	if err != nil {
 		log.Printf("JWT creation failed: %v", err)
-		respondWithError(w, http.StatusInternalServerError, "")
+		RespondWithError(w, http.StatusInternalServerError, "")
 		return
 	}
 
@@ -331,66 +329,6 @@ func (h *Handler) RefreshTokensHandler(w http.ResponseWriter, r *http.Request) {
 		JWToken:      jwToken,
 		RefreshToken: refreshToken,
 	}
-	respondWithJSON(w, http.StatusOK, payload)
+	RespondWithJSON(w, http.StatusOK, payload)
 	return
-}
-
-func getPathID(r *http.Request, prefix string) (int, error) {
-	path := strings.TrimPrefix(r.URL.Path, prefix)
-	path = strings.Trim(path, "/")
-
-	if path == "" {
-		log.Printf("getPathID returned empty string")
-		err := errors.New("Missing or invalid url param")
-		return 0, err
-	}
-
-	id, err := strconv.Atoi(path)
-	if err != nil {
-		log.Printf("getPathID failed: %v", err)
-		return 0, err
-	}
-
-	return id, nil
-}
-
-func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
-	if w.Header().Get("Content-Type") == "" {
-		w.Header().Set("Content-Type", "application/json")
-	}
-
-	if code != 0 {
-		w.WriteHeader(code)
-	}
-
-	data, err := json.Marshal(payload)
-	if err != nil {
-		log.Printf("Error marshalling JSON: %s", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
-	}
-
-	w.Write(data)
-}
-
-func respondWithError(w http.ResponseWriter, code int, msg string) {
-	if w.Header().Get("Content-Type") == "" {
-		w.Header().Set("Content-Type", "application/json")
-	}
-
-	if code != 0 {
-		w.WriteHeader(code)
-	}
-
-	respBody := ReturnVals{
-		Error: msg,
-	}
-
-	data, err := json.Marshal(respBody)
-	if err != nil {
-		log.Printf("Error marshalling JSON: %s", err)
-		return
-	}
-
-	w.Write(data)
 }
