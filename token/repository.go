@@ -15,6 +15,8 @@ func NewRepository(db *sql.DB) *Repository {
 	}
 }
 
+// TODO: These are extremely simplistic in protocol (not tracking revoked, multi-sessions, etc. . . )
+// Will advance this after unit tests, CI/CD, and AWS deploy.
 func (repo *Repository) AddRefreshToken(token *RefreshToken) error {
 	_, err := repo.DB.Exec(
 		"INSERT INTO refresh_tokens (user_id, refresh_token, expires_at, created_at, updated_at) "+
@@ -35,9 +37,12 @@ func (repo *Repository) AddRefreshToken(token *RefreshToken) error {
 
 func (repo *Repository) GetStoredRefreshToken(userID int) (string, error) {
 	var storedToken string
-	err := repo.DB.QueryRow("SELECT refresh_token from refresh_tokens WHERE user_id = $1",
-		userID,
-	).Scan(&storedToken)
+	err := repo.DB.QueryRow(`
+		SELECT refresh_token FROM refresh_tokens 
+		WHERE user_id = $1 
+		ORDER BY created_at DESC 
+		LIMIT 1
+		`, userID).Scan(&storedToken)
 	if err == sql.ErrNoRows {
 		log.Printf("User ID invalid: %v", err)
 		return "", err
