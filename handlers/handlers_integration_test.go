@@ -36,10 +36,11 @@ type TestCase struct {
 	expectError    bool
 	respBody       handlers.ReturnVals
 	respBodyFunc   func() handlers.ReturnVals
-	DBCheck        bool
 	Interview      *interview.Interview
 	Conversation   *conversation.Conversation
 	User           *user.User
+	TokensExpected bool
+	DBCheck        bool
 }
 
 var (
@@ -319,7 +320,54 @@ func Test_LoginHandler_Integration(t *testing.T) {
 				"username" : "test",
 				"password" : "test"
 			}`,
-			DBCheck: true,
+			DBCheck:        true,
+			TokensExpected: true,
+		},
+		{
+			name:           "Login_MissingUsername",
+			method:         "POST",
+			url:            testutil.TestServerURL + "/api/auth/login",
+			expectedStatus: http.StatusBadRequest,
+			reqBody: `{
+				"password": "test"
+			}`,
+			DBCheck:        false,
+			TokensExpected: false,
+		},
+		{
+			name:           "Login_MissingPassword",
+			method:         "POST",
+			url:            testutil.TestServerURL + "/api/auth/login",
+			expectedStatus: http.StatusBadRequest,
+			reqBody: `{
+				"username": "test"
+			}`,
+			DBCheck:        false,
+			TokensExpected: false,
+		},
+		{
+			name:           "Login_WrongUsername",
+			method:         "POST",
+			url:            testutil.TestServerURL + "/api/auth/login",
+			expectedStatus: http.StatusUnauthorized,
+			reqBody: `{
+				"username": "notarealuser",
+				"password": "test"
+			}`,
+			DBCheck:        false,
+			TokensExpected: false,
+		},
+		{
+			name:           "Login_WrongPassword",
+			method:         "POST",
+			url:            testutil.TestServerURL + "/api/auth/login",
+			expectedStatus: http.StatusUnauthorized,
+			reqBody: `{
+				"username": "test",
+				"password": "wrongpass"
+			}`,
+			DBCheck:        false,
+			TokensExpected: false,
 		},
 	}
 
@@ -342,12 +390,22 @@ func Test_LoginHandler_Integration(t *testing.T) {
 				t.Fatalf("[%s] expected status %d, got %d\n", tc.name, tc.expectedStatus, respCode)
 			}
 
-			if respUnmarshalled.JWToken == "" {
-				t.Fatalf("Expected access token, got empty string")
-			}
+			if tc.TokensExpected {
+				if respUnmarshalled.JWToken == "" {
+					t.Fatalf("Expected access token, got empty string")
+				}
 
-			if respUnmarshalled.RefreshToken == "" {
-				t.Fatalf("Expected refresh token, got empty string")
+				if respUnmarshalled.RefreshToken == "" {
+					t.Fatalf("Expected refresh token, got empty string")
+				}
+			} else {
+				if respUnmarshalled.JWToken != "" {
+					t.Fatalf("Did not expect JWT, but got one: %v", respUnmarshalled.JWToken)
+				}
+
+				if respUnmarshalled.RefreshToken != "" {
+					t.Fatalf("Did not expect refresh token, but got one: %v", respUnmarshalled.RefreshToken)
+				}
 			}
 
 			// Assert Database
