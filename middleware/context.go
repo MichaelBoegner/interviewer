@@ -40,8 +40,6 @@ const (
 
 func EnableCors(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
-		// In production, this should be a specific domain. For development, we check the environment
 		if os.Getenv("ENV") == "production" {
 			log.Println("Using production")
 			w.Header().Set("Access-Control-Allow-Origin", "https://interviewer-ui.vercel.app")

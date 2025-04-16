@@ -28,19 +28,16 @@ func StartDB() (*sql.DB, error) {
 			dbHost, dbPort, dbUser, dbName, sslMode)
 	}
 
-	// For direct Supabase connection string (alternative method)
 	supabaseConnStr := os.Getenv("DATABASE_URL")
 	if supabaseConnStr != "" {
 		connStr = supabaseConnStr
 	}
 
-	// Open the connection
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	// Ensure the connection is successful
 	err = db.Ping()
 	if err != nil {
 		log.Fatal(err)
