@@ -134,17 +134,23 @@ func (h *Handler) RefreshTokensHandler(w http.ResponseWriter, r *http.Request) {
 		RespondWithError(w, http.StatusInternalServerError, "Internal Server Error")
 	}
 
+	if params.UserID == 0 {
+		log.Printf("Invalid userID")
+		RespondWithError(w, http.StatusBadRequest, "Invalid username or password")
+		return
+	}
+
 	storedToken, err := token.GetStoredRefreshToken(h.TokenRepo, params.UserID)
 	if err != nil {
 		log.Printf("GetStoredRefreshToken error: %v", err)
-		RespondWithError(w, http.StatusUnauthorized, "User ID is invalid.")
+		RespondWithError(w, http.StatusBadRequest, "Invalid user_id")
 		return
 	}
 
 	ok := token.VerifyRefreshToken(storedToken, providedToken)
 	if !ok {
-		log.Printf("VerifyRefreshToken error.")
-		RespondWithError(w, http.StatusUnauthorized, "Refresh token is invalid.")
+		log.Printf("VerifyRefreshToken error")
+		RespondWithError(w, http.StatusUnauthorized, "Refresh token is invalid")
 		return
 	}
 

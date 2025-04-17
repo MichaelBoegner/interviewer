@@ -443,11 +443,62 @@ func Test_RefreshTokensHandler_Integration(t *testing.T) {
 			expectedStatus: http.StatusOK,
 			headerKey:      "Authorization",
 			headerValue:    "Bearer " + refreshToken,
-			reqBody: `{
-				"user_id" : ` + fmt.Sprint(userID) + `
-			}`,
+			reqBody: fmt.Sprintf(`{
+				"user_id" : %d
+			}`, userID),
 			DBCheck:        true,
 			TokensExpected: true,
+		},
+		{
+			name:           "RefreshToken_IncorrectUserID",
+			method:         "POST",
+			url:            testutil.TestServerURL + "/api/auth/token",
+			expectedStatus: http.StatusBadRequest,
+			headerKey:      "Authorization",
+			headerValue:    "Bearer " + refreshToken,
+			reqBody: `{
+				"user_id" : 2
+			}`,
+			DBCheck:        false,
+			TokensExpected: false,
+		},
+		{
+			name:           "RefreshToken_MissingBearer&Token",
+			method:         "POST",
+			url:            testutil.TestServerURL + "/api/auth/token",
+			expectedStatus: http.StatusUnauthorized,
+			headerKey:      "Authorization",
+			reqBody: fmt.Sprintf(`{
+				"user_id": %d
+			}`, userID),
+			DBCheck:        false,
+			TokensExpected: false,
+		},
+		{
+			name:           "RefreshToken_MissingToken",
+			method:         "POST",
+			url:            testutil.TestServerURL + "/api/auth/token",
+			expectedStatus: http.StatusUnauthorized,
+			headerKey:      "Authorization",
+			headerValue:    "Bearer ",
+			reqBody: fmt.Sprintf(`{
+				"user_id": %d
+			}`, userID),
+			DBCheck:        false,
+			TokensExpected: false,
+		},
+		{
+			name:           "RefreshToken_MalformedToken",
+			method:         "POST",
+			url:            testutil.TestServerURL + "/api/auth/token",
+			expectedStatus: http.StatusUnauthorized,
+			headerKey:      "Authorization",
+			headerValue:    "12341234",
+			reqBody: fmt.Sprintf(`{
+				"user_id": %d
+			}`, userID),
+			DBCheck:        false,
+			TokensExpected: false,
 		},
 	}
 
@@ -564,7 +615,7 @@ func Test_InterviewsHandler_Integration(t *testing.T) {
 			},
 		},
 		{
-			name:           "CreateInterview_MalformedHeaderValue",
+			name:           "CreateInterview_MalformedToken",
 			method:         "POST",
 			url:            testutil.TestServerURL + "/api/interviews",
 			reqBody:        `{}`,
