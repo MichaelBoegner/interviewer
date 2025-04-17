@@ -95,35 +95,6 @@ func CreateTestConversation(jwt string, interviewID int) int {
 	return returnVals.Conversation.InterviewID
 }
 
-func testRequests(headerKey, headerValue, method, url string, reqBody *strings.Reader) ([]byte, error) {
-	client := &http.Client{}
-
-	req, err := http.NewRequest(method, url, reqBody)
-	if err != nil {
-		log.Printf("CreateTestUserAndJWT user creation failed: %v", err)
-		return nil, err
-	}
-	req.Header.Set("Content-Type", "application/json")
-	if headerKey != "" {
-		req.Header.Set(headerKey, headerValue)
-	}
-
-	resp, err := client.Do(req)
-	if err != nil {
-		log.Printf("Request failed: %v", err)
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	bodyBytes, err := io.ReadAll(resp.Body)
-	if err != nil {
-		log.Printf("Reading response failed: %v", err)
-		return nil, err
-	}
-
-	return bodyBytes, nil
-}
-
 func CreateTestExpiredJWT(id, expires int) string {
 	var token *jwt.Token
 	jwtSecret := os.Getenv("JWT_SECRET")
@@ -157,4 +128,33 @@ func TruncateAllTables(db *sql.DB) error {
 		TRUNCATE users, interviews, conversations RESTART IDENTITY CASCADE;
 	`)
 	return err
+}
+
+func testRequests(headerKey, headerValue, method, url string, reqBody *strings.Reader) ([]byte, error) {
+	client := &http.Client{}
+
+	req, err := http.NewRequest(method, url, reqBody)
+	if err != nil {
+		log.Printf("CreateTestUserAndJWT user creation failed: %v", err)
+		return nil, err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	if headerKey != "" {
+		req.Header.Set(headerKey, headerValue)
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Printf("Request failed: %v", err)
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	bodyBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		log.Printf("Reading response failed: %v", err)
+		return nil, err
+	}
+
+	return bodyBytes, nil
 }

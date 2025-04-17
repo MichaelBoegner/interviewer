@@ -426,6 +426,86 @@ func Test_LoginHandler_Integration(t *testing.T) {
 	}
 }
 
+func Test_RefreshTokensHandler_Integration(t *testing.T) {
+	cleanDBOrFail(t)
+
+	_, userID := testutil.CreateTestUserAndJWT()
+	refreshToken, err := token.GetStoredRefreshToken(Handler.TokenRepo, userID)
+	if err != nil {
+		t.Fatalf("TC GetStoredRefreshToken failed: %v", err)
+	}
+
+	tests := []TestCase{
+		{
+			name:           "RefreshToken_Success",
+			method:         "POST",
+			url:            testutil.TestServerURL + "/api/auth/token",
+			expectedStatus: http.StatusOK,
+			headerKey:      "Authorization",
+			headerValue:    "Bearer " + refreshToken,
+			reqBody: `{
+				"user_id" : ` + fmt.Sprint(userID) + `
+			}`,
+			DBCheck:        false,
+			TokensExpected: true,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			// Act
+			resp, respCode, err := testRequests(t, tc.headerKey, tc.headerValue, tc.method, tc.url, strings.NewReader(tc.reqBody))
+			if err != nil {
+				log.Fatalf("TestRequest for interview creation failed: %v", err)
+			}
+
+			respUnmarshalled := &handlers.ReturnVals{}
+			err = json.Unmarshal(resp, respUnmarshalled)
+			if err != nil {
+				t.Fatalf("failed to unmarshal response: %v", err)
+			}
+
+			// Assert Response
+			if respCode != tc.expectedStatus {
+				t.Fatalf("[%s] expected status %d, got %d\n", tc.name, tc.expectedStatus, respCode)
+			}
+
+			if tc.TokensExpected {
+				if respUnmarshalled.JWToken == "" {
+					t.Fatalf("Expected access token, got empty string")
+				}
+
+				if respUnmarshalled.RefreshToken == "" {
+					t.Fatalf("Expected refresh token, got empty string")
+				}
+			} else {
+				if respUnmarshalled.JWToken != "" {
+					t.Fatalf("Did not expect JWT, but got one: %v", respUnmarshalled.JWToken)
+				}
+
+				if respUnmarshalled.RefreshToken != "" {
+					t.Fatalf("Did not expect refresh token, but got one: %v", respUnmarshalled.RefreshToken)
+				}
+			}
+
+			// Assert Database
+			if tc.DBCheck {
+				refreshToken, err := token.GetStoredRefreshToken(Handler.TokenRepo, respUnmarshalled.UserID)
+				if err != nil {
+					t.Fatalf("Assert Database: GetUser failed: %v", err)
+				}
+
+				expectedDB := respUnmarshalled.RefreshToken
+				gotDB := refreshToken
+
+				if diff := cmp.Diff(expectedDB, gotDB, cmpopts.EquateApproxTime(time.Second)); diff != "" {
+					t.Errorf("DB Mismatch (-expected +got):\n%s", diff)
+				}
+			}
+		})
+	}
+}
+
 func Test_InterviewsHandler_Integration(t *testing.T) {
 	cleanDBOrFail(t)
 
@@ -552,6 +632,7 @@ func Test_InterviewsHandler_Integration(t *testing.T) {
 		})
 	}
 }
+
 func Test_CreateConversationsHandler_Integration(t *testing.T) {
 	cleanDBOrFail(t)
 

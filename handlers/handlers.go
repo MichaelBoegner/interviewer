@@ -124,6 +124,53 @@ func (h *Handler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
+func (h *Handler) RefreshTokensHandler(w http.ResponseWriter, r *http.Request) {
+	providedToken := r.Context().Value(middleware.ContextKeyTokenKey).(string)
+	params := &middleware.AcceptedVals{}
+
+	err := json.NewDecoder(r.Body).Decode(params)
+	if err != nil {
+		log.Printf("Decoding params failed: %v", err)
+		RespondWithError(w, http.StatusInternalServerError, "Internal Server Error")
+	}
+
+	storedToken, err := token.GetStoredRefreshToken(h.TokenRepo, params.UserID)
+	if err != nil {
+		log.Printf("GetStoredRefreshToken error: %v", err)
+		RespondWithError(w, http.StatusUnauthorized, "User ID is invalid.")
+		return
+	}
+
+	ok := token.VerifyRefreshToken(storedToken, providedToken)
+	if !ok {
+		log.Printf("VerifyRefreshToken error.")
+		RespondWithError(w, http.StatusUnauthorized, "Refresh token is invalid.")
+		return
+	}
+
+	refreshToken, err := token.CreateRefreshToken(h.TokenRepo, params.UserID)
+	if err != nil {
+		log.Printf("CreateRefreshToken error: %v", err)
+		RespondWithError(w, http.StatusUnauthorized, "")
+		return
+	}
+
+	jwToken, err := token.CreateJWT(params.UserID, 0)
+	if err != nil {
+		log.Printf("JWT creation failed: %v", err)
+		RespondWithError(w, http.StatusInternalServerError, "")
+		return
+	}
+
+	payload := &ReturnVals{
+		ID:           params.UserID,
+		JWToken:      jwToken,
+		RefreshToken: refreshToken,
+	}
+	RespondWithJSON(w, http.StatusOK, payload)
+	return
+}
+
 func (h *Handler) InterviewsHandler(w http.ResponseWriter, r *http.Request) {
 	userID, ok := r.Context().Value(middleware.ContextKeyTokenParams).(int)
 	if !ok {
@@ -239,50 +286,4 @@ func (h *Handler) AppendConversationsHandler(w http.ResponseWriter, r *http.Requ
 		Conversation: conversationReturned,
 	}
 	RespondWithJSON(w, http.StatusCreated, payload)
-}
-
-func (h *Handler) RefreshTokensHandler(w http.ResponseWriter, r *http.Request) {
-	providedToken := r.Context().Value(middleware.ContextKeyTokenKey).(string)
-	params := &middleware.AcceptedVals{}
-	err := json.NewDecoder(r.Body).Decode(params)
-	if err != nil {
-		log.Printf("Decoding params failed: %v", err)
-		RespondWithError(w, http.StatusInternalServerError, "Internal Server Error")
-	}
-
-	storedToken, err := token.GetStoredRefreshToken(h.TokenRepo, params.UserID)
-	if err != nil {
-		log.Printf("GetStoredRefreshToken error: %v", err)
-		RespondWithError(w, http.StatusUnauthorized, "User ID is invalid.")
-		return
-	}
-
-	ok := token.VerifyRefreshToken(storedToken, providedToken)
-	if !ok {
-		log.Printf("VerifyRefreshToken error.")
-		RespondWithError(w, http.StatusUnauthorized, "Refresh token is invalid.")
-		return
-	}
-
-	refreshToken, err := token.CreateRefreshToken(h.TokenRepo, params.UserID)
-	if err != nil {
-		log.Printf("CreateRefreshToken error: %v", err)
-		RespondWithError(w, http.StatusUnauthorized, "")
-		return
-	}
-
-	jwToken, err := token.CreateJWT(params.UserID, 0)
-	if err != nil {
-		log.Printf("JWT creation failed: %v", err)
-		RespondWithError(w, http.StatusInternalServerError, "")
-		return
-	}
-
-	payload := &ReturnVals{
-		ID:           params.UserID,
-		JWToken:      jwToken,
-		RefreshToken: refreshToken,
-	}
-	RespondWithJSON(w, http.StatusOK, payload)
-	return
 }
