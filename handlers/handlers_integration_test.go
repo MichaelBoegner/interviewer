@@ -446,7 +446,7 @@ func Test_RefreshTokensHandler_Integration(t *testing.T) {
 			reqBody: `{
 				"user_id" : ` + fmt.Sprint(userID) + `
 			}`,
-			DBCheck:        false,
+			DBCheck:        true,
 			TokensExpected: true,
 		},
 	}
@@ -490,7 +490,7 @@ func Test_RefreshTokensHandler_Integration(t *testing.T) {
 
 			// Assert Database
 			if tc.DBCheck {
-				refreshToken, err := token.GetStoredRefreshToken(Handler.TokenRepo, respUnmarshalled.UserID)
+				refreshToken, err := token.GetStoredRefreshToken(Handler.TokenRepo, userID)
 				if err != nil {
 					t.Fatalf("Assert Database: GetUser failed: %v", err)
 				}
