@@ -2,7 +2,6 @@ package user
 
 import (
 	"testing"
-	"time"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
@@ -17,27 +16,38 @@ func TestCreateUser(t *testing.T) {
 		email       string
 		password    string
 		userResp    *User
+		failRepo    bool
 		expectError bool
 	}{
 		{
-			name:     "UserCreate_Success",
+			name:     "CreateUser_Success",
 			username: "test",
 			email:    "test@test.com",
 			password: "test",
 			userResp: &User{
-				ID:        1,
-				Username:  "test",
-				Email:     "test@test.com",
-				CreatedAt: time.Now().UTC(),
-				UpdatedAt: time.Now().UTC(),
+				ID:       1,
+				Username: "test",
+				Email:    "test@test.com",
 			},
 			expectError: false,
+		},
+		{
+			name:        "CreateUser_RepoError",
+			username:    "test",
+			email:       "test@test.com",
+			password:    "test",
+			userResp:    nil,
+			failRepo:    true,
+			expectError: true,
 		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			repo := NewMockRepo()
+			if tc.failRepo {
+				repo.failRepo = true
+			}
 
 			user, err := CreateUser(repo, tc.username, tc.email, tc.password)
 
@@ -53,8 +63,7 @@ func TestCreateUser(t *testing.T) {
 				got := user
 
 				if diff := cmp.Diff(expected, got,
-					cmpopts.IgnoreFields(User{}, "Password"),
-					cmpopts.EquateApproxTime(time.Second),
+					cmpopts.IgnoreFields(User{}, "Password", "CreatedAt", "UpdatedAt"),
 				); diff != "" {
 					t.Errorf("User mismatch (-want +got):\n%s", diff)
 				}

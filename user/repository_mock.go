@@ -1,13 +1,15 @@
 package user
 
 import (
+	"errors"
 	"log"
 
 	"golang.org/x/crypto/bcrypt"
 )
 
 type MockRepo struct {
-	Users map[int]User
+	Users    map[int]User
+	failRepo bool
 }
 
 func NewMockRepo() *MockRepo {
@@ -19,6 +21,10 @@ func NewMockRepo() *MockRepo {
 }
 
 func (m *MockRepo) CreateUser(user *User) (int, error) {
+	if m.failRepo {
+		return 0, errors.New("Mocked DB failure")
+	}
+
 	m.Users[0] = *user
 	return 1, nil
 }
