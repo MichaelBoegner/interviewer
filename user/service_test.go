@@ -15,7 +15,7 @@ func TestCreateUser(t *testing.T) {
 		username    string
 		email       string
 		password    string
-		userResp    *User
+		user        *User
 		failRepo    bool
 		expectError bool
 	}{
@@ -24,7 +24,7 @@ func TestCreateUser(t *testing.T) {
 			username: "test",
 			email:    "test@test.com",
 			password: "test",
-			userResp: &User{
+			user: &User{
 				ID:       1,
 				Username: "test",
 				Email:    "test@test.com",
@@ -36,7 +36,7 @@ func TestCreateUser(t *testing.T) {
 			username:    "test",
 			email:       "test@test.com",
 			password:    "test",
-			userResp:    nil,
+			user:        nil,
 			failRepo:    true,
 			expectError: true,
 		},
@@ -59,7 +59,7 @@ func TestCreateUser(t *testing.T) {
 			}
 
 			if !tc.expectError {
-				expected := tc.userResp
+				expected := tc.user
 				got := user
 
 				if diff := cmp.Diff(expected, got,
@@ -70,6 +70,64 @@ func TestCreateUser(t *testing.T) {
 
 				if err := bcrypt.CompareHashAndPassword(got.Password, []byte(tc.password)); err != nil {
 					t.Error("Password hash does not match original password")
+				}
+			}
+		})
+	}
+}
+
+func TestLoginUser(t *testing.T) {
+
+	tests := []struct {
+		name        string
+		username    string
+		password    string
+		jwtoken     string
+		userID      int
+		failRepo    bool
+		expectError bool
+	}{
+		{
+			name:        "LoginUser_Success",
+			username:    "test",
+			password:    "test",
+			userID:      1,
+			expectError: false,
+		},
+		{
+			name:        "LoginUser_RepoError",
+			username:    "test",
+			password:    "test",
+			failRepo:    true,
+			expectError: true,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			repo := NewMockRepo()
+			if tc.failRepo {
+				repo.failRepo = true
+			}
+
+			jwtoken, userID, err := LoginUser(repo, tc.username, tc.password)
+
+			if tc.expectError && err == nil {
+				t.Fatalf("expected error but got nil")
+			}
+			if !tc.expectError && err != nil {
+				t.Fatalf("did not expect error but got: %v", err)
+			}
+
+			if !tc.expectError {
+				expected := tc.userID
+				got := userID
+
+				if diff := cmp.Diff(expected, got); diff != "" {
+					t.Errorf("User mismatch (-want +got):\n%s", diff)
+				}
+				if jwtoken == "" {
+					t.Errorf("Expected jwtoken but got empty string")
 				}
 			}
 		})
