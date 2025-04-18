@@ -24,11 +24,8 @@ func NewMockRepo() *MockRepo {
 	}
 
 	return &MockRepo{
-		Users: map[int]User{
-			1: {ID: 1, Username: "testuser", Password: []byte("$2a$10$...")},
-		},
+		Users: map[int]User{},
 	}
-
 }
 
 func (m *MockRepo) CreateUser(user *User) (int, error) {
@@ -36,7 +33,6 @@ func (m *MockRepo) CreateUser(user *User) (int, error) {
 		return 0, errors.New("Mocked DB failure")
 	}
 
-	m.Users[0] = *user
 	return 1, nil
 }
 
@@ -46,10 +42,10 @@ func (m *MockRepo) GetUser(user *User) (*User, error) {
 	}
 
 	mockUser := &User{
-		ID:       user.ID,
-		Username: "testuser",
+		ID:       1,
+		Username: "test",
 		Password: PasswordHashed,
-		Email:    "test@example.com",
+		Email:    "test@test.com",
 	}
 
 	return mockUser, nil
