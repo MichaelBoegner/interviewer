@@ -13,6 +13,35 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
+func CreateJWT(id, expires int) (string, error) {
+	var (
+		key     []byte
+		jwtoken *jwt.Token
+	)
+
+	jwtSecret := os.Getenv("JWT_SECRET")
+	now := time.Now().UTC()
+	if expires == 0 {
+		expires = 36000
+	}
+	expiresAt := now.Add(time.Duration(expires) * time.Second)
+	key = []byte(jwtSecret)
+	claims := jwt.RegisteredClaims{
+		Issuer:    "interviewer",
+		IssuedAt:  jwt.NewNumericDate(now),
+		ExpiresAt: jwt.NewNumericDate(expiresAt),
+		Subject:   strconv.Itoa(id),
+	}
+	jwtoken = jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	tokenString, err := jwtoken.SignedString(key)
+	if err != nil {
+		log.Fatalf("Bad SignedString: %s", err)
+		return "", err
+	}
+
+	return tokenString, nil
+}
+
 func CreateRefreshToken(repo TokenRepo, userID int) (string, error) {
 	now := time.Now().UTC()
 
@@ -78,33 +107,4 @@ func ExtractUserIDFromToken(tokenString string) (int, error) {
 	}
 
 	return 0, fmt.Errorf("Unauthorized")
-}
-
-func CreateJWT(id, expires int) (string, error) {
-	var (
-		key []byte
-		t   *jwt.Token
-	)
-
-	jwtSecret := os.Getenv("JWT_SECRET")
-	now := time.Now().UTC()
-	if expires == 0 {
-		expires = 36000
-	}
-	expiresAt := now.Add(time.Duration(expires) * time.Second)
-	key = []byte(jwtSecret)
-	claims := jwt.RegisteredClaims{
-		Issuer:    "interviewer",
-		IssuedAt:  jwt.NewNumericDate(now),
-		ExpiresAt: jwt.NewNumericDate(expiresAt),
-		Subject:   strconv.Itoa(id),
-	}
-	t = jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	s, err := t.SignedString(key)
-	if err != nil {
-		log.Fatalf("Bad SignedString: %s", err)
-		return "", err
-	}
-
-	return s, nil
 }

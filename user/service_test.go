@@ -9,7 +9,6 @@ import (
 )
 
 func TestCreateUser(t *testing.T) {
-
 	tests := []struct {
 		name        string
 		username    string

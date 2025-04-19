@@ -64,7 +64,7 @@ func TestMain(m *testing.M) {
 		log.Fatal("TestMain: TestServerURL is empty! The server did not start properly.")
 	}
 
-	log.Printf("TestMain: Test server started successfully at: %s", testutil.TestServerURL)
+	m.Logf("TestMain: Test server started successfully at: %s", testutil.TestServerURL)
 
 	conversationBuilder = testutil.NewConversationBuilder()
 
