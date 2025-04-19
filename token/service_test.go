@@ -1,7 +1,10 @@
 package token
 
 import (
+	"fmt"
+	"log"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -29,6 +32,10 @@ func TestCreateRefreshToken(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
+			var buf strings.Builder
+			log.SetOutput(&buf)
+			defer showLogsIfFail(t, tc.name, buf)
+
 			repo := NewMockRepo()
 			if tc.failRepo {
 				repo.failRepo = true
@@ -79,6 +86,10 @@ func TestGetStoredRefreshToken(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
+			var buf strings.Builder
+			log.SetOutput(&buf)
+			defer showLogsIfFail(t, tc.name, buf)
+
 			repo := NewMockRepo()
 			if tc.failRepo {
 				repo.failRepo = true
@@ -128,6 +139,10 @@ func TestVerifyRefreshToken(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
+			var buf strings.Builder
+			log.SetOutput(&buf)
+			defer showLogsIfFail(t, tc.name, buf)
+
 			result := VerifyRefreshToken(tc.storedToken, tc.inputToken)
 
 			if result != tc.expected {
@@ -159,8 +174,12 @@ func TestExtractUserIDFromToken(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
+			var buf strings.Builder
 			var token string
 			var err error
+
+			log.SetOutput(&buf)
+			defer showLogsIfFail(t, tc.name, buf)
 
 			if tc.invalid {
 				token = "invalid.token.value"
@@ -189,5 +208,12 @@ func TestExtractUserIDFromToken(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+func showLogsIfFail(t *testing.T, name string, buf strings.Builder) {
+	log.SetOutput(os.Stderr)
+	if t.Failed() {
+		fmt.Printf("---- logs for test: %s ----\n%s\n", name, buf.String())
 	}
 }

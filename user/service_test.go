@@ -1,6 +1,10 @@
 package user
 
 import (
+	"fmt"
+	"log"
+	"os"
+	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -43,6 +47,10 @@ func TestCreateUser(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
+			var buf strings.Builder
+			log.SetOutput(&buf)
+			defer showLogsIfFail(t, tc.name, buf)
+
 			repo := NewMockRepo()
 			if tc.failRepo {
 				repo.failRepo = true
@@ -104,6 +112,10 @@ func TestLoginUser(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
+			var buf strings.Builder
+			log.SetOutput(&buf)
+			defer showLogsIfFail(t, tc.name, buf)
+
 			repo := NewMockRepo()
 			if tc.failRepo {
 				repo.failRepo = true
@@ -161,6 +173,10 @@ func TestGetUser(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
+			var buf strings.Builder
+			log.SetOutput(&buf)
+			defer showLogsIfFail(t, tc.name, buf)
+
 			repo := NewMockRepo()
 			if tc.failRepo {
 				repo.failRepo = true
@@ -186,5 +202,12 @@ func TestGetUser(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+func showLogsIfFail(t *testing.T, name string, buf strings.Builder) {
+	log.SetOutput(os.Stderr)
+	if t.Failed() {
+		fmt.Printf("---- logs for test: %s ----\n%s\n", name, buf.String())
 	}
 }

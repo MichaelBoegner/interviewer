@@ -64,7 +64,7 @@ func TestMain(m *testing.M) {
 		log.Fatal("TestMain: TestServerURL is empty! The server did not start properly.")
 	}
 
-	m.Logf("TestMain: Test server started successfully at: %s", testutil.TestServerURL)
+	log.Printf("TestMain: Test server started successfully at: %s", testutil.TestServerURL)
 
 	conversationBuilder = testutil.NewConversationBuilder()
 
@@ -173,6 +173,10 @@ func Test_CreateUsersHandler_Integration(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
+			var buf strings.Builder
+			log.SetOutput(&buf)
+			defer showLogsIfFail(t, tc.name, buf)
+
 			// Act
 			resp, respCode, err := testRequests(t, tc.headerKey, tc.headerValue, tc.method, tc.url, strings.NewReader(tc.reqBody))
 			if err != nil {
@@ -263,6 +267,10 @@ func Test_GetUsersHandler_Integration(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
+			var buf strings.Builder
+			log.SetOutput(&buf)
+			defer showLogsIfFail(t, tc.name, buf)
+
 			// Act
 			resp, respCode, err := testRequests(t, tc.headerKey, tc.headerValue, tc.method, tc.url, strings.NewReader(tc.reqBody))
 			if err != nil {
@@ -373,6 +381,10 @@ func Test_LoginHandler_Integration(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
+			var buf strings.Builder
+			log.SetOutput(&buf)
+			defer showLogsIfFail(t, tc.name, buf)
+
 			// Act
 			resp, respCode, err := testRequests(t, tc.headerKey, tc.headerValue, tc.method, tc.url, strings.NewReader(tc.reqBody))
 			if err != nil {
@@ -504,6 +516,10 @@ func Test_RefreshTokensHandler_Integration(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
+			var buf strings.Builder
+			log.SetOutput(&buf)
+			defer showLogsIfFail(t, tc.name, buf)
+
 			// Act
 			resp, respCode, err := testRequests(t, tc.headerKey, tc.headerValue, tc.method, tc.url, strings.NewReader(tc.reqBody))
 			if err != nil {
@@ -642,6 +658,10 @@ func Test_InterviewsHandler_Integration(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
+			var buf strings.Builder
+			log.SetOutput(&buf)
+			defer showLogsIfFail(t, tc.name, buf)
+
 			// Act
 			resp, respCode, err := testRequests(t, tc.headerKey, tc.headerValue, tc.method, tc.url, strings.NewReader(tc.reqBody))
 			if err != nil {
@@ -739,6 +759,10 @@ func Test_CreateConversationsHandler_Integration(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
+			var buf strings.Builder
+			log.SetOutput(&buf)
+			defer showLogsIfFail(t, tc.name, buf)
+
 			// Act
 			resp, respCode, err := testRequests(t, tc.headerKey, tc.headerValue, tc.method, tc.url, strings.NewReader(tc.reqBody))
 			if err != nil {
@@ -861,6 +885,10 @@ func Test_AppendConversationsHandler_Integration(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
+			var buf strings.Builder
+			log.SetOutput(&buf)
+			defer showLogsIfFail(t, tc.name, buf)
+
 			// Act
 			resp, respCode, err := testRequests(t, tc.headerKey, tc.headerValue, tc.method, tc.url, strings.NewReader(tc.reqBody))
 			if err != nil {
@@ -905,6 +933,13 @@ func Test_AppendConversationsHandler_Integration(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+func showLogsIfFail(t *testing.T, name string, buf strings.Builder) {
+	log.SetOutput(os.Stderr)
+	if t.Failed() {
+		fmt.Printf("---- logs for test: %s ----\n%s\n", name, buf.String())
 	}
 }
 
