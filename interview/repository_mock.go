@@ -1,31 +1,42 @@
 package interview
 
 import (
+	"errors"
 	"time"
 )
 
-type MockRepo struct{}
+type MockRepo struct {
+	failRepo bool
+}
 
 func NewMockRepo() *MockRepo {
 	return &MockRepo{}
 }
 
-func (repo *MockRepo) CreateInterview(interview *Interview) (int, error) {
-	id := 1
-	return id, nil
+func (m *MockRepo) CreateInterview(interview *Interview) (int, error) {
+	if m.failRepo {
+		return 0, errors.New("Mocked DB failure")
+	}
+
+	return 1, nil
 }
 
-func (repo *MockRepo) GetInterview(interviewID int) (*Interview, error) {
+func (m *MockRepo) GetInterview(interviewID int) (*Interview, error) {
+	if m.failRepo {
+		return nil, errors.New("Mocked DB failure")
+	}
+
 	interview := &Interview{
 		Id:              1,
 		UserId:          1,
 		Length:          30,
-		NumberQuestions: 5,
+		NumberQuestions: 2,
 		Difficulty:      "easy",
 		Status:          "running",
 		Score:           0,
 		Language:        "python",
-		FirstQuestion:   "What is the flight speed of an unladdened swallow?",
+		FirstQuestion:   "question1",
+		Subtopic:        "None",
 		CreatedAt:       time.Now().UTC(),
 		UpdatedAt:       time.Now().UTC(),
 	}
