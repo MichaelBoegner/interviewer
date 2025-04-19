@@ -1,18 +1,31 @@
 package conversation
 
-import "time"
+import (
+	"errors"
+	"time"
+)
 
-type MockRepo struct{}
+type MockRepo struct {
+	FailRepo bool
+}
 
 func NewMockRepo() *MockRepo {
 	return &MockRepo{}
 }
 
-func (repo *MockRepo) CheckForConversation(interviewID int) bool {
-	return false
+func (m *MockRepo) CheckForConversation(interviewID int) (bool, error) {
+	if m.FailRepo {
+		return false, errors.New("Mocked DB failure")
+	}
+
+	return true, nil
 }
 
-func (repo *MockRepo) GetConversation(interviewID int) (*Conversation, error) {
+func (m *MockRepo) GetConversation(interviewID int) (*Conversation, error) {
+	if m.FailRepo {
+		return nil, errors.New("Mocked DB failure")
+	}
+
 	conversationResponse := &Conversation{
 		ID:          1,
 		InterviewID: 1,
@@ -55,36 +68,68 @@ func (repo *MockRepo) GetConversation(interviewID int) (*Conversation, error) {
 	return conversationResponse, nil
 }
 
-func (repo *MockRepo) CreateConversation(conversation *Conversation) (int, error) {
+func (m *MockRepo) CreateConversation(conversation *Conversation) (int, error) {
+	if m.FailRepo {
+		return 0, errors.New("Mocked DB failure")
+	}
+
 	return 1, nil
 }
 
-func (repo *MockRepo) CreateQuestion(conversation *Conversation, prompt string) (int, error) {
+func (m *MockRepo) CreateQuestion(conversation *Conversation, prompt string) (int, error) {
+	if m.FailRepo {
+		return 0, errors.New("Mocked DB failure")
+	}
+
 	return 1, nil
 }
 
-func (repo *MockRepo) CreateMessages(conversation *Conversation, messages []Message) error {
+func (m *MockRepo) CreateMessages(conversation *Conversation, messages []Message) error {
+	if m.FailRepo {
+		return errors.New("Mocked DB failure")
+	}
+
 	return nil
 }
 
-func (repo *MockRepo) AddMessage(conversationID, topic_id, questionNumber int, message Message) (int, error) {
+func (m *MockRepo) AddMessage(conversationID, topic_id, questionNumber int, message Message) (int, error) {
+	if m.FailRepo {
+		return 0, errors.New("Mocked DB failure")
+	}
+
 	return 3, nil
 }
 
-func (repo *MockRepo) AddQuestion(question *Question) (int, error) {
+func (m *MockRepo) AddQuestion(question *Question) (int, error) {
+	if m.FailRepo {
+		return 0, errors.New("Mocked DB failure")
+	}
+
 	return 2, nil
 }
 
-func (repo *MockRepo) GetMessages(conversationID, topic_id, questionNumber int) ([]Message, error) {
-	var messages []Message
+func (m *MockRepo) GetMessages(conversationID, topic_id, questionNumber int) ([]Message, error) {
+	if m.FailRepo {
+		return nil, errors.New("Mocked DB failure")
+	}
+
+	var messages = []Message{}
 	return messages, nil
 }
 
-func (repo *MockRepo) GetQuestions(Conversation *Conversation) ([]*Question, error) {
-	var questions []*Question
+func (m *MockRepo) GetQuestions(Conversation *Conversation) ([]*Question, error) {
+	if m.FailRepo {
+		return nil, errors.New("Mocked DB failure")
+	}
+
+	var questions = []*Question{}
 	return questions, nil
 }
 
-func (repo *MockRepo) UpdateConversationCurrents(conversationID, currentQuestionNumber, topicID int, subtopic string) (int, error) {
+func (m *MockRepo) UpdateConversationCurrents(conversationID, currentQuestionNumber, topicID int, subtopic string) (int, error) {
+	if m.FailRepo {
+		return 0, errors.New("Mocked DB failure")
+	}
+
 	return 1, nil
 }

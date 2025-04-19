@@ -8,7 +8,7 @@ import (
 	"github.com/michaelboegner/interviewer/chatgpt"
 )
 
-func CheckForConversation(repo ConversationRepo, interviewID int) bool {
+func CheckForConversation(repo ConversationRepo, interviewID int) (bool, error) {
 	return repo.CheckForConversation(interviewID)
 }
 
