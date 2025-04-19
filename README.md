@@ -101,7 +101,7 @@ The backend is structured using a layered architecture:
 | **Database**          | PostgreSQL 15+                                   |
 | **Authentication**    | JWT-based authentication (access & refresh tokens) |
 | **AI Integration**    | OpenAI GPT API (4.0)                             |
-| **Testing**           | Go standard testing package                      |
+| **Testing**           | Go table-driven tests (unit + integration)       |
 | **Containerization**  | Docker                                           |
 | **Deployment**        | Fly.io                                           |
 | **Database Hosting**  | Supabase (PostgreSQL)                            |
@@ -283,14 +283,21 @@ docker run -p 8080:8080 --env-file .env interviewer
 
 - **Stateless Design**: The API is designed to be stateless, allowing for horizontal scaling
 
+## ✅ Testing Strategy
+
+The app is tested with both **unit tests** (mocked repositories) and **integration tests** (real PostgreSQL + full HTTP stack).
+
+- **Unit Tests**: Every core domain (`user`, `token`, `interview`, `conversation`) is covered using table-driven tests and a mock repository layer. This verifies business logic independently from the database.
+- **Integration Tests**: `handlers/handlers_test.go` validates full end-to-end request flows using a Dockerized PostgreSQL test database. The `Makefile` automates setup, teardown, and migration steps to simulate a production-like environment.
+
+Tests are run consistently during development to ensure correctness, stability, and maintainability. CI is coming next (see Development Roadmap below)
 
 ## 🛣️ Development Roadmap
 
 ### Current Focus
-- I'm actively refining the test suite right now. The integration framework is in place — Dockerized DB, environment isolation, and Makefile setup — and I'm working through building out test cases.
+- Implementation of CI/CD pipeline
 
 ### Upcoming Improvements
-- Implementation of CI/CD pipeline
 - Enhancing error handling and recovery mechanisms
 - Structured logging for better observability
 - Input validation
