@@ -23,5 +23,9 @@ func (m *MockRepo) GetStoredRefreshToken(userID int) (string, error) {
 		return "", errors.New("Mocked DB failure")
 	}
 
+	if userID != 1 {
+		return "", errors.New("UserID does not exist")
+	}
+
 	return "abc123", nil
 }
