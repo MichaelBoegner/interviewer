@@ -4,6 +4,7 @@
 ![Go Version](https://img.shields.io/badge/Go-1.20+-00ADD8?style=flat&logo=go&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15+-336791?style=flat&logo=postgresql&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=flat&logo=docker&logoColor=white)
+![CI Status](https://github.com/michaelboegner/interviewer/actions/workflows/ci.yml/badge.svg)
 
 
 ---
@@ -206,7 +207,17 @@ The backend is structured using a layered architecture:
 
 ## 📦 Deployment
 
-This application is currently deployed on Fly.io with a PostgreSQL database hosted on Supabase.
+### CI/CD Pipeline
+
+The project uses a GitHub Actions CI workflow to enforce code quality and test reliability. Every push and pull request to the `main` branch triggers:
+
+- **Linting** (`go vet`) to catch potential bugs
+- **Integration Tests** (`make test`) against a Dockerized PostgreSQL test database
+- **Environment Setup**: Test environment variables are injected securely during the workflow
+- **Isolation**: No production deployment is automatically triggered to maintain staging integrity
+
+Production deployment (CD) is currently triggered manually to avoid unintended updates. Full automated CD will be implemented after migration to AWS.
+
 
 ### Deployment Stack
 - **Application Hosting**: Fly.io (containerized deployment)
@@ -290,7 +301,7 @@ The app is tested with both **unit tests** (mocked repositories) and **integrati
 - **Unit Tests**: Every core domain (`user`, `token`, `interview`, `conversation`) is covered using table-driven tests and a mock repository layer. This verifies business logic independently from the database.
 - **Integration Tests**: `handlers/handlers_test.go` validates full end-to-end request flows using a Dockerized PostgreSQL test database. The `Makefile` automates setup, teardown, and migration steps to simulate a production-like environment.
 
-Tests are run consistently during development to ensure correctness, stability, and maintainability. CI is coming next (see Development Roadmap below)
+Tests are run consistently during development and are integrated into the CI pipeline to ensure correctness, stability, and maintainability.
 
 ## 🛣️ Development Roadmap
 
