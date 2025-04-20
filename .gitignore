@@ -25,3 +25,6 @@ go.work.sum
 .env
 .env.dev
 .env.test
+
+# AWS
+aws.md
