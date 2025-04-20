@@ -22,6 +22,17 @@ jobs:
       - name: Install dependencies
         run: go mod download
 
+      - name: Generate .env.test for CI
+        run: |
+          echo "JWT_SECRET=xZ_6kE0eAqGoO2zr6O9gkuJViErpM_9qZoz3e-KOJYg" >> .env.test
+          echo "OPEN_API=d5sadf54sa6d5f4asdfsa5df6a5sd465dsa4f" >> .env.test
+          echo "DB_HOST=localhost" >> .env.test
+          echo "DB_PORT=5433" >> .env.test
+          echo "DB_USER=testuser" >> .env.test
+          echo "DB_PASSWORD=testpassword" >> .env.test
+          echo "DB_NAME=testdb" >> .env.test
+          echo "DB_SSLMODE=disable" >> .env.test
+
       - name: Lint
         run: go vet ./...
 
