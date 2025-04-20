@@ -26,4 +26,5 @@ go.work.sum
 .env.dev
 .env.test
 
-
+# AWS
+infra/ecs/task-definition.json

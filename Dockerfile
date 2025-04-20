@@ -32,4 +32,4 @@ COPY --from=builder /app/interviewer .
 EXPOSE 8080
 
 # Command to run the application
-CMD ["./cmd/interviewer"]
+CMD ["./interviewer"]
