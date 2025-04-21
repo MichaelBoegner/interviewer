@@ -5,6 +5,7 @@ import (
 	"errors"
 	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/michaelboegner/interviewer/conversation"
 	"github.com/michaelboegner/interviewer/interview"
@@ -172,7 +173,7 @@ func (h *Handler) RefreshTokensHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	jwToken, err := token.CreateJWT(params.UserID, 0)
+	jwToken, err := token.CreateJWT(strconv.Itoa(params.UserID), 0)
 	if err != nil {
 		log.Printf("JWT creation failed: %v", err)
 		RespondWithError(w, http.StatusInternalServerError, "")
@@ -304,3 +305,59 @@ func (h *Handler) AppendConversationsHandler(w http.ResponseWriter, r *http.Requ
 	}
 	RespondWithJSON(w, http.StatusCreated, payload)
 }
+
+func (h *Handler) RequestResetHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var req PasswordResetRequest
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		log.Printf("Decoding request failed: %v", err)
+		RespondWithError(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	tokenStr, err := user.RequestPasswordReset(h.UserRepo, req.Email)
+	if err != nil {
+		log.Printf("Error generating reset token for email %s: %v", req.Email, err)
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+
+	resetURL := "https://yourapp.com/reset-password?token=" + tokenStr
+
+	err = h.CustomerIO.SendPasswordReset(req.Email, resetURL)
+	if err != nil {
+		log.Printf("SendPasswordReset error: %v", err)
+		RespondWithError(w, http.StatusInternalServerError, "Failed to send email")
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+}
+
+// func (h *Handler) ResetPasswordHandler(w http.ResponseWriter, r *http.Request) {
+// 	if r.Method != http.MethodPost {
+// 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+// 		return
+// 	}
+
+// 	var payload PasswordResetPayload
+// 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+// 		log.Printf("Decoding payload failed: %v", err)
+// 		RespondWithError(w, http.StatusBadRequest, "Invalid request body")
+// 		return
+// 	}
+
+// 	err := user.SubmitPasswordReset(r.Context(), h.UserRepo, payload.Token, payload.NewPassword, h.JWTSecret)
+// 	if err != nil {
+// 		log.Printf("ResetPasswordHandler failed: %v", err)
+// 		RespondWithError(w, http.StatusUnauthorized, "Invalid or expired token")
+// 		return
+// 	}
+
+// 	w.WriteHeader(http.StatusOK)
+// }

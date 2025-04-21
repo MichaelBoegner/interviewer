@@ -2,6 +2,7 @@ package user
 
 import (
 	"log"
+	"strconv"
 	"time"
 
 	"github.com/michaelboegner/interviewer/token"
@@ -49,7 +50,7 @@ func LoginUser(repo UserRepo, username, password string) (string, int, error) {
 		return "", 0, err
 	}
 
-	jwToken, err := token.CreateJWT(id, 0)
+	jwToken, err := token.CreateJWT(strconv.Itoa(id), 0)
 	if err != nil {
 		log.Printf("JWT creation failed: %v", err)
 		return "", 0, err
@@ -69,4 +70,20 @@ func GetUser(repo UserRepo, userID int) (*User, error) {
 		return nil, err
 	}
 	return userReturned, nil
+}
+
+func RequestPasswordReset(repo UserRepo, email string) (string, error) {
+	user, err := repo.GetUserByEmail(email)
+	if err != nil {
+		log.Printf("GetByEmail failed: %v", err)
+		return "", nil
+	}
+
+	resetJWT, err := token.CreateJWT(user.Email, 900)
+	if err != nil {
+		log.Printf("CreateJWT failed: %v", err)
+		return "", nil
+	}
+
+	return resetJWT, nil
 }

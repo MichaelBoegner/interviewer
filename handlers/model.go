@@ -10,6 +10,15 @@ import (
 	"github.com/michaelboegner/interviewer/user"
 )
 
+type PasswordResetRequest struct {
+	Email string `json:"email"`
+}
+
+type PasswordResetPayload struct {
+	Token       string `json:"token"`
+	NewPassword string `json:"new_password"`
+}
+
 type Handler struct {
 	UserRepo         user.UserRepo
 	InterviewRepo    interview.InterviewRepo

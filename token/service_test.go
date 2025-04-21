@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -184,7 +185,7 @@ func TestExtractUserIDFromToken(t *testing.T) {
 			if tc.invalid {
 				token = "invalid.token.value"
 			} else {
-				token, err = CreateJWT(tc.userID, 3600)
+				token, err = CreateJWT(strconv.Itoa(tc.userID), 3600)
 				if err != nil {
 					t.Fatalf("failed to create JWT: %v", err)
 				}

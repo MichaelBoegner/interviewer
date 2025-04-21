@@ -88,3 +88,18 @@ func (repo *Repository) GetUser(user *User) (*User, error) {
 
 	return user, nil
 }
+
+func (repo *Repository) GetUserByEmail(email string) (*User, error) {
+	var user *User
+	err := repo.DB.QueryRow("SELECT id, username, email FROM users WHERE email= $1", email).Scan(&user.ID, &user.Username, &user.Email)
+
+	if err == sql.ErrNoRows {
+		log.Printf("Email invalid: %v", err)
+		return nil, err
+	} else if err != nil {
+		log.Printf("Error querying database: %v\n", err)
+		return nil, err
+	}
+
+	return user, nil
+}

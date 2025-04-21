@@ -22,6 +22,7 @@ type UserRepo interface {
 	CreateUser(user *User) (int, error)
 	GetPasswordandID(username string) (int, string, error)
 	GetUser(user *User) (*User, error)
+	GetUserByEmail(email string) (*User, error)
 }
 
 var (

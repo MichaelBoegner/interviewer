@@ -58,3 +58,18 @@ func (m *MockRepo) GetPasswordandID(username string) (int, string, error) {
 
 	return 1, string(PasswordHashed), nil
 }
+
+func (m *MockRepo) GetUserByEmail(email string) (*User, error) {
+	if m.failRepo {
+		return nil, errors.New("Mocked DB failure")
+	}
+
+	mockUser := &User{
+		ID:       1,
+		Username: "test",
+		Password: PasswordHashed,
+		Email:    "test@test.com",
+	}
+
+	return mockUser, nil
+}

@@ -13,7 +13,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-func CreateJWT(id, expires int) (string, error) {
+func CreateJWT(subject string, expires int) (string, error) {
 	var (
 		key     []byte
 		jwtoken *jwt.Token
@@ -30,7 +30,7 @@ func CreateJWT(id, expires int) (string, error) {
 		Issuer:    "interviewer",
 		IssuedAt:  jwt.NewNumericDate(now),
 		ExpiresAt: jwt.NewNumericDate(expiresAt),
-		Subject:   strconv.Itoa(id),
+		Subject:   subject,
 	}
 	jwtoken = jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	tokenString, err := jwtoken.SignedString(key)
