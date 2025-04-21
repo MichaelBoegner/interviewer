@@ -1,4 +1,4 @@
-# Interviewer App
+# Interviewer
 **An intelligent, interactive mock interview platform powered by Go, React, and PostgreSQL, designed to help users confidently prepare for Backend Engineering interviews.**
 
 ![Go Version](https://img.shields.io/badge/Go-1.20+-00ADD8?style=flat&logo=go&logoColor=white)
@@ -25,6 +25,7 @@
 - [Performance Considerations](#-performance-considerations)
 - [Testing Strategy](#-testing-strategy)
 - [Development Roadmap](#-development-roadmap)
+- [Frontend](#-frontend)
 - [License](#-license)
 
 ## 🚀 Overview
@@ -40,6 +41,10 @@ The application was built with a focus on:
 - **Scalability**: Designed for horizontal scaling with stateless API design
 - **Security**: Implementing industry-standard JWT authentication with refresh token rotation
 - **Maintainability**: Modular code structure with reusable components
+
+> ⚠️ **Note:** The backend code for this project is private due to proprietary licensing and upcoming go-to-market efforts. I built the entire backend myself in Go, including structured interview logic, OpenAI GPT-4 integration, secure JWT-based auth, and PostgreSQL-backed persistence.
+>
+> This README remains public to demonstrate the full system design, development process, and architecture. The [frontend repository](https://github.com/michaelboegner/interviewer-ui) reflects the user experience side of the platform.
 
 ## 🧠 Learning Log
 
@@ -326,6 +331,21 @@ Tests are run consistently during development and are integrated into the CI pip
 - Optimizing database queries
 - Refining API documentation
 - Interview preferences (language, difficulty, duration, etc . . .)
+
+## 🌐 Frontend
+
+The frontend is built in React and communicates with the protected backend API. It handles:
+
+- Authentication (login, signup, token refresh)
+- Interview start and in-progress flow
+- GPT-4 feedback and response display
+- Post-interview summary (upcoming)
+
+You can explore the UI code and structure here:  
+🔗 [Frontend GitHub Repository](https://github.com/michaelboegner/interviewer-ui)
+
+The frontend is currently deployed on Vercel and connects to a deployed Fly.io backend
+
 
 ## 📜 License
 
