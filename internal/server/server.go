@@ -42,10 +42,7 @@ func NewServer() *Server {
 	mux.Handle("/api/conversations/create/", middleware.GetContext(http.HandlerFunc(handler.CreateConversationsHandler)))
 	mux.Handle("/api/conversations/append/", middleware.GetContext(http.HandlerFunc(handler.AppendConversationsHandler)))
 	mux.Handle("/api/auth/token", middleware.GetContext(http.HandlerFunc(handler.RefreshTokensHandler)))
-	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("healthy"))
-	})
+	mux.Handle("/health", http.HandlerFunc(handler.HealthCheckHandler))
 
 	return &Server{mux: mux}
 }

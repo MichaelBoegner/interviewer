@@ -13,6 +13,12 @@ import (
 	"github.com/michaelboegner/interviewer/user"
 )
 
+func (h *Handler) HealthCheckHandler(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("healthy"))
+	return
+}
+
 func (h *Handler) CreateUsersHandler(w http.ResponseWriter, r *http.Request) {
 	params := &middleware.AcceptedVals{}
 	err := json.NewDecoder(r.Body).Decode(params)
