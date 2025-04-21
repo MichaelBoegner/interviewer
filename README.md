@@ -207,7 +207,16 @@ The backend is structured using a layered architecture:
 
 ## 📦 Deployment
 
-### CI/CD Pipeline
+### Deployment Philosophy
+
+My current deployment approach prioritizes simplicity, cost-efficiency, and flexibility:
+
+1. **Primary/Early deployment via Fly.io** — Ideal for rapid iteration, minimal infrastructure overhead, and a smooth path to initial user feedback. This is my default platform for going to market quickly.
+2. **AWS ECS Fargate + ALB fully configured** — I’ve pre-wired an AWS deployment path using ECS, ALB, and ACM certificates. This allows me to scale seamlessly by simply pointing DNS to the ALB once traffic or organizational needs warrant it.
+3. **Manual deploy for now** — To avoid accidental production pushes, I’ve chosen manual deployment. I’ll revisit full CD/staging setup as traffic/updates warrant it.
+
+
+### CI Pipeline
 
 The project uses a GitHub Actions CI workflow to enforce code quality and test reliability. Every push and pull request to the `main` branch triggers:
 
@@ -216,13 +225,12 @@ The project uses a GitHub Actions CI workflow to enforce code quality and test r
 - **Environment Setup**: Test environment variables are injected securely during the workflow
 - **Isolation**: No production deployment is automatically triggered to maintain staging integrity
 
-Production deployment (CD) is currently triggered manually to avoid unintended updates. Full automated CD will be implemented after migration to AWS.
-
-
 ### Deployment Stack
 - **Application Hosting**: Fly.io (containerized deployment)
+- **Frontend Hosting**: Vercel
 - **Database**: Supabase PostgreSQL
 - **Environment Variables**: Managed through Fly.io secrets
+- **Future Prod**: AWS - ALB/ECS/Fargate - Deployment infra is available under `infra/aws/` and `infra/ecs/`
 
 ### Deployment Process
 1. Build Docker container using the included Dockerfile
