@@ -1,10 +1,13 @@
 package user
 
 import (
+	"errors"
 	"log"
+	"os"
 	"strconv"
 	"time"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/michaelboegner/interviewer/token"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -86,4 +89,39 @@ func RequestPasswordReset(repo UserRepo, email string) (string, error) {
 	}
 
 	return resetJWT, nil
+}
+
+func ResetPassword(repo UserRepo, newPassword string, resetToken string) error {
+	email, err := verifyResetToken(resetToken)
+	if err != nil {
+		return err
+	}
+	passwordHashed, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.MinCost)
+	if err != nil {
+		log.Printf("GenerateFromPassword failed: %v\n", err)
+		return nil, err
+	}
+
+	repo.UpdatePasswordByEmail(email, passwordHashed)
+}
+
+func verifyResetToken(tokenString string) (string, error) {
+	jwtSecret := os.Getenv("JWT_SECRET")
+	if jwtSecret == "" {
+		log.Printf("JWT secret is not set")
+		err := errors.New("jwt secret is not set")
+		return "", err
+	}
+
+	token, err := jwt.ParseWithClaims(tokenString, &jwt.RegisteredClaims{}, func(token *jwt.Token) (interface{}, error) {
+		return []byte(jwtSecret), nil
+	})
+	if err != nil {
+		return "", err
+	}
+	if claims, ok := token.Claims.(*jwt.RegisteredClaims); ok && token.Valid {
+		return claims.Subject, nil
+	} else {
+		return "", errors.New("Invalid token")
+	}
 }

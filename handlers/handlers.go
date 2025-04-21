@@ -339,25 +339,25 @@ func (h *Handler) RequestResetHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-// func (h *Handler) ResetPasswordHandler(w http.ResponseWriter, r *http.Request) {
-// 	if r.Method != http.MethodPost {
-// 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-// 		return
-// 	}
+func (h *Handler) ResetPasswordHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
 
-// 	var payload PasswordResetPayload
-// 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
-// 		log.Printf("Decoding payload failed: %v", err)
-// 		RespondWithError(w, http.StatusBadRequest, "Invalid request body")
-// 		return
-// 	}
+	var payload PasswordResetPayload
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		log.Printf("Decoding payload failed: %v", err)
+		RespondWithError(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
 
-// 	err := user.SubmitPasswordReset(r.Context(), h.UserRepo, payload.Token, payload.NewPassword, h.JWTSecret)
-// 	if err != nil {
-// 		log.Printf("ResetPasswordHandler failed: %v", err)
-// 		RespondWithError(w, http.StatusUnauthorized, "Invalid or expired token")
-// 		return
-// 	}
+	err := user.ResetPassword(h.UserRepo, payload.Token, payload.NewPassword)
+	if err != nil {
+		log.Printf("ResetPasswordHandler failed: %v", err)
+		RespondWithError(w, http.StatusUnauthorized, "Invalid or expired token")
+		return
+	}
 
-// 	w.WriteHeader(http.StatusOK)
-// }
+	w.WriteHeader(http.StatusOK)
+}
