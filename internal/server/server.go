@@ -6,6 +6,7 @@ import (
 
 	"github.com/michaelboegner/interviewer/chatgpt"
 	"github.com/michaelboegner/interviewer/conversation"
+	"github.com/michaelboegner/interviewer/customerio"
 	"github.com/michaelboegner/interviewer/database"
 	"github.com/michaelboegner/interviewer/handlers"
 	"github.com/michaelboegner/interviewer/interview"
@@ -31,8 +32,9 @@ func NewServer() *Server {
 	tokenRepo := token.NewRepository(db)
 	conversationRepo := conversation.NewRepository(db)
 	openAI := &chatgpt.OpenAIClient{}
+	mailer := customerio.Mailer{}
 
-	handler := handlers.NewHandler(interviewRepo, userRepo, tokenRepo, conversationRepo, openAI, db)
+	handler := handlers.NewHandler(interviewRepo, userRepo, tokenRepo, conversationRepo, mailer, openAI, db)
 
 	mux.Handle("/api/users", http.HandlerFunc(handler.CreateUsersHandler))
 	mux.Handle("/api/auth/login", http.HandlerFunc(handler.LoginHandler))

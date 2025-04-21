@@ -6,22 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 )
-
-type Mailer struct {
-	APIKey  string
-	APIPass string
-	BaseURL string
-}
-
-func New(apiKey string) *Mailer {
-	return &Mailer{
-		APIKey:  os.Getenv("CIO_KEY"),
-		APIPass: os.Getenv("CIO_PASS"),
-		BaseURL: "https://track.customer.io/api/v1",
-	}
-}
 
 func (m *Mailer) SendPasswordReset(email, resetURL string) error {
 	payload := map[string]any{

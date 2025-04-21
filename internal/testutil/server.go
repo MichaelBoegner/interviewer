@@ -6,6 +6,7 @@ import (
 	"net/http/httptest"
 
 	"github.com/michaelboegner/interviewer/conversation"
+	"github.com/michaelboegner/interviewer/customerio"
 	"github.com/michaelboegner/interviewer/database"
 	"github.com/michaelboegner/interviewer/handlers"
 	"github.com/michaelboegner/interviewer/internal/mocks"
@@ -36,8 +37,9 @@ func InitTestServer() *handlers.Handler {
 	tokenRepo := token.NewRepository(db)
 	conversationRepo := conversation.NewRepository(db)
 	openAI := &mocks.MockOpenAIClient{}
+	mailer := customerio.Mailer{}
 
-	handler := handlers.NewHandler(interviewRepo, userRepo, tokenRepo, conversationRepo, openAI, db)
+	handler := handlers.NewHandler(interviewRepo, userRepo, tokenRepo, conversationRepo, mailer, openAI, db)
 
 	TestMux = http.NewServeMux()
 	TestMux.Handle("/api/users", http.HandlerFunc(handler.CreateUsersHandler))

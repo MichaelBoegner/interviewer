@@ -55,7 +55,6 @@ func NewHandler(
 	conversationRepo conversation.ConversationRepo,
 	mailer customerio.Mailer,
 	openAI chatgpt.AIClient,
-
 	db *sql.DB) *Handler {
 	return &Handler{
 		InterviewRepo:    interviewRepo,
