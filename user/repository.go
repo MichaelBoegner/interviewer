@@ -90,7 +90,7 @@ func (repo *Repository) GetUser(user *User) (*User, error) {
 }
 
 func (repo *Repository) GetUserByEmail(email string) (*User, error) {
-	var user *User
+	var user = &User{}
 	err := repo.DB.QueryRow("SELECT id, username, email FROM users WHERE email= $1", email).Scan(&user.ID, &user.Username, &user.Email)
 
 	if err == sql.ErrNoRows {

@@ -5,6 +5,7 @@ import (
 
 	"github.com/michaelboegner/interviewer/chatgpt"
 	"github.com/michaelboegner/interviewer/conversation"
+	"github.com/michaelboegner/interviewer/customerio"
 	"github.com/michaelboegner/interviewer/interview"
 	"github.com/michaelboegner/interviewer/token"
 	"github.com/michaelboegner/interviewer/user"
@@ -17,15 +18,6 @@ type PasswordResetRequest struct {
 type PasswordResetPayload struct {
 	Token       string `json:"token"`
 	NewPassword string `json:"new_password"`
-}
-
-type Handler struct {
-	UserRepo         user.UserRepo
-	InterviewRepo    interview.InterviewRepo
-	ConversationRepo conversation.ConversationRepo
-	TokenRepo        token.TokenRepo
-	OpenAI           chatgpt.AIClient
-	DB               *sql.DB
 }
 
 type ReturnVals struct {
@@ -46,18 +38,31 @@ type ReturnVals struct {
 	User           *user.User                 `json:"user,omitempty"`
 }
 
+type Handler struct {
+	UserRepo         user.UserRepo
+	InterviewRepo    interview.InterviewRepo
+	ConversationRepo conversation.ConversationRepo
+	TokenRepo        token.TokenRepo
+	Mailer           customerio.Mailer
+	OpenAI           chatgpt.AIClient
+	DB               *sql.DB
+}
+
 func NewHandler(
 	interviewRepo interview.InterviewRepo,
 	userRepo user.UserRepo,
 	tokenRepo token.TokenRepo,
 	conversationRepo conversation.ConversationRepo,
+	mailer customerio.Mailer,
 	openAI chatgpt.AIClient,
+
 	db *sql.DB) *Handler {
 	return &Handler{
 		InterviewRepo:    interviewRepo,
 		UserRepo:         userRepo,
 		TokenRepo:        tokenRepo,
 		ConversationRepo: conversationRepo,
+		Mailer:           mailer,
 		OpenAI:           openAI,
 		DB:               db,
 	}

@@ -329,7 +329,7 @@ func (h *Handler) RequestResetHandler(w http.ResponseWriter, r *http.Request) {
 
 	resetURL := "https://yourapp.com/reset-password?token=" + tokenStr
 
-	err = h.CustomerIO.SendPasswordReset(req.Email, resetURL)
+	err = h.Mailer.SendPasswordReset(req.Email, resetURL)
 	if err != nil {
 		log.Printf("SendPasswordReset error: %v", err)
 		RespondWithError(w, http.StatusInternalServerError, "Failed to send email")
