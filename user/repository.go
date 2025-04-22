@@ -103,3 +103,32 @@ func (repo *Repository) GetUserByEmail(email string) (*User, error) {
 
 	return user, nil
 }
+
+func (repo *Repository) UpdatePasswordByEmail(email string, password []byte) error {
+	query := `
+			UPDATE users
+			SET password = $1, updated_at = $2
+			WHERE id = $3
+			`
+
+	result, err := repo.DB.Exec(query,
+		password,
+		time.Now().UTC(),
+	)
+	if err != nil {
+		log.Printf("UpdatePasswordByEmail exec failed: %v", err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		log.Printf("RowsAffected failed: %v", err)
+		return err
+	}
+
+	if rowsAffected == 0 {
+		log.Printf("Email doesn't exist")
+		return nil
+	}
+
+	return nil
+}

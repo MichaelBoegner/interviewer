@@ -73,3 +73,11 @@ func (m *MockRepo) GetUserByEmail(email string) (*User, error) {
 
 	return mockUser, nil
 }
+
+func (m *MockRepo) UpdatePasswordByEmail(email string, password []byte) error {
+	if m.failRepo {
+		return errors.New("Mocked DB failure")
+	}
+
+	return nil
+}

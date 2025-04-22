@@ -91,18 +91,25 @@ func RequestPasswordReset(repo UserRepo, email string) (string, error) {
 	return resetJWT, nil
 }
 
-func ResetPassword(repo UserRepo, newPassword string, resetToken string) error {
-	email, err := verifyResetToken(resetToken)
+func ResetPassword(repo UserRepo, newPassword string, resetJWT string) error {
+	email, err := verifyResetToken(resetJWT)
 	if err != nil {
 		return err
 	}
+
 	passwordHashed, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.MinCost)
 	if err != nil {
 		log.Printf("GenerateFromPassword failed: %v\n", err)
-		return nil, err
+		return err
 	}
 
-	repo.UpdatePasswordByEmail(email, passwordHashed)
+	err = repo.UpdatePasswordByEmail(email, passwordHashed)
+	if err != nil {
+		log.Printf("UpdatePasswordByEmail failed: %v", err)
+		return err
+	}
+
+	return nil
 }
 
 func verifyResetToken(tokenString string) (string, error) {

@@ -312,31 +312,32 @@ func (h *Handler) RequestResetHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var req PasswordResetRequest
-	err := json.NewDecoder(r.Body).Decode(&req)
+	var params PasswordResetRequest
+	err := json.NewDecoder(r.Body).Decode(&params)
 	if err != nil {
 		log.Printf("Decoding request failed: %v", err)
 		RespondWithError(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 
-	tokenStr, err := user.RequestPasswordReset(h.UserRepo, req.Email)
+	resetJWT, err := user.RequestPasswordReset(h.UserRepo, params.Email)
 	if err != nil {
-		log.Printf("Error generating reset token for email %s: %v", req.Email, err)
+		log.Printf("Error generating reset token for email %s: %v", params.Email, err)
 		w.WriteHeader(http.StatusOK)
 		return
 	}
 
-	resetURL := "https://yourapp.com/reset-password?token=" + tokenStr
+	resetURL := "https://yourapp.com/reset-password?token=" + resetJWT
 
-	err = h.Mailer.SendPasswordReset(req.Email, resetURL)
+	err = h.Mailer.SendPasswordReset(params.Email, resetURL)
 	if err != nil {
 		log.Printf("SendPasswordReset error: %v", err)
 		RespondWithError(w, http.StatusInternalServerError, "Failed to send email")
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
+	payload := ReturnVals{}
+	RespondWithJSON(w, http.StatusOK, payload)
 }
 
 func (h *Handler) ResetPasswordHandler(w http.ResponseWriter, r *http.Request) {
@@ -345,19 +346,20 @@ func (h *Handler) ResetPasswordHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var payload PasswordResetPayload
-	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+	var params PasswordResetPayload
+	if err := json.NewDecoder(r.Body).Decode(&params); err != nil {
 		log.Printf("Decoding payload failed: %v", err)
 		RespondWithError(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 
-	err := user.ResetPassword(h.UserRepo, payload.Token, payload.NewPassword)
+	err := user.ResetPassword(h.UserRepo, params.Token, params.NewPassword)
 	if err != nil {
 		log.Printf("ResetPasswordHandler failed: %v", err)
 		RespondWithError(w, http.StatusUnauthorized, "Invalid or expired token")
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
+	payload := ReturnVals{}
+	RespondWithJSON(w, http.StatusOK, payload)
 }

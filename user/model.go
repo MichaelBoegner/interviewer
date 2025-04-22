@@ -23,6 +23,7 @@ type UserRepo interface {
 	GetPasswordandID(username string) (int, string, error)
 	GetUser(user *User) (*User, error)
 	GetUserByEmail(email string) (*User, error)
+	UpdatePasswordByEmail(email string, password []byte) error
 }
 
 var (
