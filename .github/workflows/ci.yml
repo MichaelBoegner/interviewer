@@ -32,6 +32,7 @@ jobs:
           echo "DB_PASSWORD=testpassword" >> .env.test
           echo "DB_NAME=testdb" >> .env.test
           echo "DB_SSLMODE=disable" >> .env.test
+          echo "FRONTEND_URL=http://localhost:5173/" >> .env.test
 
       - name: Lint
         run: go vet ./...

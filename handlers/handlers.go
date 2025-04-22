@@ -5,6 +5,7 @@ import (
 	"errors"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 
 	"github.com/michaelboegner/interviewer/conversation"
@@ -327,7 +328,8 @@ func (h *Handler) RequestResetHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resetURL := "https://yourapp.com/reset-password?token=" + resetJWT
+	frontendURL := os.Getenv("FRONTEND_URL")
+	resetURL := frontendURL + "reset-password?token=" + resetJWT
 
 	err = h.Mailer.SendPasswordReset(params.Email, resetURL)
 	if err != nil {
