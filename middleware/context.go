@@ -42,7 +42,7 @@ func EnableCors(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if os.Getenv("ENV") == "production" {
 			log.Println("Using production")
-			w.Header().Set("Access-Control-Allow-Origin", "https://interviewer-ui.vercel.app")
+			w.Header().Set("Access-Control-Allow-Origin", "https://interviewer.dev")
 		} else {
 			log.Println("NOT using production")
 			w.Header().Set("Access-Control-Allow-Origin", "http://localhost:5173")
