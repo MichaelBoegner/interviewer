@@ -3,6 +3,7 @@ package handlers
 import (
 	"database/sql"
 
+	"github.com/michaelboegner/interviewer/billing"
 	"github.com/michaelboegner/interviewer/chatgpt"
 	"github.com/michaelboegner/interviewer/conversation"
 	"github.com/michaelboegner/interviewer/interview"
@@ -18,6 +19,14 @@ type PasswordResetRequest struct {
 type PasswordResetPayload struct {
 	Token       string `json:"token"`
 	NewPassword string `json:"new_password"`
+}
+
+type CheckoutRequest struct {
+	Tier string `json:"tier"`
+}
+
+type CheckoutResponse struct {
+	CheckoutURL string `json:"checkout_url"`
 }
 
 type ReturnVals struct {
@@ -43,6 +52,7 @@ type Handler struct {
 	InterviewRepo    interview.InterviewRepo
 	ConversationRepo conversation.ConversationRepo
 	TokenRepo        token.TokenRepo
+	Billing          billing.Billing
 	Mailer           mailer.Mailer
 	OpenAI           chatgpt.AIClient
 	DB               *sql.DB
@@ -53,6 +63,7 @@ func NewHandler(
 	userRepo user.UserRepo,
 	tokenRepo token.TokenRepo,
 	conversationRepo conversation.ConversationRepo,
+	billing billing.Billing,
 	mailer mailer.Mailer,
 	openAI chatgpt.AIClient,
 	db *sql.DB) *Handler {
@@ -61,6 +72,7 @@ func NewHandler(
 		UserRepo:         userRepo,
 		TokenRepo:        tokenRepo,
 		ConversationRepo: conversationRepo,
+		Billing:          billing,
 		Mailer:           mailer,
 		OpenAI:           openAI,
 		DB:               db,

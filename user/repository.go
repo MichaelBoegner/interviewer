@@ -133,3 +133,14 @@ func (repo *Repository) UpdatePasswordByEmail(email string, password []byte) err
 
 	return nil
 }
+
+func (repo *Repository) UpdateStripeInfo(customerID string, tier string) error {
+	query := `UPDATE users SET subscription_tier = $1 WHERE stripe_customer_id = $2`
+	_, err := repo.DB.Exec(query, tier, customerID)
+	if err != nil {
+		log.Printf("UpdateStripeInfo Exec failed: %v", err)
+		return err
+	}
+
+	return nil
+}

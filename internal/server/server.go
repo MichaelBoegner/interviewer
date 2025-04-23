@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/michaelboegner/interviewer/billing"
 	"github.com/michaelboegner/interviewer/chatgpt"
 	"github.com/michaelboegner/interviewer/conversation"
 	"github.com/michaelboegner/interviewer/database"
@@ -33,8 +34,9 @@ func NewServer() *Server {
 	conversationRepo := conversation.NewRepository(db)
 	openAI := &chatgpt.OpenAIClient{}
 	mailer := mailer.Mailer{}
+	billing := billing.Billing{}
 
-	handler := handlers.NewHandler(interviewRepo, userRepo, tokenRepo, conversationRepo, mailer, openAI, db)
+	handler := handlers.NewHandler(interviewRepo, userRepo, tokenRepo, conversationRepo, billing, mailer, openAI, db)
 
 	mux.Handle("/api/users", http.HandlerFunc(handler.CreateUsersHandler))
 	mux.Handle("/api/auth/login", http.HandlerFunc(handler.LoginHandler))
@@ -46,6 +48,7 @@ func NewServer() *Server {
 	mux.Handle("/api/conversations/create/", middleware.GetContext(http.HandlerFunc(handler.CreateConversationsHandler)))
 	mux.Handle("/api/conversations/append/", middleware.GetContext(http.HandlerFunc(handler.AppendConversationsHandler)))
 	mux.Handle("/api/auth/token", middleware.GetContext(http.HandlerFunc(handler.RefreshTokensHandler)))
+	mux.Handle("/api/payment/checkout", middleware.GetContext(http.HandlerFunc(handler.CreateCheckoutSessionHandler)))
 	mux.Handle("/health", http.HandlerFunc(handler.HealthCheckHandler))
 
 	return &Server{mux: mux}
