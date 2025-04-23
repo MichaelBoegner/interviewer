@@ -6,11 +6,11 @@ import (
 	"net/http/httptest"
 
 	"github.com/michaelboegner/interviewer/conversation"
-	"github.com/michaelboegner/interviewer/customerio"
 	"github.com/michaelboegner/interviewer/database"
 	"github.com/michaelboegner/interviewer/handlers"
 	"github.com/michaelboegner/interviewer/internal/mocks"
 	"github.com/michaelboegner/interviewer/interview"
+	"github.com/michaelboegner/interviewer/mailer"
 	"github.com/michaelboegner/interviewer/middleware"
 	"github.com/michaelboegner/interviewer/token"
 	"github.com/michaelboegner/interviewer/user"
@@ -37,7 +37,7 @@ func InitTestServer() *handlers.Handler {
 	tokenRepo := token.NewRepository(db)
 	conversationRepo := conversation.NewRepository(db)
 	openAI := &mocks.MockOpenAIClient{}
-	mailer := customerio.Mailer{}
+	mailer := mailer.Mailer{}
 
 	handler := handlers.NewHandler(interviewRepo, userRepo, tokenRepo, conversationRepo, mailer, openAI, db)
 

@@ -38,7 +38,7 @@ func CreateUser(repo UserRepo, username, email, password string) (*User, error) 
 
 	return user, nil
 	// For preventing user creation in deployment:
-	// err := errors.New("User creation has been disabled for now. Live demos available upon request!")
+	// err := errors.New("We are not quite yet fully live. Check back again in the future!")
 	// return nil, err
 }
 

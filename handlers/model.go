@@ -5,8 +5,8 @@ import (
 
 	"github.com/michaelboegner/interviewer/chatgpt"
 	"github.com/michaelboegner/interviewer/conversation"
-	"github.com/michaelboegner/interviewer/customerio"
 	"github.com/michaelboegner/interviewer/interview"
+	"github.com/michaelboegner/interviewer/mailer"
 	"github.com/michaelboegner/interviewer/token"
 	"github.com/michaelboegner/interviewer/user"
 )
@@ -43,7 +43,7 @@ type Handler struct {
 	InterviewRepo    interview.InterviewRepo
 	ConversationRepo conversation.ConversationRepo
 	TokenRepo        token.TokenRepo
-	Mailer           customerio.Mailer
+	Mailer           mailer.Mailer
 	OpenAI           chatgpt.AIClient
 	DB               *sql.DB
 }
@@ -53,7 +53,7 @@ func NewHandler(
 	userRepo user.UserRepo,
 	tokenRepo token.TokenRepo,
 	conversationRepo conversation.ConversationRepo,
-	mailer customerio.Mailer,
+	mailer mailer.Mailer,
 	openAI chatgpt.AIClient,
 	db *sql.DB) *Handler {
 	return &Handler{

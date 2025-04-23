@@ -48,7 +48,7 @@ func (h *Handler) CreateUsersHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		// For preventing user creation in frontend.
 		// noNewUsers := fmt.Sprintf("%s", err)
-		RespondWithError(w, http.StatusInternalServerError, "Internal Server Error")
+		RespondWithError(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
 
