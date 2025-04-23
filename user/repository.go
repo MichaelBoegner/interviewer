@@ -108,12 +108,13 @@ func (repo *Repository) UpdatePasswordByEmail(email string, password []byte) err
 	query := `
 			UPDATE users
 			SET password = $1, updated_at = $2
-			WHERE id = $3
+			WHERE email = $3
 			`
 
 	result, err := repo.DB.Exec(query,
 		password,
 		time.Now().UTC(),
+		email,
 	)
 	if err != nil {
 		log.Printf("UpdatePasswordByEmail exec failed: %v", err)

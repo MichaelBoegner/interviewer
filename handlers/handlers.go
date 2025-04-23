@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -354,8 +355,10 @@ func (h *Handler) ResetPasswordHandler(w http.ResponseWriter, r *http.Request) {
 		RespondWithError(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
+	//DEBUG
+	fmt.Printf("\n\nnparams.Token: %v\n", params.Token)
 
-	err := user.ResetPassword(h.UserRepo, params.Token, params.NewPassword)
+	err := user.ResetPassword(h.UserRepo, params.NewPassword, params.Token)
 	if err != nil {
 		log.Printf("ResetPasswordHandler failed: %v", err)
 		RespondWithError(w, http.StatusUnauthorized, "Invalid or expired token")
