@@ -368,12 +368,14 @@ func (h *Handler) ResetPasswordHandler(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) CreateCheckoutSessionHandler(w http.ResponseWriter, r *http.Request) {
 	userID, ok := r.Context().Value(middleware.ContextKeyTokenParams).(int)
 	if !ok {
+		log.Printf("r.Context().Value() failed")
 		RespondWithError(w, http.StatusUnauthorized, "Unauthorized")
 		return
 	}
 
 	var params CheckoutRequest
 	if err := json.NewDecoder(r.Body).Decode(&params); err != nil || params.Tier == "" {
+		log.Printf("jsonNewDecoder failed: %v", err)
 		RespondWithError(w, http.StatusBadRequest, "Missing or invalid tier")
 		return
 	}
@@ -386,18 +388,27 @@ func (h *Handler) CreateCheckoutSessionHandler(w http.ResponseWriter, r *http.Re
 
 	var priceID string
 	switch params.Tier {
-	case "pro":
-		priceID = os.Getenv("STRIPE_PRICE_ID_PRO")
-	case "premium":
-		priceID = os.Getenv("STRIPE_PRICE_ID_PREMIUM")
+	case "practice":
+		priceID = os.Getenv("LEMON_VARIANT_ID_PRACTICE")
+	case "master":
+		priceID = os.Getenv("LEMON_VARIANT_ID_MASTER")
+	case "genius":
+		priceID = os.Getenv("LEMON_VARIANT_ID_GENIUS")
 	default:
 		RespondWithError(w, http.StatusBadRequest, "Invalid tier selected")
 		return
 	}
 
-	url, err := h.Billing.CreateCheckoutSession(user.Email, priceID)
+	priceIDInt, err := strconv.Atoi(priceID)
 	if err != nil {
-		log.Printf("Stripe session error: %v", err)
+		log.Printf("strconv.Atoi() failed: %v", err)
+		RespondWithError(w, http.StatusInternalServerError, "Internal server error")
+		return
+	}
+
+	url, err := h.Billing.CreateCheckoutSession(user.Email, priceIDInt)
+	if err != nil {
+		log.Printf("billing.CreateCheckoutSession failed: %v", err)
 		RespondWithError(w, http.StatusInternalServerError, "Could not start checkout")
 		return
 	}

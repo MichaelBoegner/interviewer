@@ -1,34 +1,47 @@
 package billing
 
 import (
-	"fmt"
-	"os"
-
-	"github.com/stripe/stripe-go/v76"
-	"github.com/stripe/stripe-go/v76/checkout/session"
-	"github.com/stripe/stripe-go/v76/customer"
+	"bytes"
+	"encoding/json"
+	"log"
+	"net/http"
 )
 
-func (s *Billing) CreateCheckoutSession(userEmail string, priceID string) (string, error) {
-	cus, err := customer.New(&stripe.CustomerParams{
-		Email: stripe.String(userEmail),
-	})
+func (b *Billing) CreateCheckoutSession(userEmail string, variantID int) (string, error) {
+	payload := CheckoutPayload{
+		VariantID: variantID,
+		Email:     userEmail,
+	}
+
+	body, err := json.Marshal(payload)
 	if err != nil {
-		return "", fmt.Errorf("failed to create stripe customer: %w", err)
+		log.Printf("json.Marshal failed: %v", err)
+		return "", err
 	}
 
-	params := &stripe.CheckoutSessionParams{
-		Customer:   stripe.String(cus.ID),
-		SuccessURL: stripe.String(os.Getenv("FRONTEND_URL") + "payment-success"),
-		CancelURL:  stripe.String(os.Getenv("FRONTEND_URL") + "payment-cancel"),
-		Mode:       stripe.String(string(stripe.CheckoutSessionModeSubscription)),
-		LineItems:  []*stripe.CheckoutSessionLineItemParams{{Price: stripe.String(priceID), Quantity: stripe.Int64(1)}},
-	}
-
-	sess, err := session.New(params)
+	req, err := http.NewRequest("POST", "https://api.lemonsqueezy.com/v1/checkouts", bytes.NewBuffer(body))
 	if err != nil {
-		return "", fmt.Errorf("failed to create checkout session: %w", err)
+		log.Printf("http.NewRequest failed: %v", err)
+		return "", err
 	}
 
-	return sess.URL, nil
+	req.Header.Set("Authorization", "Bearer "+b.APIKey)
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept", "application/vnd.api+json")
+
+	client := &http.Client{}
+	res, err := client.Do(req)
+	if err != nil {
+		log.Printf("client.Do failed: %v", err)
+		return "", err
+	}
+	defer res.Body.Close()
+
+	var result CheckoutResponse
+	if err := json.NewDecoder(res.Body).Decode(&result); err != nil {
+		log.Printf("NewDecoder failed: %v", err)
+		return "", err
+	}
+
+	return result.Data.Attributes.URL, nil
 }
