@@ -24,7 +24,7 @@ func CreateUser(repo UserRepo, username, email, password string) (*User, error) 
 	user := &User{
 		Username:  username,
 		Email:     email,
-		Password:  []byte(passwordHashed),
+		Password:  passwordHashed,
 		CreatedAt: now,
 		UpdatedAt: now,
 	}
