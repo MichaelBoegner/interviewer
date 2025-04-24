@@ -10,7 +10,7 @@ import (
 
 func (m *Mailer) SendPasswordReset(email, resetURL string) error {
 	payload := map[string]any{
-		"from":    "Interviewer Support <support@mail.interviewer.dev>", // Must be verified in Resend
+		"from":    "Interviewer Support <support@mail.interviewer.dev>",
 		"to":      email,
 		"subject": "Reset your password",
 		"html":    "<p>" + fmt.Sprintf("To reset your password, click here: %s", resetURL) + "</p>",
