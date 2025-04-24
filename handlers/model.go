@@ -52,8 +52,8 @@ type Handler struct {
 	InterviewRepo    interview.InterviewRepo
 	ConversationRepo conversation.ConversationRepo
 	TokenRepo        token.TokenRepo
-	Billing          billing.Billing
-	Mailer           mailer.Mailer
+	Billing          *billing.Billing
+	Mailer           *mailer.Mailer
 	OpenAI           chatgpt.AIClient
 	DB               *sql.DB
 }
@@ -63,8 +63,8 @@ func NewHandler(
 	userRepo user.UserRepo,
 	tokenRepo token.TokenRepo,
 	conversationRepo conversation.ConversationRepo,
-	billing billing.Billing,
-	mailer mailer.Mailer,
+	billing *billing.Billing,
+	mailer *mailer.Mailer,
 	openAI chatgpt.AIClient,
 	db *sql.DB) *Handler {
 	return &Handler{

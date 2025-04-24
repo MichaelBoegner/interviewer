@@ -38,8 +38,8 @@ func InitTestServer() *handlers.Handler {
 	tokenRepo := token.NewRepository(db)
 	conversationRepo := conversation.NewRepository(db)
 	openAI := &mocks.MockOpenAIClient{}
-	mailer := mailer.Mailer{}
-	billing := billing.Billing{}
+	mailer := mailer.NewMailer()
+	billing := billing.NewBilling()
 
 	handler := handlers.NewHandler(interviewRepo, userRepo, tokenRepo, conversationRepo, billing, mailer, openAI, db)
 

@@ -7,7 +7,7 @@ type Mailer struct {
 	BaseURL string
 }
 
-func New() *Mailer {
+func NewMailer() *Mailer {
 	return &Mailer{
 		APIKey:  os.Getenv("RESEND_API_KEY"),
 		BaseURL: "https://api.resend.com",

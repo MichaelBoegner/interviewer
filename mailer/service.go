@@ -9,8 +9,6 @@ import (
 )
 
 func (m *Mailer) SendPasswordReset(email, resetURL string) error {
-	mailer := New()
-
 	payload := map[string]any{
 		"from":    "Interviewer Support <support@mail.interviewer.dev>", // Must be verified in Resend
 		"to":      email,
@@ -24,12 +22,12 @@ func (m *Mailer) SendPasswordReset(email, resetURL string) error {
 		return err
 	}
 
-	req, err := http.NewRequest("POST", fmt.Sprintf("%s/emails", mailer.BaseURL), bytes.NewBuffer(body))
+	req, err := http.NewRequest("POST", fmt.Sprintf("%s/emails", m.BaseURL), bytes.NewBuffer(body))
 	if err != nil {
 		log.Printf("Mailer NewRequest failed: %v", err)
 		return err
 	}
-	req.Header.Set("Authorization", "Bearer "+mailer.APIKey)
+	req.Header.Set("Authorization", "Bearer "+m.APIKey)
 	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := http.DefaultClient.Do(req)

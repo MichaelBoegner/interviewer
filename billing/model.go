@@ -21,8 +21,8 @@ type CheckoutResponse struct {
 	} `json:"data"`
 }
 
-func NewBilling() Billing {
-	return Billing{
+func NewBilling() *Billing {
+	return &Billing{
 		APIKey: os.Getenv("STRIPE_SECRET_KEY"),
 	}
 }

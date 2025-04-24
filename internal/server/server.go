@@ -33,8 +33,8 @@ func NewServer() *Server {
 	tokenRepo := token.NewRepository(db)
 	conversationRepo := conversation.NewRepository(db)
 	openAI := &chatgpt.OpenAIClient{}
-	mailer := mailer.Mailer{}
-	billing := billing.Billing{}
+	mailer := mailer.NewMailer()
+	billing := billing.NewBilling()
 
 	handler := handlers.NewHandler(interviewRepo, userRepo, tokenRepo, conversationRepo, billing, mailer, openAI, db)
 
