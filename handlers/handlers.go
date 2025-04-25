@@ -27,6 +27,11 @@ func (h *Handler) HealthCheckHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) CreateUsersHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
 	params := &middleware.AcceptedVals{}
 	err := json.NewDecoder(r.Body).Decode(params)
 	if err != nil {
@@ -62,6 +67,11 @@ func (h *Handler) CreateUsersHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) GetUsersHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
 	userID, ok := r.Context().Value(middleware.ContextKeyTokenParams).(int)
 	if !ok {
 		RespondWithError(w, http.StatusBadRequest, "Invalid ID")
@@ -98,6 +108,11 @@ func (h *Handler) GetUsersHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) LoginHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
 	params := &middleware.AcceptedVals{}
 	err := json.NewDecoder(r.Body).Decode(params)
 	if err != nil {
@@ -138,6 +153,11 @@ func (h *Handler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) RefreshTokensHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
 	providedToken := r.Context().Value(middleware.ContextKeyTokenKey).(string)
 	params := &middleware.AcceptedVals{}
 
@@ -191,6 +211,11 @@ func (h *Handler) RefreshTokensHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) InterviewsHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
 	userID, ok := r.Context().Value(middleware.ContextKeyTokenParams).(int)
 	if !ok {
 		RespondWithError(w, http.StatusBadRequest, "Invalid userID")
@@ -213,6 +238,11 @@ func (h *Handler) InterviewsHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) CreateConversationsHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
 	params := &middleware.AcceptedVals{}
 	err := json.NewDecoder(r.Body).Decode(params)
 	if err != nil {
@@ -256,6 +286,11 @@ func (h *Handler) CreateConversationsHandler(w http.ResponseWriter, r *http.Requ
 }
 
 func (h *Handler) AppendConversationsHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
 	params := &middleware.AcceptedVals{}
 	err := json.NewDecoder(r.Body).Decode(params)
 	if err != nil {
@@ -366,6 +401,11 @@ func (h *Handler) ResetPasswordHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) CreateCheckoutSessionHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
 	userID, ok := r.Context().Value(middleware.ContextKeyTokenParams).(int)
 	if !ok {
 		log.Printf("r.Context().Value() failed")
