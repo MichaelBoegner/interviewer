@@ -1,6 +1,7 @@
 package chatgpt
 
 import (
+	"os"
 	"time"
 )
 
@@ -16,7 +17,15 @@ type ChatGPTResponse struct {
 	CreatedAt    time.Time `json:"created_at"`
 }
 
-type OpenAIClient struct{}
+type OpenAIClient struct {
+	APIKey string
+}
+
+func NewOpenAI() *OpenAIClient {
+	return &OpenAIClient{
+		APIKey: os.Getenv("OPENAI_API_KEY"),
+	}
+}
 
 type AIClient interface {
 	GetChatGPTResponseInterview(prompt string) (*ChatGPTResponse, error)

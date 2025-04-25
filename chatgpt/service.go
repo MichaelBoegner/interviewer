@@ -9,12 +9,10 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"os"
 )
 
 func (c *OpenAIClient) GetChatGPTResponseInterview(prompt string) (*ChatGPTResponse, error) {
 	ctx := context.Background()
-	apiKey := os.Getenv("OPENAI_API_KEY")
 
 	var messagesArray []map[string]string
 	messagesArray = append(messagesArray, map[string]string{
@@ -39,7 +37,7 @@ func (c *OpenAIClient) GetChatGPTResponseInterview(prompt string) (*ChatGPTRespo
 	}
 
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", apiKey))
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.APIKey))
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
@@ -84,7 +82,6 @@ func (c *OpenAIClient) GetChatGPTResponseInterview(prompt string) (*ChatGPTRespo
 
 func (c *OpenAIClient) GetChatGPTResponseConversation(conversationHistory []map[string]string) (*ChatGPTResponse, error) {
 	ctx := context.Background()
-	apiKey := os.Getenv("OPENAI_API_KEY")
 
 	requestBody, err := json.Marshal(map[string]interface{}{
 		"model":       "gpt-4",
@@ -103,7 +100,7 @@ func (c *OpenAIClient) GetChatGPTResponseConversation(conversationHistory []map[
 	}
 
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", apiKey))
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.APIKey))
 
 	client := &http.Client{}
 	resp, err := client.Do(req)

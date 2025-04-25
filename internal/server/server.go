@@ -32,7 +32,7 @@ func NewServer() *Server {
 	userRepo := user.NewRepository(db)
 	tokenRepo := token.NewRepository(db)
 	conversationRepo := conversation.NewRepository(db)
-	openAI := &chatgpt.OpenAIClient{}
+	openAI := chatgpt.NewOpenAI()
 	mailer := mailer.NewMailer()
 	billing := billing.NewBilling()
 
