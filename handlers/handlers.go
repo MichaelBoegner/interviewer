@@ -366,12 +366,13 @@ func (h *Handler) RequestResetHandler(w http.ResponseWriter, r *http.Request) {
 	frontendURL := os.Getenv("FRONTEND_URL")
 	resetURL := frontendURL + "reset-password?token=" + resetJWT
 
-	err = h.Mailer.SendPasswordReset(params.Email, resetURL)
-	if err != nil {
-		log.Printf("SendPasswordReset error: %v", err)
-		RespondWithError(w, http.StatusInternalServerError, "Failed to send email")
-		return
-	}
+	go func(email, resetURL string) {
+		err := h.Mailer.SendPasswordReset(email, resetURL)
+		if err != nil {
+			log.Printf("SendPasswordReset error: %v", err)
+			return
+		}
+	}(params.Email, resetURL)
 
 	payload := ReturnVals{}
 	RespondWithJSON(w, http.StatusOK, payload)

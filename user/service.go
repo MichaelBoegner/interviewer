@@ -78,14 +78,14 @@ func GetUser(repo UserRepo, userID int) (*User, error) {
 func RequestPasswordReset(repo UserRepo, email string) (string, error) {
 	user, err := repo.GetUserByEmail(email)
 	if err != nil {
-		log.Printf("GetByEmail failed: %v", err)
-		return "", nil
+		log.Printf("GetUserByEmail failed: %v", err)
+		return "", err
 	}
 
 	resetJWT, err := token.CreateJWT(user.Email, 900)
 	if err != nil {
 		log.Printf("CreateJWT failed: %v", err)
-		return "", nil
+		return "", err
 	}
 
 	return resetJWT, nil
