@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"time"
 )
 
 func (b *Billing) CreateCheckoutSession(userEmail string, variantID int) (string, error) {
@@ -29,7 +30,9 @@ func (b *Billing) CreateCheckoutSession(userEmail string, variantID int) (string
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "application/vnd.api+json")
 
-	client := &http.Client{}
+	client := &http.Client{
+		Timeout: 10 * time.Second,
+	}
 	res, err := client.Do(req)
 	if err != nil {
 		log.Printf("client.Do failed: %v", err)
