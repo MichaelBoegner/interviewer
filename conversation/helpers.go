@@ -10,6 +10,26 @@ import (
 	"github.com/michaelboegner/interviewer/chatgpt"
 )
 
+func GetChatGPTResponses(conversation *Conversation, openAI chatgpt.AIClient) (*chatgpt.ChatGPTResponse, string, error) {
+	conversationHistory, err := GetConversationHistory(conversation)
+	if err != nil {
+		log.Printf("GetConversationHistory failed: %v", err)
+		return nil, "", err
+	}
+	chatGPTResponse, err := openAI.GetChatGPTResponseConversation(conversationHistory)
+	if err != nil {
+		log.Printf("getNextQuestion failed: %v", err)
+		return nil, "", err
+	}
+	chatGPTResponseString, err := ChatGPTResponseToString(chatGPTResponse)
+	if err != nil {
+		log.Printf("Marshalled response failed: %v", err)
+		return nil, "", err
+	}
+
+	return chatGPTResponse, chatGPTResponseString, nil
+}
+
 func GetConversationHistory(conversation *Conversation) ([]map[string]string, error) {
 	chatGPTConversationArray := make([]map[string]string, 0)
 
