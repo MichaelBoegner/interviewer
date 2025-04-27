@@ -10,6 +10,6 @@ CREATE TABLE IF NOT EXISTS interviews (
     prompt TEXT,         
     first_question TEXT, 
     subtopic VARCHAR(255) NOT NULL,                       
-    created_at TIMESTAMP, 
-    updated_at TIMESTAMP  
+    created_at TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP NOT NULL
 );

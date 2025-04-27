@@ -3,6 +3,6 @@ CREATE TABLE IF NOT EXISTS refresh_tokens (
     user_id INT REFERENCES users(id),
     refresh_token VARCHAR(255),
     expires_at TIMESTAMP,
-    created_at TIMESTAMP,
-    updated_at TIMESTAMP
+     created_at TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP NOT NULL
 );
