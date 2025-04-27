@@ -10,17 +10,17 @@ type Users struct {
 }
 
 type User struct {
-	ID                      int
-	Username                string
-	Email                   string
-	Password                []byte
-	BillingCustomerID       string
-	SubscriptionTier        string
-	subscription_start_date time.Time
-	BillingSubscriptionID   string
-	BillingStatus           string
-	CreatedAt               time.Time
-	UpdatedAt               time.Time
+	ID                    int
+	Username              string
+	Email                 string
+	Password              []byte
+	BillingCustomerID     string
+	SubscriptionTier      string
+	SubscriptionStartDate time.Time
+	BillingSubscriptionID string
+	BillingStatus         string
+	CreatedAt             time.Time
+	UpdatedAt             time.Time
 }
 
 type UserRepo interface {

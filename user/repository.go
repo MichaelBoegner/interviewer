@@ -142,9 +142,10 @@ func (repo *Repository) UpdateBillingInfo(user *User) error {
 				billing_status = $4,
 				WHERE email = $5`
 	_, err := repo.DB.Exec(query,
-		user.BillingCustomeID,
+		user.BillingCustomerID,
 		user.SubscriptionTier,
 		user.BillingSubscriptionID,
+		user.SubscriptionStartDate,
 		user.BillingStatus,
 	)
 	if err != nil {
