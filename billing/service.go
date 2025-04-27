@@ -54,9 +54,9 @@ func (b *Billing) ServiceWebhook(webhookPayload BillingWebhookPayload) error {
 	eventType := webhookPayload.Meta.EventName
 	switch eventType {
 	case "subscription_created", "subscription_updated":
-		//repo update
+		//user service update
 	case "subscription_cancelled":
-		// repo cancellation
+		// user service cancellation
 	default:
 		log.Printf("Unhandled event type: %s", eventType)
 		return errors.New("Unhandled event type")
