@@ -51,6 +51,7 @@ func (b *Billing) CreateCheckoutSession(userEmail string, variantID int) (string
 }
 
 func (b *Billing) ServiceWebhook(webhookPayload BillingWebhookPayload) error {
+
 	eventType := webhookPayload.Meta.EventName
 	switch eventType {
 	case "subscription_created", "subscription_updated":
