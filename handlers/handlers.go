@@ -9,6 +9,7 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/michaelboegner/interviewer/billing"
 	"github.com/michaelboegner/interviewer/conversation"
 	"github.com/michaelboegner/interviewer/interview"
 	"github.com/michaelboegner/interviewer/middleware"
@@ -472,7 +473,7 @@ func (h *Handler) BillingWebhookHandler(w http.ResponseWriter, r *http.Request) 
 	}
 	defer r.Body.Close()
 
-	var webhookPayload BillingWebhookPayload
+	var webhookPayload billing.BillingWebhookPayload
 	err = json.Unmarshal(body, &webhookPayload)
 	if err != nil {
 		log.Printf("json.Unmarshal failed: %v", err)
@@ -480,21 +481,10 @@ func (h *Handler) BillingWebhookHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	eventType := webhookPayload.Meta.EventName
-	switch eventType {
-	case "subscription_created", "subscription_updated":
-		// 4. Update the user in DB based on customer_id and subscription_id
-		err := user.UpdateUserSubscription(webhookPayload)
-		if err != nil {
-			log.Printf("user.UPdateUserSubscription failed: %v", err)
-			RespondWithError(w, http.StatusInternalServerError, "Failed to update subscription")
-			return
-		}
-	case "subscription_cancelled":
-		// handle cancellation
-	default:
-		log.Printf("Unhandled event type: %s", eventType)
-		RespondWithError(w, http.StatusNotImplemented, "Unhandled event type")
+	err = h.Billing.ServiceWebhook(webhookPayload)
+	if err != nil {
+		log.Printf("h.Billing.ServiceWebhook failed: %v", err)
+		RespondWithError(w, http.StatusNotImplemented, "Failed to update subscription")
 	}
 
 	w.WriteHeader(http.StatusOK)
