@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"database/sql"
+	"time"
 
 	"github.com/michaelboegner/interviewer/billing"
 	"github.com/michaelboegner/interviewer/chatgpt"
@@ -27,6 +28,31 @@ type CheckoutRequest struct {
 
 type CheckoutResponse struct {
 	CheckoutURL string `json:"checkout_url"`
+}
+
+type BillingWebhookPayload struct {
+	Meta MetaData `json:"meta"`
+	Data Data     `json:"data"`
+}
+
+type MetaData struct {
+	EventName string `json:"event_name"`
+}
+
+type Data struct {
+	Attributes Attributes `json:"attributes"`
+}
+
+type Attributes struct {
+	CustomerID     string     `json:"customer_id"`
+	SubscriptionID string     `json:"id"`
+	Status         string     `json:"status"`
+	RenewsAt       *time.Time `json:"renews_at"`
+	EndsAt         *time.Time `json:"ends_at"`
+	TrialEndsAt    *time.Time `json:"trial_ends_at"`
+	VariantID      int        `json:"variant_id"`
+	UnitPrice      int        `json:"unit_price"`
+	Currency       string     `json:"currency"`
 }
 
 type ReturnVals struct {

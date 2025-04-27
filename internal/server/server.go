@@ -42,6 +42,7 @@ func NewServer() *Server {
 	mux.Handle("/api/auth/login", http.HandlerFunc(handler.LoginHandler))
 	mux.Handle("/api/auth/request-reset", http.HandlerFunc(handler.RequestResetHandler))
 	mux.Handle("/api/auth/reset-password", http.HandlerFunc(handler.ResetPasswordHandler))
+	mux.Handle("/api/webhooks/billing", http.HandlerFunc(handler.BillingWebhookHandler))
 
 	mux.Handle("/api/users/", middleware.GetContext(http.HandlerFunc(handler.GetUsersHandler)))
 	mux.Handle("/api/interviews", middleware.GetContext(http.HandlerFunc(handler.InterviewsHandler)))

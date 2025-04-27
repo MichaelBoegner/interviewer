@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -17,7 +18,7 @@ import (
 
 func (h *Handler) HealthCheckHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		RespondWithError(w, http.StatusMethodNotAllowed, "Method not allowed")
 		return
 	}
 
@@ -28,7 +29,7 @@ func (h *Handler) HealthCheckHandler(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) CreateUsersHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		RespondWithError(w, http.StatusMethodNotAllowed, "Method not allowed")
 		return
 	}
 
@@ -68,7 +69,7 @@ func (h *Handler) CreateUsersHandler(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) GetUsersHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		RespondWithError(w, http.StatusMethodNotAllowed, "Method not allowed")
 		return
 	}
 
@@ -109,7 +110,7 @@ func (h *Handler) GetUsersHandler(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		RespondWithError(w, http.StatusMethodNotAllowed, "Method not allowed")
 		return
 	}
 
@@ -154,7 +155,7 @@ func (h *Handler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) RefreshTokensHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		RespondWithError(w, http.StatusMethodNotAllowed, "Method not allowed")
 		return
 	}
 
@@ -212,7 +213,7 @@ func (h *Handler) RefreshTokensHandler(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) InterviewsHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		RespondWithError(w, http.StatusMethodNotAllowed, "Method not allowed")
 		return
 	}
 
@@ -239,7 +240,7 @@ func (h *Handler) InterviewsHandler(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) CreateConversationsHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		RespondWithError(w, http.StatusMethodNotAllowed, "Method not allowed")
 		return
 	}
 
@@ -287,7 +288,7 @@ func (h *Handler) CreateConversationsHandler(w http.ResponseWriter, r *http.Requ
 
 func (h *Handler) AppendConversationsHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		RespondWithError(w, http.StatusMethodNotAllowed, "Method not allowed")
 		return
 	}
 
@@ -344,7 +345,7 @@ func (h *Handler) AppendConversationsHandler(w http.ResponseWriter, r *http.Requ
 
 func (h *Handler) RequestResetHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		RespondWithError(w, http.StatusMethodNotAllowed, "Method not allowed")
 		return
 	}
 
@@ -380,7 +381,7 @@ func (h *Handler) RequestResetHandler(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) ResetPasswordHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		RespondWithError(w, http.StatusMethodNotAllowed, "Method not allowed")
 		return
 	}
 
@@ -403,7 +404,7 @@ func (h *Handler) ResetPasswordHandler(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) CreateCheckoutSessionHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		RespondWithError(w, http.StatusMethodNotAllowed, "Method not allowed")
 		return
 	}
 
@@ -455,4 +456,46 @@ func (h *Handler) CreateCheckoutSessionHandler(w http.ResponseWriter, r *http.Re
 	}
 
 	RespondWithJSON(w, http.StatusOK, CheckoutResponse{CheckoutURL: url})
+}
+
+func (h *Handler) BillingWebhookHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		RespondWithError(w, http.StatusMethodNotAllowed, "Method not allowed")
+		return
+	}
+
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		log.Printf("io.ReadAll failed: %v", err)
+		RespondWithError(w, http.StatusBadRequest, "Bad Request")
+		return
+	}
+	defer r.Body.Close()
+
+	var webhookPayload BillingWebhookPayload
+	err = json.Unmarshal(body, &webhookPayload)
+	if err != nil {
+		log.Printf("json.Unmarshal failed: %v", err)
+		RespondWithError(w, http.StatusBadRequest, "Invalid JSON")
+		return
+	}
+
+	eventType := webhookPayload.Meta.EventName
+	switch eventType {
+	case "subscription_created", "subscription_updated":
+		// 4. Update the user in DB based on customer_id and subscription_id
+		err := user.UpdateUserSubscription(webhookPayload)
+		if err != nil {
+			log.Printf("user.UPdateUserSubscription failed: %v", err)
+			RespondWithError(w, http.StatusInternalServerError, "Failed to update subscription")
+			return
+		}
+	case "subscription_cancelled":
+		// handle cancellation
+	default:
+		log.Printf("Unhandled event type: %s", eventType)
+		RespondWithError(w, http.StatusNotImplemented, "Unhandled event type")
+	}
+
+	w.WriteHeader(http.StatusOK)
 }
