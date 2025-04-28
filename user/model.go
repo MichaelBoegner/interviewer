@@ -15,7 +15,7 @@ type User struct {
 	Email                 string
 	Password              []byte
 	BillingCustomerID     string
-	SubscriptionTier      string
+	SubscriptionTier      int
 	SubscriptionStartDate time.Time
 	BillingSubscriptionID string
 	BillingStatus         string
@@ -28,7 +28,9 @@ type UserRepo interface {
 	GetPasswordandID(username string) (int, string, error)
 	GetUser(user *User) (*User, error)
 	GetUserByEmail(email string) (*User, error)
+	GetUserByCustomerID(customerID string) (*User, error)
 	UpdatePasswordByEmail(email string, password []byte) error
+	UpdateBillingInfo(user *User) error
 }
 
 var (

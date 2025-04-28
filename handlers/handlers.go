@@ -481,10 +481,22 @@ func (h *Handler) BillingWebhookHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	err = h.Billing.ServiceWebhook(webhookPayload)
+	eventType := webhookPayload.Meta.EventName
+	switch eventType {
+	case "subscription_created", "subscription_updated":
+		err = user.UpdateSubscription(h.UserRepo, webhookPayload)
+	case "subscription_cancelled":
+		err = user.CancelSubscription(h.UserRepo, webhookPayload)
+	default:
+		log.Printf("Unhandled event type: %s", eventType)
+		RespondWithError(w, http.StatusNotImplemented, "Unhandled event type")
+		return
+	}
+
 	if err != nil {
-		log.Printf("h.Billing.ServiceWebhook failed: %v", err)
-		RespondWithError(w, http.StatusNotImplemented, "Failed to update subscription")
+		log.Printf("eventType switch func failed: %v", err)
+		RespondWithError(w, http.StatusInternalServerError, "Failed to update user")
+		return
 	}
 
 	w.WriteHeader(http.StatusOK)

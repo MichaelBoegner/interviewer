@@ -104,6 +104,20 @@ func (repo *Repository) GetUserByEmail(email string) (*User, error) {
 	return user, nil
 }
 
+func (repo *Repository) GetUserByCustomerID(customerID string) (*User, error) {
+	var user = &User{}
+	err := repo.DB.QueryRow("SELECT id, username, email FROM users WHERE billing_customer_id = $1", customerID).Scan(&user.ID, &user.Username, &user.Email)
+	if err == sql.ErrNoRows {
+		log.Printf("CustomerID invalid: %v", err)
+		return nil, err
+	} else if err != nil {
+		log.Printf("Error querying database: %v\n", err)
+		return nil, err
+	}
+
+	return user, nil
+}
+
 func (repo *Repository) UpdatePasswordByEmail(email string, password []byte) error {
 	query := `
 			UPDATE users

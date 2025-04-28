@@ -3,7 +3,6 @@ package billing
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"log"
 	"net/http"
 	"time"
@@ -48,20 +47,4 @@ func (b *Billing) CreateCheckoutSession(userEmail string, variantID int) (string
 	}
 
 	return result.Data.Attributes.URL, nil
-}
-
-func (b *Billing) ServiceWebhook(webhookPayload BillingWebhookPayload) error {
-
-	eventType := webhookPayload.Meta.EventName
-	switch eventType {
-	case "subscription_created", "subscription_updated":
-		//user service update
-	case "subscription_cancelled":
-		// user service cancellation
-	default:
-		log.Printf("Unhandled event type: %s", eventType)
-		return errors.New("Unhandled event type")
-	}
-
-	return nil
 }
