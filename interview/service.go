@@ -2,12 +2,14 @@ package interview
 
 import (
 	"log"
+	"os/user"
 	"time"
 
 	"github.com/michaelboegner/interviewer/chatgpt"
 )
 
-func StartInterview(repo InterviewRepo, ai chatgpt.AIClient, userId, length, numberQuestions int, difficulty string) (*Interview, error) {
+func StartInterview(repo InterviewRepo, ai chatgpt.AIClient, user *user.User, length, numberQuestions int, difficulty string) (*Interview, error) {
+
 	now := time.Now().UTC()
 	prompt := "You are conducting a structured backend development interview. " +
 		"The interview follows **six topics in this order**:\n\n" +
@@ -47,7 +49,7 @@ func StartInterview(repo InterviewRepo, ai chatgpt.AIClient, userId, length, num
 	chatGPTResponse.CreatedAt = now
 
 	interview := &Interview{
-		UserId:          userId,
+		UserId:          user.ID,
 		Length:          length,
 		NumberQuestions: numberQuestions,
 		Difficulty:      difficulty,
