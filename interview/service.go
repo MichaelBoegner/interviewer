@@ -2,10 +2,10 @@ package interview
 
 import (
 	"log"
-	"os/user"
 	"time"
 
 	"github.com/michaelboegner/interviewer/chatgpt"
+	"github.com/michaelboegner/interviewer/user"
 )
 
 func StartInterview(repo InterviewRepo, ai chatgpt.AIClient, user *user.User, length, numberQuestions int, difficulty string) (*Interview, error) {
