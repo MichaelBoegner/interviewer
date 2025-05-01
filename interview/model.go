@@ -26,4 +26,5 @@ type Interview struct {
 type InterviewRepo interface {
 	CreateInterview(interview *Interview) (int, error)
 	GetInterview(interviewID int) (*Interview, error)
+	GetInterviewsThisCycle(userID int, cycleStart, cycleEnd time.Time) (int, error)
 }

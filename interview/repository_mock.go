@@ -42,3 +42,11 @@ func (m *MockRepo) GetInterview(interviewID int) (*Interview, error) {
 	}
 	return interview, nil
 }
+
+func (m *MockRepo) GetInterviewsThisCycle(userID int, cycleStart, cycleEnd time.Time) (int, error) {
+	if m.failRepo {
+		return 0, errors.New("Mocked DB failure")
+	}
+
+	return 1, nil
+}

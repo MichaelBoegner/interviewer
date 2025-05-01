@@ -33,10 +33,10 @@ func InitTestServer() *handlers.Handler {
 
 	log.Println("Database connected successfully.")
 
-	interviewRepo := interview.NewRepository(db)
-	userRepo := user.NewRepository(db)
-	tokenRepo := token.NewRepository(db)
-	conversationRepo := conversation.NewRepository(db)
+	interviewRepo := interview.NewRepository()
+	userRepo := user.NewRepository()
+	tokenRepo := token.NewRepository()
+	conversationRepo := conversation.NewRepository()
 	openAI := &mocks.MockOpenAIClient{}
 	mailer := mailer.NewMailer()
 	billing := billing.NewBilling()

@@ -74,7 +74,30 @@ func (m *MockRepo) GetUserByEmail(email string) (*User, error) {
 	return mockUser, nil
 }
 
+func (m *MockRepo) GetUserByCustomerID(customerID string) (*User, error) {
+	if m.failRepo {
+		return nil, errors.New("Mocked DB failure")
+	}
+
+	mockUser := &User{
+		ID:       1,
+		Username: "test",
+		Password: PasswordHashed,
+		Email:    "test@test.com",
+	}
+
+	return mockUser, nil
+}
+
 func (m *MockRepo) UpdatePasswordByEmail(email string, password []byte) error {
+	if m.failRepo {
+		return errors.New("Mocked DB failure")
+	}
+
+	return nil
+}
+
+func (m *MockRepo) UpdateBillingInfo(user *User) error {
 	if m.failRepo {
 		return errors.New("Mocked DB failure")
 	}

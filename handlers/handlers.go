@@ -224,7 +224,13 @@ func (h *Handler) InterviewsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	interviewStarted, err := interview.StartInterview(h.InterviewRepo, h.OpenAI, userID, 30, 3, "easy")
+	userReturned, err := user.GetUser(h.UserRepo, userID)
+	if err != nil {
+		log.Printf("GetUsers error: %v", err)
+		return
+	}
+
+	interviewStarted, err := interview.StartInterview(h.InterviewRepo, h.OpenAI, userReturned, 30, 3, "easy")
 	if err != nil {
 		log.Printf("Interview failed to start: %v", err)
 		return

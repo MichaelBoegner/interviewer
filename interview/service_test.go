@@ -11,12 +11,13 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/michaelboegner/interviewer/internal/mocks"
+	"github.com/michaelboegner/interviewer/user"
 )
 
 func TestStartInterview(t *testing.T) {
 	tests := []struct {
 		name         string
-		userID       int
+		user         *user.User
 		length       int
 		numQuestions int
 		difficulty   string
@@ -26,8 +27,12 @@ func TestStartInterview(t *testing.T) {
 		expectError  bool
 	}{
 		{
-			name:         "StartInterview_Success",
-			userID:       1,
+			name: "StartInterview_Success",
+			user: &user.User{
+				ID:                    1,
+				SubscriptionTier:      0,
+				SubscriptionStartDate: time.Now(),
+			},
 			length:       30,
 			numQuestions: 3,
 			difficulty:   "easy",
@@ -46,8 +51,12 @@ func TestStartInterview(t *testing.T) {
 			expectError: false,
 		},
 		{
-			name:         "StartInterview_RepoError",
-			userID:       1,
+			name: "StartInterview_RepoError",
+			user: &user.User{
+				ID:                    1,
+				SubscriptionTier:      0,
+				SubscriptionStartDate: time.Now(),
+			},
 			length:       30,
 			numQuestions: 3,
 			difficulty:   "easy",
@@ -68,7 +77,7 @@ func TestStartInterview(t *testing.T) {
 				repo.failRepo = true
 			}
 
-			interview, err := StartInterview(repo, tc.aiClient, tc.userID, tc.length, tc.numQuestions, tc.difficulty)
+			interview, err := StartInterview(repo, tc.aiClient, tc.user, tc.length, tc.numQuestions, tc.difficulty)
 
 			if tc.expectError && err == nil {
 				t.Fatalf("expected error but got nil")

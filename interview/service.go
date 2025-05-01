@@ -9,6 +9,11 @@ import (
 )
 
 func StartInterview(repo InterviewRepo, ai chatgpt.AIClient, user *user.User, length, numberQuestions int, difficulty string) (*Interview, error) {
+	_, err := checkSubscription(repo, user)
+	if err != nil {
+		log.Printf("checkSubscription failed: %v", err)
+		return nil, err
+	}
 
 	now := time.Now().UTC()
 	prompt := "You are conducting a structured backend development interview. " +
@@ -81,4 +86,24 @@ func GetInterview(repo InterviewRepo, interviewID int) (*Interview, error) {
 	}
 
 	return interview, nil
+}
+
+func checkSubscription(repo InterviewRepo, user *user.User) (bool, error) {
+	startDay := user.SubscriptionStartDate.Day()
+
+	timeDiff := user.SubscriptionStartDate.Compare(time.Now())
+	if timeDiff == 1 {
+		return false, nil
+	}
+
+	interviewsThisCycle, err := repo.GetInterviewsThisCycle(user.ID, cycleStart, cycleEnd)
+	if err != nil {
+		log.Printf("repo.GetInterviewsThisCycle failed: %v", interviewsThisCycle)
+	}
+
+	if user.BillingStatus != "active" {
+		return false, nil
+	}
+
+	return true, nil
 }
