@@ -439,10 +439,10 @@ func (h *Handler) CreateCheckoutSessionHandler(w http.ResponseWriter, r *http.Re
 	switch params.Tier {
 	case "practice":
 		priceID = os.Getenv("LEMON_VARIANT_ID_PRACTICE")
-	case "master":
-		priceID = os.Getenv("LEMON_VARIANT_ID_MASTER")
-	case "genius":
-		priceID = os.Getenv("LEMON_VARIANT_ID_GENIUS")
+	case "improve":
+		priceID = os.Getenv("LEMON_VARIANT_ID_IMPROVE")
+	case "ace":
+		priceID = os.Getenv("LEMON_VARIANT_ID_ACE")
 	default:
 		RespondWithError(w, http.StatusBadRequest, "Invalid tier selected")
 		return
@@ -490,7 +490,7 @@ func (h *Handler) BillingWebhookHandler(w http.ResponseWriter, r *http.Request) 
 	eventType := webhookPayload.Meta.EventName
 	switch eventType {
 	case "subscription_created", "subscription_updated":
-		err = user.UpdateSubscription(h.UserRepo, webhookPayload)
+		err = h.Billing.UpdateSubscription(h.UserRepo, webhookPayload)
 	case "subscription_cancelled":
 		err = user.CancelSubscription(h.UserRepo, webhookPayload)
 	default:

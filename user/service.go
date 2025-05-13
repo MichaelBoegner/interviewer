@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/michaelboegner/interviewer/billing"
 	"github.com/michaelboegner/interviewer/token"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -107,45 +106,6 @@ func ResetPassword(repo UserRepo, newPassword string, resetJWT string) error {
 	err = repo.UpdatePasswordByEmail(email, passwordHashed)
 	if err != nil {
 		log.Printf("UpdatePasswordByEmail failed: %v", err)
-		return err
-	}
-
-	return nil
-}
-
-func UpdateSubscription(repo UserRepo, payload billing.BillingWebhookPayload) error {
-	user, err := repo.GetUserByCustomerID(payload.Data.Attributes.CustomerID)
-	if err != nil {
-		log.Printf("repo.GetUserByCustomerID failed: %v", err)
-		return err
-	}
-
-	user.SubscriptionTier = payload.Data.Attributes.VariantID
-	user.BillingSubscriptionID = payload.Data.Attributes.SubscriptionID
-	user.BillingStatus = payload.Data.Attributes.Status
-	user.SubscriptionStartDate = time.Now().UTC()
-
-	err = repo.UpdateBillingInfo(user)
-	if err != nil {
-		log.Printf("repo.UpdateBillingInfo failed: %v", err)
-		return err
-	}
-
-	return nil
-}
-
-func CancelSubscription(repo UserRepo, payload billing.BillingWebhookPayload) error {
-	user, err := repo.GetUserByCustomerID(payload.Data.Attributes.CustomerID)
-	if err != nil {
-		log.Printf("repo.GetUserByCustomerID failed: %v", err)
-		return err
-	}
-
-	user.BillingStatus = "cancelled"
-
-	err = repo.UpdateBillingInfo(user)
-	if err != nil {
-		log.Printf("repo.UpdateBillingInfo failed: %v", err)
 		return err
 	}
 
