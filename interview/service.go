@@ -88,13 +88,8 @@ func GetInterview(repo InterviewRepo, interviewID int) (*Interview, error) {
 	return interview, nil
 }
 
-func checkSubscription(repo InterviewRepo, user *user.User) (bool, error) {
-	startDay := user.SubscriptionStartDate.Day()
-
-	timeDiff := user.SubscriptionStartDate.Compare(time.Now())
-	if timeDiff == 1 {
-		return false, nil
-	}
+func checkSubscription(repo InterviewRepo, user *user.User) bool {
+	cycleStart, cycleEnd := getCurrentCycleWindow(user.SubscriptionStartDate)
 
 	interviewsThisCycle, err := repo.GetInterviewsThisCycle(user.ID, cycleStart, cycleEnd)
 	if err != nil {
@@ -102,8 +97,28 @@ func checkSubscription(repo InterviewRepo, user *user.User) (bool, error) {
 	}
 
 	if user.BillingStatus != "active" {
-		return false, nil
+		return false
 	}
 
-	return true, nil
+	if user.
+
+	return true
+}
+
+func getCurrentCycleWindow(startDate time.Time) (time.Time, time.Time) {
+	startDay := startDate.Day()
+	now := time.Now().UTC()
+	location := now.Location()
+
+	var cycleStart time.Time
+	if now.Day() >= startDay {
+		cycleStart = time.Date(now.Year(), now.Month(), startDay, 0, 0, 0, 0, location)
+	} else {
+		lastMonth := now.AddDate(0, -1, 0)
+		cycleStart = time.Date(lastMonth.Year(), lastMonth.Month(), startDay, 0, 0, 0, 0, location)
+	}
+
+	cycleEnd := cycleStart.AddDate(0, 1, 0)
+
+	return cycleStart, cycleEnd
 }

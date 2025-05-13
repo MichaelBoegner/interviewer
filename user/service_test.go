@@ -205,6 +205,60 @@ func TestGetUser(t *testing.T) {
 	}
 }
 
+func TestUpdateSubscription(t *testing.T) {
+	tests := []struct {
+		name        string
+		userID      int
+		user        *User
+		failRepo    bool
+		expectError bool
+	}{
+		{
+			name:   "UpdateSubscription_Success",
+			userID: 1,
+			user: &User{
+				ID:       1,
+				Username: "test",
+				Email:    "test@test.com",
+			},
+			expectError: false,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var buf strings.Builder
+			log.SetOutput(&buf)
+			defer showLogsIfFail(t, tc.name, buf)
+
+			repo := NewMockRepo()
+			if tc.failRepo {
+				repo.failRepo = true
+			}
+
+			user, err := GetUser(repo, tc.userID)
+
+			if tc.expectError && err == nil {
+				t.Fatalf("expected error but got nil")
+			}
+			if !tc.expectError && err != nil {
+				t.Fatalf("did not expect error but got: %v", err)
+			}
+
+			if !tc.expectError {
+				expected := tc.user
+				got := user
+
+				if diff := cmp.Diff(expected, got,
+					cmpopts.IgnoreFields(User{}, "Password", "CreatedAt", "UpdatedAt"),
+				); diff != "" {
+					t.Errorf("User mismatch (-want +got):\n%s", diff)
+				}
+			}
+		})
+	}
+}
+
 func showLogsIfFail(t *testing.T, name string, buf strings.Builder) {
 	log.SetOutput(os.Stderr)
 	if t.Failed() {
