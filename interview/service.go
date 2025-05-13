@@ -9,12 +9,6 @@ import (
 )
 
 func StartInterview(repo InterviewRepo, ai chatgpt.AIClient, user *user.User, length, numberQuestions int, difficulty string) (*Interview, error) {
-	_, err := checkSubscription(repo, user)
-	if err != nil {
-		log.Printf("checkSubscription failed: %v", err)
-		return nil, err
-	}
-
 	now := time.Now().UTC()
 	prompt := "You are conducting a structured backend development interview. " +
 		"The interview follows **six topics in this order**:\n\n" +
@@ -86,39 +80,4 @@ func GetInterview(repo InterviewRepo, interviewID int) (*Interview, error) {
 	}
 
 	return interview, nil
-}
-
-func checkSubscription(repo InterviewRepo, user *user.User) bool {
-	cycleStart, cycleEnd := getCurrentCycleWindow(user.SubscriptionStartDate)
-
-	interviewsThisCycle, err := repo.GetInterviewsThisCycle(user.ID, cycleStart, cycleEnd)
-	if err != nil {
-		log.Printf("repo.GetInterviewsThisCycle failed: %v", interviewsThisCycle)
-	}
-
-	if user.BillingStatus != "active" {
-		return false
-	}
-
-	if user.
-
-	return true
-}
-
-func getCurrentCycleWindow(startDate time.Time) (time.Time, time.Time) {
-	startDay := startDate.Day()
-	now := time.Now().UTC()
-	location := now.Location()
-
-	var cycleStart time.Time
-	if now.Day() >= startDay {
-		cycleStart = time.Date(now.Year(), now.Month(), startDay, 0, 0, 0, 0, location)
-	} else {
-		lastMonth := now.AddDate(0, -1, 0)
-		cycleStart = time.Date(lastMonth.Year(), lastMonth.Month(), startDay, 0, 0, 0, 0, location)
-	}
-
-	cycleEnd := cycleStart.AddDate(0, 1, 0)
-
-	return cycleStart, cycleEnd
 }
