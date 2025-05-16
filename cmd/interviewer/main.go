@@ -17,6 +17,9 @@ func main() {
 		}
 	}
 
-	srv := server.NewServer()
+	srv, err := server.NewServer()
+	if err != nil {
+		log.Fatalf("Server intialization failed: %v", err)
+	}
 	srv.StartServer()
 }

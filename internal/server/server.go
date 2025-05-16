@@ -20,7 +20,7 @@ type Server struct {
 	mux *http.ServeMux
 }
 
-func NewServer() *Server {
+func NewServer() (*Server, error) {
 	mux := http.NewServeMux()
 
 	db, err := database.StartDB()
@@ -34,7 +34,11 @@ func NewServer() *Server {
 	conversationRepo := conversation.NewRepository(db)
 	openAI := chatgpt.NewOpenAI()
 	mailer := mailer.NewMailer()
-	billing := billing.NewBilling()
+	billing, err := billing.NewBilling()
+	if err != nil {
+		log.Printf("billing.NewBilling failed: %v", err)
+		return nil, err
+	}
 
 	handler := handlers.NewHandler(interviewRepo, userRepo, tokenRepo, conversationRepo, billing, mailer, openAI, db)
 
@@ -52,7 +56,7 @@ func NewServer() *Server {
 	mux.Handle("/api/payment/checkout", middleware.GetContext(http.HandlerFunc(handler.CreateCheckoutSessionHandler)))
 	mux.Handle("/health", http.HandlerFunc(handler.HealthCheckHandler))
 
-	return &Server{mux: mux}
+	return &Server{mux: mux}, nil
 }
 
 func (s *Server) StartServer() {

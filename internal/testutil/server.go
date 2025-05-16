@@ -23,7 +23,7 @@ var (
 	TestServerURL string
 )
 
-func InitTestServer() *handlers.Handler {
+func InitTestServer() (*handlers.Handler, error) {
 	log.Println("Initializing test database connection...")
 
 	db, err := database.StartDB()
@@ -39,7 +39,11 @@ func InitTestServer() *handlers.Handler {
 	conversationRepo := conversation.NewRepository(db)
 	openAI := &mocks.MockOpenAIClient{}
 	mailer := mailer.NewMailer()
-	billing := billing.NewBilling()
+	billing, err := billing.NewBilling()
+	if err != nil {
+		log.Printf("billing.NewBilling failed: %v", err)
+		return nil, err
+	}
 
 	handler := handlers.NewHandler(interviewRepo, userRepo, tokenRepo, conversationRepo, billing, mailer, openAI, db)
 
@@ -62,7 +66,7 @@ func InitTestServer() *handlers.Handler {
 	TestServer = httptest.NewServer(TestMux)
 	TestServerURL = TestServer.URL
 
-	return handler
+	return handler, nil
 }
 
 func StopTestServer() {

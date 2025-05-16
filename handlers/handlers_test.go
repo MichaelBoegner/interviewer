@@ -58,7 +58,10 @@ func TestMain(m *testing.M) {
 	}
 
 	log.Println("Initializing test server...")
-	Handler = testutil.InitTestServer()
+	Handler, err = testutil.InitTestServer()
+	if err != nil {
+		log.Fatalf("Test server initialization failed: %v", err)
+	}
 
 	if testutil.TestServerURL == "" {
 		log.Fatal("TestMain: TestServerURL is empty! The server did not start properly.")
