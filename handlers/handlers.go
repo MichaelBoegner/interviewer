@@ -497,9 +497,7 @@ func (h *Handler) BillingWebhookHandler(w http.ResponseWriter, r *http.Request) 
 			RespondWithError(w, http.StatusBadRequest, "Invalid order_created payload")
 			return
 		}
-		//DEBUG
-		fmt.Printf("OrderCreatedAttribitues struct works")
-		// err = h.Billing.ApplyCredits(h.UserRepo, attrs.UserEmail, attrs.FirstOrderItem.VariantID)
+		err = h.Billing.ApplyCredits(h.UserRepo, attrs.UserEmail, attrs.FirstOrderItem.VariantID)
 
 	case "subscription_cancelled":
 		var attrs billing.SubscriptionCancelledAttributes

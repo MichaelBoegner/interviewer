@@ -2,12 +2,17 @@ package billing
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
+	"strconv"
 	"time"
 )
 
 type Billing struct {
-	APIKey string
+	APIKey              string
+	VariantIDIndividual int
+	VariantIDPro        int
+	VariantIDPremium    int
 }
 
 type CheckoutPayload struct {
@@ -51,8 +56,29 @@ type SubscriptionCancelledAttributes struct {
 	EndsAt    *time.Time `json:"ends_at"`
 }
 
-func NewBilling() *Billing {
-	return &Billing{
-		APIKey: os.Getenv("BILLING_SECRET_KEY"),
+type CreditTransaction struct {
+	UserID int
+	Amount int
+	Reason string
+}
+
+func NewBilling() (*Billing, error) {
+	indivID, err := strconv.Atoi(os.Getenv("LEMON_VARIANT_ID_INDIVIDUAL"))
+	if err != nil {
+		return nil, fmt.Errorf("invalid INDIVIDUAL ID: %w", err)
 	}
+	proID, err := strconv.Atoi(os.Getenv("LEMON_VARIANT_ID_PRO"))
+	if err != nil {
+		return nil, fmt.Errorf("invalid PRO ID: %w", err)
+	}
+	premiumID, err := strconv.Atoi(os.Getenv("LEMON_VARIANT_ID_PREMIUM"))
+	if err != nil {
+		return nil, fmt.Errorf("invalid PREMIUM ID: %w", err)
+	}
+	return &Billing{
+		APIKey:              os.Getenv("BILLING_SECRET_KEY"),
+		VariantIDIndividual: indivID,
+		VariantIDPro:        proID,
+		VariantIDPremium:    premiumID,
+	}, nil
 }

@@ -3,6 +3,7 @@ package billing
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -51,41 +52,41 @@ func (b *Billing) CreateCheckoutSession(userEmail string, variantID int) (string
 	return result.Data.Attributes.URL, nil
 }
 
-func (b *Billing) UpdateSubscription(repo *user.UserRepo, payload BillingWebhookPayload) error {
-	// user, err := repo.GetUserByCustomerID(payload.Data.Attributes.CustomerID)
-	// if err != nil {
-	// 	log.Printf("repo.GetUserByCustomerID failed: %v", err)
-	// 	return err
-	// }
+func (b *Billing) ApplyCredits(repo user.UserRepo, email string, variantID int) error {
+	user, err := repo.GetUserByEmail(email)
+	if err != nil {
+		return fmt.Errorf("user lookup failed: %w", err)
+	}
 
-	// user.SubscriptionTier = payload.Data.Attributes.VariantID
-	// user.BillingSubscriptionID = payload.Data.Attributes.SubscriptionID
-	// user.BillingStatus = payload.Data.Attributes.Status
-	// user.SubscriptionStartDate = time.Now().UTC()
+	var credits int
+	var reason string
 
-	// err = repo.UpdateBillingInfo(user)
-	// if err != nil {
-	// 	log.Printf("repo.UpdateBillingInfo failed: %v", err)
-	// 	return err
-	// }
+	switch variantID {
+	case b.VariantIDIndividual:
+		credits = 1
+		reason = "Individual interview purchase"
+	case b.VariantIDPro:
+		credits = 10
+		reason = "Pro subscription monthly credit grant"
+	case b.VariantIDPremium:
+		credits = 20
+		reason = "Premium subscription monthly credit grant"
+	default:
+		return fmt.Errorf("unknown variant ID: %d", variantID)
+	}
+
+	if err := repo.AddCredits(user.ID, credits); err != nil {
+		return fmt.Errorf("failed to add credits: %w", err)
+	}
+
+	tx := CreditTransaction{
+		UserID: user.ID,
+		Amount: credits,
+		Reason: reason,
+	}
+	if err := repo.LogCreditTransaction(tx); err != nil {
+		log.Printf("warning: credit granted but failed to log transaction: %v", err)
+	}
 
 	return nil
 }
-
-// func CancelSubscription(repo UserRepo, payload billing.BillingWebhookPayload) error {
-// 	user, err := repo.GetUserByCustomerID(payload.Data.Attributes.CustomerID)
-// 	if err != nil {
-// 		log.Printf("repo.GetUserByCustomerID failed: %v", err)
-// 		return err
-// 	}
-
-// 	user.BillingStatus = "cancelled"
-
-// 	err = repo.UpdateBillingInfo(user)
-// 	if err != nil {
-// 		log.Printf("repo.UpdateBillingInfo failed: %v", err)
-// 		return err
-// 	}
-
-// 	return nil
-// }
