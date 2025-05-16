@@ -52,22 +52,22 @@ func (b *Billing) CreateCheckoutSession(userEmail string, variantID int) (string
 }
 
 func (b *Billing) UpdateSubscription(repo *user.UserRepo, payload BillingWebhookPayload) error {
-	user, err := repo.GetUserByCustomerID(payload.Data.Attributes.CustomerID)
-	if err != nil {
-		log.Printf("repo.GetUserByCustomerID failed: %v", err)
-		return err
-	}
+	// user, err := repo.GetUserByCustomerID(payload.Data.Attributes.CustomerID)
+	// if err != nil {
+	// 	log.Printf("repo.GetUserByCustomerID failed: %v", err)
+	// 	return err
+	// }
 
-	user.SubscriptionTier = payload.Data.Attributes.VariantID
-	user.BillingSubscriptionID = payload.Data.Attributes.SubscriptionID
-	user.BillingStatus = payload.Data.Attributes.Status
-	user.SubscriptionStartDate = time.Now().UTC()
+	// user.SubscriptionTier = payload.Data.Attributes.VariantID
+	// user.BillingSubscriptionID = payload.Data.Attributes.SubscriptionID
+	// user.BillingStatus = payload.Data.Attributes.Status
+	// user.SubscriptionStartDate = time.Now().UTC()
 
-	err = repo.UpdateBillingInfo(user)
-	if err != nil {
-		log.Printf("repo.UpdateBillingInfo failed: %v", err)
-		return err
-	}
+	// err = repo.UpdateBillingInfo(user)
+	// if err != nil {
+	// 	log.Printf("repo.UpdateBillingInfo failed: %v", err)
+	// 	return err
+	// }
 
 	return nil
 }

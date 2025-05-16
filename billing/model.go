@@ -1,6 +1,7 @@
 package billing
 
 import (
+	"encoding/json"
 	"os"
 	"time"
 )
@@ -22,28 +23,32 @@ type CheckoutResponse struct {
 }
 
 type BillingWebhookPayload struct {
-	Meta MetaData `json:"meta"`
-	Data Data     `json:"data"`
+	Meta struct {
+		EventName string `json:"event_name"`
+	} `json:"meta"`
+
+	Data struct {
+		Attributes json.RawMessage `json:"attributes"` // defer decoding
+	} `json:"data"`
 }
 
-type MetaData struct {
-	EventName string `json:"event_name"`
+type OrderCreatedAttributes struct {
+	UserEmail      string `json:"user_email"`
+	UserName       string `json:"user_name"`
+	TestMode       bool   `json:"test_mode"`
+	FirstOrderItem struct {
+		ProductID   int    `json:"product_id"`
+		VariantID   int    `json:"variant_id"`
+		ProductName string `json:"product_name"`
+		VariantName string `json:"variant_name"`
+	} `json:"first_order_item"`
 }
 
-type Data struct {
-	Attributes Attributes `json:"attributes"`
-}
-
-type Attributes struct {
-	CustomerID     string     `json:"customer_id"`
-	SubscriptionID string     `json:"id"` // inside attributes in some events
-	Status         string     `json:"status"`
-	RenewsAt       *time.Time `json:"renews_at"`
-	EndsAt         *time.Time `json:"ends_at"`
-	TrialEndsAt    *time.Time `json:"trial_ends_at"`
-	VariantID      int        `json:"variant_id"`
-	UnitPrice      int        `json:"unit_price"` // sometimes inside items array
-	Currency       string     `json:"currency"`
+type SubscriptionCancelledAttributes struct {
+	UserEmail string     `json:"user_email"`
+	UserName  string     `json:"user_name"`
+	Status    string     `json:"status"`
+	EndsAt    *time.Time `json:"ends_at"`
 }
 
 func NewBilling() *Billing {

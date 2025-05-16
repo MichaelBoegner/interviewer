@@ -490,9 +490,9 @@ func (h *Handler) BillingWebhookHandler(w http.ResponseWriter, r *http.Request) 
 	eventType := webhookPayload.Meta.EventName
 	switch eventType {
 	case "subscription_created", "subscription_updated":
-		err = h.Billing.UpdateSubscription(h.UserRepo, webhookPayload)
+		// err = h.Billing.UpdateSubscription(h.UserRepo, webhookPayload)
 	case "subscription_cancelled":
-		err = user.CancelSubscription(h.UserRepo, webhookPayload)
+		// err = user.CancelSubscription(h.UserRepo, webhookPayload)
 	default:
 		log.Printf("Unhandled event type: %s", eventType)
 		RespondWithError(w, http.StatusNotImplemented, "Unhandled event type")
