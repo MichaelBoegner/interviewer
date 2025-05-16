@@ -55,7 +55,8 @@ func (b *Billing) CreateCheckoutSession(userEmail string, variantID int) (string
 func (b *Billing) ApplyCredits(repo user.UserRepo, email string, variantID int) error {
 	user, err := repo.GetUserByEmail(email)
 	if err != nil {
-		return fmt.Errorf("user lookup failed: %w", err)
+		log.Printf("repo.GetUserByEmail failed: %v", err)
+		return err
 	}
 
 	var credits int
@@ -72,11 +73,13 @@ func (b *Billing) ApplyCredits(repo user.UserRepo, email string, variantID int) 
 		credits = 20
 		reason = "Premium subscription monthly credit grant"
 	default:
+		log.Printf("ERROR: unknown variantID: %d", variantID)
 		return fmt.Errorf("unknown variant ID: %d", variantID)
 	}
 
 	if err := repo.AddCredits(user.ID, credits); err != nil {
-		return fmt.Errorf("failed to add credits: %w", err)
+		log.Printf("repo.AddCredits failed: %v", err)
+		return err
 	}
 
 	tx := CreditTransaction{
@@ -86,6 +89,7 @@ func (b *Billing) ApplyCredits(repo user.UserRepo, email string, variantID int) 
 	}
 	if err := repo.LogCreditTransaction(tx); err != nil {
 		log.Printf("warning: credit granted but failed to log transaction: %v", err)
+		return err
 	}
 
 	return nil
