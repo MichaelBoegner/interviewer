@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -489,7 +490,9 @@ func (h *Handler) BillingWebhookHandler(w http.ResponseWriter, r *http.Request) 
 
 	eventType := webhookPayload.Meta.EventName
 	switch eventType {
-	case "subscription_created", "subscription_updated":
+	case "order_created":
+		//DEBUG
+		fmt.Printf("Order created received!")
 		// err = h.Billing.UpdateSubscription(h.UserRepo, webhookPayload)
 	case "subscription_cancelled":
 		// err = user.CancelSubscription(h.UserRepo, webhookPayload)
