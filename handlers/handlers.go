@@ -491,11 +491,26 @@ func (h *Handler) BillingWebhookHandler(w http.ResponseWriter, r *http.Request) 
 	eventType := webhookPayload.Meta.EventName
 	switch eventType {
 	case "order_created":
+		var attrs billing.OrderCreatedAttributes
+		if err := json.Unmarshal(webhookPayload.Data.Attributes, &attrs); err != nil {
+			log.Printf("Unmarshal order_created failed: %v", err)
+			RespondWithError(w, http.StatusBadRequest, "Invalid order_created payload")
+			return
+		}
 		//DEBUG
-		fmt.Printf("Order created received!")
-		// err = h.Billing.UpdateSubscription(h.UserRepo, webhookPayload)
+		fmt.Printf("OrderCreatedAttribitues struct works")
+		// err = h.Billing.ApplyCredits(h.UserRepo, attrs.UserEmail, attrs.FirstOrderItem.VariantID)
+
 	case "subscription_cancelled":
-		// err = user.CancelSubscription(h.UserRepo, webhookPayload)
+		var attrs billing.SubscriptionCancelledAttributes
+		if err := json.Unmarshal(webhookPayload.Data.Attributes, &attrs); err != nil {
+			log.Printf("Unmarshal subscription_cancelled failed: %v", err)
+			RespondWithError(w, http.StatusBadRequest, "Invalid subscription_cancelled payload")
+			return
+		}
+		//DEBUG
+		fmt.Printf("SubscriptionCancelledAttributes struct works")
+		// err = h.Billing.CancelSubscription(h.UserRepo, attrs.UserEmail, attrs.EndsAt)
 	default:
 		log.Printf("Unhandled event type: %s", eventType)
 		RespondWithError(w, http.StatusNotImplemented, "Unhandled event type")
