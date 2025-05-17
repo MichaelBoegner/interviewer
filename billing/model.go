@@ -57,13 +57,18 @@ type SubscriptionCancelledAttributes struct {
 }
 
 type CreditTransaction struct {
-	UserID int
-	Amount int
-	Reason string
+	UserID     int
+	Amount     int
+	CreditType string
+	Reason     string
+}
+
+type BillingRepo interface {
+	LogCreditTransaction(tx CreditTransaction) error
 }
 
 func NewBilling() (*Billing, error) {
-	indivID, err := strconv.Atoi(os.Getenv("LEMON_VARIANT_ID_INDIVIDUAL"))
+	individualID, err := strconv.Atoi(os.Getenv("LEMON_VARIANT_ID_INDIVIDUAL"))
 	if err != nil {
 		return nil, fmt.Errorf("invalid INDIVIDUAL ID: %w", err)
 	}
@@ -77,7 +82,7 @@ func NewBilling() (*Billing, error) {
 	}
 	return &Billing{
 		APIKey:              os.Getenv("BILLING_SECRET_KEY"),
-		VariantIDIndividual: indivID,
+		VariantIDIndividual: individualID,
 		VariantIDPro:        proID,
 		VariantIDPremium:    premiumID,
 	}, nil

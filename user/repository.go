@@ -148,22 +148,30 @@ func (repo *Repository) UpdatePasswordByEmail(email string, password []byte) err
 	return nil
 }
 
-func (repo *Repository) UpdateBillingInfo(user *User) error {
-	query := `UPDATE users SET 
-				billing_customer_id = $1, 
-				subscription_tier = $2, 
-				billing_subscription_id = $3,
-				billing_status = $4,
-				WHERE email = $5`
+func (repo *Repository) AddCredits(userID, credits int, creditType string) error {
+	var column string
+	switch creditType {
+	case "individual":
+		column = "individual_credits"
+	case "subscription":
+		column = "subscription_credits"
+	default:
+		return fmt.Errorf("invalid credit type: %s", creditType)
+	}
+
+	query := fmt.Sprintf(`
+		UPDATE users
+		SET %s = %s + $1, updated_at = $2
+		WHERE id = $3
+	`, column, column)
+
 	_, err := repo.DB.Exec(query,
-		user.BillingCustomerID,
-		user.SubscriptionTier,
-		user.BillingSubscriptionID,
-		user.SubscriptionStartDate,
-		user.BillingStatus,
+		credits,
+		time.Now().UTC(),
+		userID,
 	)
 	if err != nil {
-		log.Printf("UpdateBillingInfo Exec failed: %v", err)
+		log.Printf("AddCredits failed: %v", err)
 		return err
 	}
 

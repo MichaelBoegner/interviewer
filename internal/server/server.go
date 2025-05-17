@@ -32,6 +32,7 @@ func NewServer() (*Server, error) {
 	userRepo := user.NewRepository(db)
 	tokenRepo := token.NewRepository(db)
 	conversationRepo := conversation.NewRepository(db)
+	billingRepo := billing.NewRepository(db)
 	openAI := chatgpt.NewOpenAI()
 	mailer := mailer.NewMailer()
 	billing, err := billing.NewBilling()
@@ -40,7 +41,7 @@ func NewServer() (*Server, error) {
 		return nil, err
 	}
 
-	handler := handlers.NewHandler(interviewRepo, userRepo, tokenRepo, conversationRepo, billing, mailer, openAI, db)
+	handler := handlers.NewHandler(interviewRepo, userRepo, tokenRepo, conversationRepo, billingRepo, billing, mailer, openAI, db)
 
 	mux.Handle("/api/users", http.HandlerFunc(handler.CreateUsersHandler))
 	mux.Handle("/api/auth/login", http.HandlerFunc(handler.LoginHandler))

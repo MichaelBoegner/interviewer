@@ -37,6 +37,7 @@ func InitTestServer() (*handlers.Handler, error) {
 	userRepo := user.NewRepository(db)
 	tokenRepo := token.NewRepository(db)
 	conversationRepo := conversation.NewRepository(db)
+	billingRepo := billing.NewRepository(db)
 	openAI := &mocks.MockOpenAIClient{}
 	mailer := mailer.NewMailer()
 	billing, err := billing.NewBilling()
@@ -45,7 +46,7 @@ func InitTestServer() (*handlers.Handler, error) {
 		return nil, err
 	}
 
-	handler := handlers.NewHandler(interviewRepo, userRepo, tokenRepo, conversationRepo, billing, mailer, openAI, db)
+	handler := handlers.NewHandler(interviewRepo, userRepo, tokenRepo, conversationRepo, billingRepo, billing, mailer, openAI, db)
 
 	TestMux = http.NewServeMux()
 	TestMux.Handle("/api/users", http.HandlerFunc(handler.CreateUsersHandler))

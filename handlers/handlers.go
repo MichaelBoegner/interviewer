@@ -438,12 +438,12 @@ func (h *Handler) CreateCheckoutSessionHandler(w http.ResponseWriter, r *http.Re
 
 	var priceID string
 	switch params.Tier {
-	case "practice":
-		priceID = os.Getenv("LEMON_VARIANT_ID_PRACTICE")
-	case "improve":
-		priceID = os.Getenv("LEMON_VARIANT_ID_IMPROVE")
-	case "ace":
-		priceID = os.Getenv("LEMON_VARIANT_ID_ACE")
+	case "individual":
+		priceID = os.Getenv("LEMON_VARIANT_ID_INDIVIDUAL")
+	case "pro":
+		priceID = os.Getenv("LEMON_VARIANT_ID_PRO")
+	case "premium":
+		priceID = os.Getenv("LEMON_VARIANT_ID_PREMIUM")
 	default:
 		RespondWithError(w, http.StatusBadRequest, "Invalid tier selected")
 		return
@@ -491,13 +491,13 @@ func (h *Handler) BillingWebhookHandler(w http.ResponseWriter, r *http.Request) 
 	eventType := webhookPayload.Meta.EventName
 	switch eventType {
 	case "order_created":
-		var attrs billing.OrderCreatedAttributes
-		if err := json.Unmarshal(webhookPayload.Data.Attributes, &attrs); err != nil {
+		var orderCreatedAttributes billing.OrderCreatedAttributes
+		if err := json.Unmarshal(webhookPayload.Data.Attributes, &orderCreatedAttributes); err != nil {
 			log.Printf("Unmarshal order_created failed: %v", err)
 			RespondWithError(w, http.StatusBadRequest, "Invalid order_created payload")
 			return
 		}
-		err = h.Billing.ApplyCredits(h.UserRepo, attrs.UserEmail, attrs.FirstOrderItem.VariantID)
+		err = h.Billing.ApplyCredits(h.UserRepo, h.BillingRepo, orderCreatedAttributes.UserEmail, orderCreatedAttributes.FirstOrderItem.VariantID)
 
 	case "subscription_cancelled":
 		var attrs billing.SubscriptionCancelledAttributes

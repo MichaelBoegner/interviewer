@@ -52,43 +52,49 @@ func (b *Billing) CreateCheckoutSession(userEmail string, variantID int) (string
 	return result.Data.Attributes.URL, nil
 }
 
-func (b *Billing) ApplyCredits(repo user.UserRepo, email string, variantID int) error {
-	user, err := repo.GetUserByEmail(email)
+func (b *Billing) ApplyCredits(userRepo user.UserRepo, billingRepo BillingRepo, email string, variantID int) error {
+	user, err := userRepo.GetUserByEmail(email)
 	if err != nil {
 		log.Printf("repo.GetUserByEmail failed: %v", err)
 		return err
 	}
 
-	var credits int
-	var reason string
-
+	var (
+		credits    int
+		creditType string
+		reason     string
+	)
 	switch variantID {
 	case b.VariantIDIndividual:
 		credits = 1
+		creditType = "individual"
 		reason = "Individual interview purchase"
 	case b.VariantIDPro:
 		credits = 10
+		creditType = "subscription"
 		reason = "Pro subscription monthly credit grant"
 	case b.VariantIDPremium:
 		credits = 20
+		creditType = "subscription"
 		reason = "Premium subscription monthly credit grant"
 	default:
 		log.Printf("ERROR: unknown variantID: %d", variantID)
 		return fmt.Errorf("unknown variant ID: %d", variantID)
 	}
 
-	if err := repo.AddCredits(user.ID, credits); err != nil {
+	if err := userRepo.AddCredits(user.ID, credits, creditType); err != nil {
 		log.Printf("repo.AddCredits failed: %v", err)
 		return err
 	}
 
 	tx := CreditTransaction{
-		UserID: user.ID,
-		Amount: credits,
-		Reason: reason,
+		UserID:     user.ID,
+		Amount:     credits,
+		CreditType: creditType,
+		Reason:     reason,
 	}
-	if err := repo.LogCreditTransaction(tx); err != nil {
-		log.Printf("warning: credit granted but failed to log transaction: %v", err)
+	if err := billingRepo.LogCreditTransaction(tx); err != nil {
+		log.Printf("Warning: credit granted but failed to log transaction: %v", err)
 		return err
 	}
 

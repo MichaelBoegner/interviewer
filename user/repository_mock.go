@@ -97,7 +97,7 @@ func (m *MockRepo) UpdatePasswordByEmail(email string, password []byte) error {
 	return nil
 }
 
-func (m *MockRepo) UpdateBillingInfo(user *User) error {
+func (m *MockRepo) AddCredits(userID, credits int, creditType string) error {
 	if m.failRepo {
 		return errors.New("Mocked DB failure")
 	}
