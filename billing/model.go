@@ -39,21 +39,16 @@ type BillingWebhookPayload struct {
 
 type OrderCreatedAttributes struct {
 	UserEmail      string `json:"user_email"`
-	UserName       string `json:"user_name"`
-	TestMode       bool   `json:"test_mode"`
 	FirstOrderItem struct {
-		ProductID   int    `json:"product_id"`
-		VariantID   int    `json:"variant_id"`
-		ProductName string `json:"product_name"`
-		VariantName string `json:"variant_name"`
+		VariantID int `json:"variant_id"`
 	} `json:"first_order_item"`
 }
 
-type SubscriptionCancelledAttributes struct {
-	UserEmail string     `json:"user_email"`
-	UserName  string     `json:"user_name"`
-	Status    string     `json:"status"`
-	EndsAt    *time.Time `json:"ends_at"`
+type SubscriptionCreatedAttributes struct {
+	UserEmail string    `json:"user_email"`
+	StartsAt  time.Time `json:"created_at"`
+	EndsAt    time.Time `json:"renews_at"`
+	VariantID int       `json:"variant_id"`
 }
 
 type CreditTransaction struct {

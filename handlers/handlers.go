@@ -3,7 +3,6 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -488,6 +487,10 @@ func (h *Handler) BillingWebhookHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
+	var emailAttribute struct {
+		UserEmail string `json:"user_email"`
+	}
+
 	eventType := webhookPayload.Meta.EventName
 	switch eventType {
 	case "order_created":
@@ -497,18 +500,49 @@ func (h *Handler) BillingWebhookHandler(w http.ResponseWriter, r *http.Request) 
 			RespondWithError(w, http.StatusBadRequest, "Invalid order_created payload")
 			return
 		}
-		err = h.Billing.ApplyCredits(h.UserRepo, h.BillingRepo, orderCreatedAttributes.UserEmail, orderCreatedAttributes.FirstOrderItem.VariantID)
 
+		err = h.Billing.ApplyCredits(h.UserRepo, h.BillingRepo, orderCreatedAttributes.UserEmail, orderCreatedAttributes.FirstOrderItem.VariantID)
+	case "subscription_created":
+		var SubCreatedAttrs billing.SubscriptionCreatedAttributes
+		if err := json.Unmarshal(webhookPayload.Data.Attributes, &SubCreatedAttrs); err != nil {
+			log.Printf("Unmarshal subscription_created failed: %v", err)
+			RespondWithError(w, http.StatusBadRequest, "Invalid subscription_created payload")
+			return
+		}
+
+		err = h.Billing.CreateSubscription(h.UserRepo, SubCreatedAttrs)
 	case "subscription_cancelled":
-		var attrs billing.SubscriptionCancelledAttributes
-		if err := json.Unmarshal(webhookPayload.Data.Attributes, &attrs); err != nil {
+		if err := json.Unmarshal(webhookPayload.Data.Attributes, &emailAttribute); err != nil {
 			log.Printf("Unmarshal subscription_cancelled failed: %v", err)
 			RespondWithError(w, http.StatusBadRequest, "Invalid subscription_cancelled payload")
 			return
 		}
-		//DEBUG
-		fmt.Printf("SubscriptionCancelledAttributes struct works")
-		// err = h.Billing.CancelSubscription(h.UserRepo, attrs.UserEmail, attrs.EndsAt)
+
+		err = h.Billing.CancelSubscription(h.UserRepo, emailAttribute.UserEmail)
+	case "subscription_resumed":
+		if err := json.Unmarshal(webhookPayload.Data.Attributes, &emailAttribute); err != nil {
+			log.Printf("Unmarshal subscription_resumed failed: %v", err)
+			RespondWithError(w, http.StatusBadRequest, "Invalid subscription_resumed payload")
+			return
+		}
+
+		err = h.Billing.ResumeSubscription(h.UserRepo, emailAttribute.UserEmail)
+	case "subscription_expired":
+		if err := json.Unmarshal(webhookPayload.Data.Attributes, &emailAttribute); err != nil {
+			log.Printf("Unmarshal subscription_expired failed: %v", err)
+			RespondWithError(w, http.StatusBadRequest, "Invalid subscription_expired payload")
+			return
+		}
+
+		err = h.Billing.ExpireSubscription(h.UserRepo, emailAttribute.UserEmail)
+	case "subscription_payment_success":
+		if err := json.Unmarshal(webhookPayload.Data.Attributes, &emailAttribute); err != nil {
+			log.Printf("Unmarshal subscription_payment_success failed: %v", err)
+			RespondWithError(w, http.StatusBadRequest, "Invalid subscription_payment_success payload")
+			return
+		}
+
+		err = h.Billing.RenewSubscription(h.UserRepo, h.BillingRepo, emailAttribute.UserEmail)
 	default:
 		log.Printf("Unhandled event type: %s", eventType)
 		RespondWithError(w, http.StatusNotImplemented, "Unhandled event type")

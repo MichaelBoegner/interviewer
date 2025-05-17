@@ -91,7 +91,12 @@ func (repo *Repository) GetUser(user *User) (*User, error) {
 
 func (repo *Repository) GetUserByEmail(email string) (*User, error) {
 	var user = &User{}
-	err := repo.DB.QueryRow("SELECT id, username, email FROM users WHERE email= $1", email).Scan(&user.ID, &user.Username, &user.Email)
+	err := repo.DB.QueryRow("SELECT id, username, email, subscription_tier FROM users WHERE email= $1", email).Scan(
+		&user.ID,
+		&user.Username,
+		&user.Email,
+		&user.SubscriptionTier,
+	)
 
 	if err == sql.ErrNoRows {
 		log.Printf("Email invalid: %v", err)
@@ -172,6 +177,54 @@ func (repo *Repository) AddCredits(userID, credits int, creditType string) error
 	)
 	if err != nil {
 		log.Printf("AddCredits failed: %v", err)
+		return err
+	}
+
+	return nil
+}
+
+func (repo *Repository) CreateSubscriptionData(userID int, status, tier string, startsAt, endsAt time.Time) error {
+	query := `
+		UPDATE users
+		SET subscription_status = $1,
+		    subscription_tier = $2,
+		    subscription_start_date = $3,
+		    subscription_end_date = $4,
+		    updated_at = $5
+		WHERE id = $6
+	`
+
+	_, err := repo.DB.Exec(query,
+		status,
+		tier,
+		startsAt.UTC(),
+		endsAt.UTC(),
+		time.Now().UTC(),
+		userID,
+	)
+	if err != nil {
+		log.Printf("UpdateSubscriptionData failed: %v", err)
+		return err
+	}
+
+	return nil
+}
+
+func (repo *Repository) UpdateSubscriptionStatusData(userID int, status string) error {
+	query := `
+		UPDATE users
+		SET subscription_status = $1,
+		    updated_at = $2
+		WHERE id = $3
+	`
+
+	_, err := repo.DB.Exec(query,
+		status,
+		time.Now().UTC(),
+		userID,
+	)
+	if err != nil {
+		log.Printf("CancelSubscriptionData failed: %v", err)
 		return err
 	}
 

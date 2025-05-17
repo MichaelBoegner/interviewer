@@ -30,7 +30,7 @@ func TestStartInterview(t *testing.T) {
 			name: "StartInterview_Success",
 			user: &user.User{
 				ID:                    1,
-				SubscriptionTier:      0,
+				SubscriptionTier:      "free",
 				SubscriptionStartDate: time.Now(),
 			},
 			length:       30,
@@ -54,7 +54,7 @@ func TestStartInterview(t *testing.T) {
 			name: "StartInterview_RepoError",
 			user: &user.User{
 				ID:                    1,
-				SubscriptionTier:      0,
+				SubscriptionTier:      "free",
 				SubscriptionStartDate: time.Now(),
 			},
 			length:       30,

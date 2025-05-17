@@ -100,3 +100,138 @@ func (b *Billing) ApplyCredits(userRepo user.UserRepo, billingRepo BillingRepo, 
 
 	return nil
 }
+
+func (b *Billing) CreateSubscription(userRepo user.UserRepo, subCreatedAttrs SubscriptionCreatedAttributes) error {
+	user, err := userRepo.GetUserByEmail(subCreatedAttrs.UserEmail)
+	if err != nil {
+		log.Printf("repo.GetUserByEmail failed: %v", err)
+		return err
+	}
+
+	var tier string
+	switch subCreatedAttrs.VariantID {
+	case b.VariantIDPro:
+		tier = "pro"
+	case b.VariantIDPremium:
+		tier = "premium"
+	default:
+		log.Printf("ERROR: unknown variantID: %d", subCreatedAttrs.VariantID)
+		return fmt.Errorf("unknown variant ID: %d", subCreatedAttrs.VariantID)
+	}
+
+	err = userRepo.CreateSubscriptionData(
+		user.ID,
+		"active",
+		tier,
+		subCreatedAttrs.StartsAt,
+		subCreatedAttrs.EndsAt,
+	)
+	if err != nil {
+		log.Printf("CreateSubscriptionData failed: %v", err)
+		return err
+	}
+
+	return nil
+}
+
+func (b *Billing) CancelSubscription(userRepo user.UserRepo, email string) error {
+	user, err := userRepo.GetUserByEmail(email)
+	if err != nil {
+		log.Printf("repo.GetUserByEmail failed: %v", err)
+		return err
+	}
+
+	err = userRepo.UpdateSubscriptionStatusData(
+		user.ID,
+		"cancelled",
+	)
+	if err != nil {
+		log.Printf("CancelSubscriptionData failed: %v", err)
+		return err
+	}
+
+	return nil
+}
+
+func (b *Billing) ResumeSubscription(userRepo user.UserRepo, email string) error {
+	user, err := userRepo.GetUserByEmail(email)
+	if err != nil {
+		log.Printf("repo.GetUserByEmail failed: %v", err)
+		return err
+	}
+
+	err = userRepo.UpdateSubscriptionStatusData(
+		user.ID,
+		"active",
+	)
+	if err != nil {
+		log.Printf("CancelSubscriptionData failed: %v", err)
+		return err
+	}
+
+	return nil
+}
+
+func (b *Billing) ExpireSubscription(userRepo user.UserRepo, email string) error {
+	user, err := userRepo.GetUserByEmail(email)
+	if err != nil {
+		log.Printf("repo.GetUserByEmail failed: %v", err)
+		return err
+	}
+
+	err = userRepo.UpdateSubscriptionStatusData(
+		user.ID,
+		"expired",
+	)
+	if err != nil {
+		log.Printf("CancelSubscriptionData failed: %v", err)
+		return err
+	}
+
+	return nil
+}
+
+func (b *Billing) RenewSubscription(userRepo user.UserRepo, billingRepo BillingRepo, email string) error {
+	user, err := userRepo.GetUserByEmail(email)
+	if err != nil {
+		log.Printf("repo.GetUserByEmail failed: %v", err)
+		return err
+	}
+
+	var (
+		credits    int
+		creditType string
+		reason     string
+	)
+	switch user.SubscriptionTier {
+	case "pro":
+		credits = 10
+		creditType = "subscription"
+		reason = "Pro subscription monthly credit grant"
+	case "premium":
+		credits = 20
+		creditType = "subscription"
+		reason = "Premium subscription monthly credit grant"
+	default:
+		log.Printf("ERROR: unknown user.SubscriptionTier: %s", user.SubscriptionTier)
+		return fmt.Errorf("unknown user.SubscriptionTier: %s", user.SubscriptionTier)
+	}
+
+	if err := userRepo.AddCredits(user.ID, credits, creditType); err != nil {
+		log.Printf("repo.AddCredits failed: %v", err)
+		return err
+	}
+
+	tx := CreditTransaction{
+		UserID:     user.ID,
+		Amount:     credits,
+		CreditType: creditType,
+		Reason:     reason,
+	}
+	if err := billingRepo.LogCreditTransaction(tx); err != nil {
+		log.Printf("Warning: credit granted but failed to log transaction: %v", err)
+		return err
+	}
+
+	return nil
+}

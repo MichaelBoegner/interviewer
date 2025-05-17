@@ -3,6 +3,7 @@ package user
 import (
 	"errors"
 	"log"
+	"time"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -98,6 +99,22 @@ func (m *MockRepo) UpdatePasswordByEmail(email string, password []byte) error {
 }
 
 func (m *MockRepo) AddCredits(userID, credits int, creditType string) error {
+	if m.failRepo {
+		return errors.New("Mocked DB failure")
+	}
+
+	return nil
+}
+
+func (m *MockRepo) CreateSubscriptionData(userID int, status, tier string, startsAt, endsAt time.Time) error {
+	if m.failRepo {
+		return errors.New("Mocked DB failure")
+	}
+
+	return nil
+}
+
+func (m *MockRepo) UpdateSubscriptionStatusData(userID int, status string) error {
 	if m.failRepo {
 		return errors.New("Mocked DB failure")
 	}
