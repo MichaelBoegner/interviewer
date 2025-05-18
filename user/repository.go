@@ -183,7 +183,7 @@ func (repo *Repository) AddCredits(userID, credits int, creditType string) error
 	return nil
 }
 
-func (repo *Repository) CreateSubscriptionData(userID int, status, tier string, startsAt, endsAt time.Time) error {
+func (repo *Repository) UpdateSubscriptionData(userID int, status, tier string, startsAt, endsAt time.Time) error {
 	query := `
 		UPDATE users
 		SET subscription_status = $1,

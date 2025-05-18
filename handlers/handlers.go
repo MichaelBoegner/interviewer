@@ -536,13 +536,14 @@ func (h *Handler) BillingWebhookHandler(w http.ResponseWriter, r *http.Request) 
 
 		err = h.Billing.ExpireSubscription(h.UserRepo, emailAttribute.UserEmail)
 	case "subscription_payment_success":
-		if err := json.Unmarshal(webhookPayload.Data.Attributes, &emailAttribute); err != nil {
+		var SubRenewAttrs billing.SubscriptionRenewAttributes
+		if err := json.Unmarshal(webhookPayload.Data.Attributes, &SubRenewAttrs); err != nil {
 			log.Printf("Unmarshal subscription_payment_success failed: %v", err)
 			RespondWithError(w, http.StatusBadRequest, "Invalid subscription_payment_success payload")
 			return
 		}
 
-		err = h.Billing.RenewSubscription(h.UserRepo, h.BillingRepo, emailAttribute.UserEmail)
+		err = h.Billing.RenewSubscription(h.UserRepo, h.BillingRepo, SubRenewAttrs)
 	case "subscription_plan_changed":
 		var SubChangedAttrs billing.SubscriptionAttributes
 		if err := json.Unmarshal(webhookPayload.Data.Attributes, &SubChangedAttrs); err != nil {
@@ -552,6 +553,15 @@ func (h *Handler) BillingWebhookHandler(w http.ResponseWriter, r *http.Request) 
 		}
 
 		err = h.Billing.ChangeSubscription(h.UserRepo, h.BillingRepo, SubChangedAttrs)
+	case "subscription_updated":
+		var SubChangedAttrs billing.SubscriptionAttributes
+		if err := json.Unmarshal(webhookPayload.Data.Attributes, &SubChangedAttrs); err != nil {
+			log.Printf("Unmarshal subscription_updated failed: %v", err)
+			RespondWithError(w, http.StatusBadRequest, "Invalid subscription_updated payload")
+			return
+		}
+
+		err = h.Billing.UpdateSubscription(h.UserRepo, SubChangedAttrs)
 	default:
 		log.Printf("Unhandled event type: %s", eventType)
 		RespondWithError(w, http.StatusNotImplemented, "Unhandled event type")

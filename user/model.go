@@ -32,7 +32,7 @@ type UserRepo interface {
 	GetUserByCustomerID(customerID string) (*User, error)
 	UpdatePasswordByEmail(email string, password []byte) error
 	AddCredits(userID, credits int, creditType string) error
-	CreateSubscriptionData(userID int, status, tier string, startsAt, endsAt time.Time) error
+	UpdateSubscriptionData(userID int, status, tier string, startsAt, endsAt time.Time) error
 	UpdateSubscriptionStatusData(userID int, status string) error
 }
 

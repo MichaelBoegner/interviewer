@@ -106,7 +106,7 @@ func (m *MockRepo) AddCredits(userID, credits int, creditType string) error {
 	return nil
 }
 
-func (m *MockRepo) CreateSubscriptionData(userID int, status, tier string, startsAt, endsAt time.Time) error {
+func (m *MockRepo) UpdateSubscriptionData(userID int, status, tier string, startsAt, endsAt time.Time) error {
 	if m.failRepo {
 		return errors.New("Mocked DB failure")
 	}

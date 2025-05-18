@@ -46,9 +46,15 @@ type OrderCreatedAttributes struct {
 
 type SubscriptionAttributes struct {
 	UserEmail string    `json:"user_email"`
+	Status    string    `json:"status"`
 	StartsAt  time.Time `json:"created_at"`
 	EndsAt    time.Time `json:"renews_at"`
 	VariantID int       `json:"variant_id"`
+}
+
+type SubscriptionRenewAttributes struct {
+	UserEmail string `json:"user_email"`
+	Total     int    `json:"total"`
 }
 
 type CreditTransaction struct {

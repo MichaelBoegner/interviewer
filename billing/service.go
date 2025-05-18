@@ -126,7 +126,7 @@ func (b *Billing) CreateSubscription(userRepo user.UserRepo, subCreatedAttrs Sub
 		return fmt.Errorf("unknown variant ID: %d", subCreatedAttrs.VariantID)
 	}
 
-	err = userRepo.CreateSubscriptionData(
+	err = userRepo.UpdateSubscriptionData(
 		user.ID,
 		"active",
 		tier,
@@ -198,11 +198,15 @@ func (b *Billing) ExpireSubscription(userRepo user.UserRepo, email string) error
 	return nil
 }
 
-func (b *Billing) RenewSubscription(userRepo user.UserRepo, billingRepo BillingRepo, email string) error {
-	user, err := userRepo.GetUserByEmail(email)
+func (b *Billing) RenewSubscription(userRepo user.UserRepo, billingRepo BillingRepo, subRenewAttrs SubscriptionRenewAttributes) error {
+	user, err := userRepo.GetUserByEmail(subRenewAttrs.UserEmail)
 	if err != nil {
 		log.Printf("repo.GetUserByEmail failed: %v", err)
 		return err
+	}
+
+	if subRenewAttrs.Total != 1999 && subRenewAttrs.Total != 2999 {
+		return nil
 	}
 
 	var (
@@ -255,11 +259,10 @@ func (b *Billing) ChangeSubscription(userRepo user.UserRepo, billingRepo Billing
 	switch subChangedAttrs.VariantID {
 	case b.VariantIDPro:
 		currentCredits := user.SubscriptionCredits
-
 		if currentCredits >= 10 {
-			credits = 10
+			credits = -10
 		} else {
-			credits = currentCredits
+			credits = -currentCredits
 		}
 
 		reason = "Premium downgraded to Pro subscription monthly credit"
@@ -284,6 +287,39 @@ func (b *Billing) ChangeSubscription(userRepo user.UserRepo, billingRepo Billing
 	}
 	if err := billingRepo.LogCreditTransaction(tx); err != nil {
 		log.Printf("Warning: credit granted but failed to log transaction: %v", err)
+		return err
+	}
+
+	return nil
+}
+
+func (b *Billing) UpdateSubscription(userRepo user.UserRepo, subUpdatedAttrs SubscriptionAttributes) error {
+	user, err := userRepo.GetUserByEmail(subUpdatedAttrs.UserEmail)
+	if err != nil {
+		log.Printf("repo.GetUserByEmail failed: %v", err)
+		return err
+	}
+
+	var tier string
+	switch subUpdatedAttrs.VariantID {
+	case b.VariantIDPro:
+		tier = "pro"
+	case b.VariantIDPremium:
+		tier = "premium"
+	default:
+		log.Printf("ERROR: unknown variantID: %d", subUpdatedAttrs.VariantID)
+		return fmt.Errorf("unknown variant ID: %d", subUpdatedAttrs.VariantID)
+	}
+
+	err = userRepo.UpdateSubscriptionData(
+		user.ID,
+		subUpdatedAttrs.Status,
+		tier,
+		subUpdatedAttrs.StartsAt,
+		subUpdatedAttrs.EndsAt,
+	)
+	if err != nil {
+		log.Printf("UpdateSubscriptionData failed: %v", err)
 		return err
 	}
 
