@@ -44,7 +44,7 @@ type OrderCreatedAttributes struct {
 	} `json:"first_order_item"`
 }
 
-type SubscriptionCreatedAttributes struct {
+type SubscriptionAttributes struct {
 	UserEmail string    `json:"user_email"`
 	StartsAt  time.Time `json:"created_at"`
 	EndsAt    time.Time `json:"renews_at"`

@@ -503,7 +503,7 @@ func (h *Handler) BillingWebhookHandler(w http.ResponseWriter, r *http.Request) 
 
 		err = h.Billing.ApplyCredits(h.UserRepo, h.BillingRepo, orderCreatedAttributes.UserEmail, orderCreatedAttributes.FirstOrderItem.VariantID)
 	case "subscription_created":
-		var SubCreatedAttrs billing.SubscriptionCreatedAttributes
+		var SubCreatedAttrs billing.SubscriptionAttributes
 		if err := json.Unmarshal(webhookPayload.Data.Attributes, &SubCreatedAttrs); err != nil {
 			log.Printf("Unmarshal subscription_created failed: %v", err)
 			RespondWithError(w, http.StatusBadRequest, "Invalid subscription_created payload")
@@ -543,6 +543,15 @@ func (h *Handler) BillingWebhookHandler(w http.ResponseWriter, r *http.Request) 
 		}
 
 		err = h.Billing.RenewSubscription(h.UserRepo, h.BillingRepo, emailAttribute.UserEmail)
+	case "subscription_plan_changed":
+		var SubChangedAttrs billing.SubscriptionAttributes
+		if err := json.Unmarshal(webhookPayload.Data.Attributes, &SubChangedAttrs); err != nil {
+			log.Printf("Unmarshal subscription_plan_changed failed: %v", err)
+			RespondWithError(w, http.StatusBadRequest, "Invalid subscription_plan_changed payload")
+			return
+		}
+
+		err = h.Billing.ChangeSubscription(h.UserRepo, h.BillingRepo, SubChangedAttrs)
 	default:
 		log.Printf("Unhandled event type: %s", eventType)
 		RespondWithError(w, http.StatusNotImplemented, "Unhandled event type")

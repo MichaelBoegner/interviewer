@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"time"
@@ -42,6 +43,12 @@ func (b *Billing) CreateCheckoutSession(userEmail string, variantID int) (string
 		return "", err
 	}
 	defer res.Body.Close()
+
+	if res.StatusCode < 200 || res.StatusCode >= 300 {
+		bodyBytes, _ := io.ReadAll(res.Body)
+		log.Printf("LemonSqueezy returned error: %s", string(bodyBytes))
+		return "", fmt.Errorf("LemonSqueezy API error: %s", res.Status)
+	}
 
 	var result CheckoutResponse
 	if err := json.NewDecoder(res.Body).Decode(&result); err != nil {
@@ -101,7 +108,7 @@ func (b *Billing) ApplyCredits(userRepo user.UserRepo, billingRepo BillingRepo, 
 	return nil
 }
 
-func (b *Billing) CreateSubscription(userRepo user.UserRepo, subCreatedAttrs SubscriptionCreatedAttributes) error {
+func (b *Billing) CreateSubscription(userRepo user.UserRepo, subCreatedAttrs SubscriptionAttributes) error {
 	user, err := userRepo.GetUserByEmail(subCreatedAttrs.UserEmail)
 	if err != nil {
 		log.Printf("repo.GetUserByEmail failed: %v", err)
@@ -199,25 +206,22 @@ func (b *Billing) RenewSubscription(userRepo user.UserRepo, billingRepo BillingR
 	}
 
 	var (
-		credits    int
-		creditType string
-		reason     string
+		credits int
+		reason  string
 	)
 	switch user.SubscriptionTier {
 	case "pro":
 		credits = 10
-		creditType = "subscription"
-		reason = "Pro subscription monthly credit grant"
+		reason = "Pro subscription monthly credit"
 	case "premium":
 		credits = 20
-		creditType = "subscription"
-		reason = "Premium subscription monthly credit grant"
+		reason = "Premium subscription monthly credit"
 	default:
 		log.Printf("ERROR: unknown user.SubscriptionTier: %s", user.SubscriptionTier)
 		return fmt.Errorf("unknown user.SubscriptionTier: %s", user.SubscriptionTier)
 	}
 
-	if err := userRepo.AddCredits(user.ID, credits, creditType); err != nil {
+	if err := userRepo.AddCredits(user.ID, credits, "subscription"); err != nil {
 		log.Printf("repo.AddCredits failed: %v", err)
 		return err
 	}
@@ -225,7 +229,57 @@ func (b *Billing) RenewSubscription(userRepo user.UserRepo, billingRepo BillingR
 	tx := CreditTransaction{
 		UserID:     user.ID,
 		Amount:     credits,
-		CreditType: creditType,
+		CreditType: "subscription",
+		Reason:     reason,
+	}
+	if err := billingRepo.LogCreditTransaction(tx); err != nil {
+		log.Printf("Warning: credit granted but failed to log transaction: %v", err)
+		return err
+	}
+
+	return nil
+}
+
+func (b *Billing) ChangeSubscription(userRepo user.UserRepo, billingRepo BillingRepo, subChangedAttrs SubscriptionAttributes) error {
+	user, err := userRepo.GetUserByEmail(subChangedAttrs.UserEmail)
+	if err != nil {
+		log.Printf("repo.GetUserByEmail failed: %v", err)
+		return err
+	}
+
+	var (
+		credits int
+		reason  string
+	)
+
+	switch subChangedAttrs.VariantID {
+	case b.VariantIDPro:
+		currentCredits := user.SubscriptionCredits
+
+		if currentCredits >= 10 {
+			credits = 10
+		} else {
+			credits = currentCredits
+		}
+
+		reason = "Premium downgraded to Pro subscription monthly credit"
+	case b.VariantIDPremium:
+		credits = 10
+		reason = "Pro upgraded to Premium subscription monthly credit"
+	default:
+		log.Printf("ERROR: unknown user.SubscriptionTier: %s", user.SubscriptionTier)
+		return fmt.Errorf("unknown user.SubscriptionTier: %s", user.SubscriptionTier)
+	}
+
+	if err := userRepo.AddCredits(user.ID, credits, "subscription"); err != nil {
+		log.Printf("repo.AddCredits failed: %v", err)
+		return err
+	}
+
+	tx := CreditTransaction{
+		UserID:     user.ID,
+		Amount:     credits,
+		CreditType: "subscription",
 		Reason:     reason,
 	}
 	if err := billingRepo.LogCreditTransaction(tx); err != nil {
