@@ -11,6 +11,7 @@ func NewMockRepo() *MockRepo {
 func (m *MockRepo) LogCreditTransaction(tx CreditTransaction) error {
 	return nil
 }
+
 func (m *MockRepo) HasWebhookBeenProcessed(id string) (bool, error) {
 	return false, nil
 }
