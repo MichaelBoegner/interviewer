@@ -37,18 +37,19 @@ func (r *Repository) LogCreditTransaction(tx CreditTransaction) error {
 	return nil
 }
 
-func (r *Repository) HasWebhookBeenProcessed(id string) (bool, error) {
+func (r *Repository) HasWebhookBeenProcessed(webhookID string) (bool, error) {
 	var exists bool
 	err := r.DB.QueryRow(`
         SELECT EXISTS(SELECT 1 FROM processed_webhooks WHERE webhook_id = $1)
-    `, id).Scan(&exists)
+    `, webhookID).Scan(&exists)
 	return exists, err
 }
 
-func (r *Repository) MarkWebhookProcessed(id string, event string) error {
+func (r *Repository) MarkWebhookProcessed(webhookID string, event string) error {
 	_, err := r.DB.Exec(`
-        INSERT INTO processed_webhooks (webhook_id, event_name)
-        VALUES ($1, $2)
-    `, id, event)
+        INSERT INTO processed_webhooks (webhook_id, event_name, processed_at)
+        VALUES ($1, $2, $3)
+    `, webhookID, event, time.Now().UTC())
+
 	return err
 }
