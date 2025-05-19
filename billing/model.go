@@ -30,6 +30,7 @@ type CheckoutResponse struct {
 type BillingWebhookPayload struct {
 	Meta struct {
 		EventName string `json:"event_name"`
+		WebhookID string `json:"webhook_id"`
 	} `json:"meta"`
 
 	Data struct {
@@ -66,6 +67,8 @@ type CreditTransaction struct {
 
 type BillingRepo interface {
 	LogCreditTransaction(tx CreditTransaction) error
+	HasWebhookBeenProcessed(id string) (bool, error)
+	MarkWebhookProcessed(id string, event string) error
 }
 
 func NewBilling() (*Billing, error) {

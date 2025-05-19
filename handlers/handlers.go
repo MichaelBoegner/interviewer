@@ -487,6 +487,19 @@ func (h *Handler) BillingWebhookHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
+	webhookID := webhookPayload.Meta.WebhookID
+	exists, err := h.BillingRepo.HasWebhookBeenProcessed(webhookID)
+	if err != nil {
+		log.Printf("h.BillingRepo.HasWebhookBeenProcessed failed: %v", err)
+		RespondWithError(w, http.StatusInternalServerError, "Error checking webhook")
+		return
+	}
+	if exists {
+		log.Printf("Webhook %s already processed", webhookID)
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+
 	var emailAttribute struct {
 		UserEmail string `json:"user_email"`
 	}
@@ -571,6 +584,13 @@ func (h *Handler) BillingWebhookHandler(w http.ResponseWriter, r *http.Request) 
 	if err != nil {
 		log.Printf("eventType switch func failed: %v", err)
 		RespondWithError(w, http.StatusInternalServerError, "Failed to update user")
+		return
+	}
+
+	err = h.BillingRepo.MarkWebhookProcessed(webhookID, eventType)
+	if err != nil {
+		log.Printf("MarkWebhookProcessed failed: %v", err)
+		w.WriteHeader(http.StatusOK)
 		return
 	}
 
