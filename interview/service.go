@@ -1,14 +1,31 @@
 package interview
 
 import (
+	"fmt"
 	"log"
 	"time"
 
+	"github.com/michaelboegner/interviewer/billing"
 	"github.com/michaelboegner/interviewer/chatgpt"
 	"github.com/michaelboegner/interviewer/user"
 )
 
-func StartInterview(repo InterviewRepo, ai chatgpt.AIClient, user *user.User, length, numberQuestions int, difficulty string) (*Interview, error) {
+func StartInterview(
+	interviewRepo InterviewRepo,
+	userRepo user.UserRepo,
+	billingRepo billing.BillingRepo,
+	ai chatgpt.AIClient,
+	user *user.User,
+	length,
+	numberQuestions int,
+	difficulty string) (*Interview, error) {
+
+	err := deductAndLogCredit(user, userRepo, billingRepo)
+	if err != nil {
+		log.Printf("checkCreditsLogTransaction failed: %v", err)
+		return nil, err
+	}
+
 	now := time.Now().UTC()
 	prompt := "You are conducting a structured backend development interview. " +
 		"The interview follows **six topics in this order**:\n\n" +
@@ -63,7 +80,7 @@ func StartInterview(repo InterviewRepo, ai chatgpt.AIClient, user *user.User, le
 		UpdatedAt:       now,
 	}
 
-	id, err := repo.CreateInterview(interview)
+	id, err := interviewRepo.CreateInterview(interview)
 	if err != nil {
 		log.Printf("CreateInterview err: %v", err)
 		return nil, err
@@ -73,11 +90,52 @@ func StartInterview(repo InterviewRepo, ai chatgpt.AIClient, user *user.User, le
 	return interview, nil
 }
 
-func GetInterview(repo InterviewRepo, interviewID int) (*Interview, error) {
-	interview, err := repo.GetInterview(interviewID)
+func GetInterview(interviewRepo InterviewRepo, interviewID int) (*Interview, error) {
+	interview, err := interviewRepo.GetInterview(interviewID)
 	if err != nil {
 		return nil, err
 	}
 
 	return interview, nil
+}
+
+func canUseCredit(user *user.User) (string, error) {
+	now := time.Now()
+
+	switch {
+	case user.SubscriptionStatus != "expired" && user.SubscriptionEndDate.After(now) && user.SubscriptionCredits > 0:
+		return "subscription", nil
+	case user.IndividualCredits > 0:
+		return "individual", nil
+	default:
+		return "", fmt.Errorf("no valid credits")
+	}
+}
+
+func deductAndLogCredit(user *user.User, userRepo user.UserRepo, billingRepo billing.BillingRepo) error {
+	creditType, err := canUseCredit(user)
+	if err != nil {
+		log.Print(err)
+		return err
+	}
+
+	err = userRepo.AddCredits(user.ID, -1, creditType)
+	if err != nil {
+		log.Printf("AddCredits failed: %v", err)
+		return err
+	}
+
+	reason := "Interview started"
+	tx := billing.CreditTransaction{
+		UserID:     user.ID,
+		Amount:     -1,
+		CreditType: creditType,
+		Reason:     reason,
+	}
+	if err := billingRepo.LogCreditTransaction(tx); err != nil {
+		log.Printf("billingRepo.LogCreditTransaction failed: %v", err)
+		return err
+	}
+
+	return nil
 }

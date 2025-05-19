@@ -76,7 +76,17 @@ func (repo *Repository) GetPasswordandID(username string) (int, string, error) {
 }
 
 func (repo *Repository) GetUser(user *User) (*User, error) {
-	err := repo.DB.QueryRow("SELECT id, username, email FROM users WHERE id= $1", user.ID).Scan(&user.ID, &user.Username, &user.Email)
+	err := repo.DB.QueryRow(`SELECT id, username, email,  
+							FROM users 
+							WHERE id= $1`, user.ID).Scan(
+		&user.ID,
+		&user.Username,
+		&user.Email,
+		&user.IndividualCredits,
+		&user.SubscriptionCredits,
+		&user.SubscriptionEndDate,
+		&user.SubscriptionStatus,
+	)
 
 	if err == sql.ErrNoRows {
 		log.Printf("UserID invalid: %v", err)
@@ -167,8 +177,8 @@ func (repo *Repository) AddCredits(userID, credits int, creditType string) error
 	query := fmt.Sprintf(`
 		UPDATE users
 		SET %s = %s + $1, updated_at = $2
-		WHERE id = $3
-	`, column, column)
+		WHERE id = $3 AND %s + $1 >= 0
+	`, column, column, column)
 
 	_, err := repo.DB.Exec(query,
 		credits,

@@ -230,7 +230,15 @@ func (h *Handler) InterviewsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	interviewStarted, err := interview.StartInterview(h.InterviewRepo, h.OpenAI, userReturned, 30, 3, "easy")
+	interviewStarted, err := interview.StartInterview(
+		h.InterviewRepo,
+		h.UserRepo,
+		h.BillingRepo,
+		h.OpenAI,
+		userReturned,
+		30,
+		3,
+		"easy")
 	if err != nil {
 		log.Printf("Interview failed to start: %v", err)
 		return
