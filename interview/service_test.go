@@ -10,6 +10,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/michaelboegner/interviewer/billing"
 	"github.com/michaelboegner/interviewer/internal/mocks"
 	"github.com/michaelboegner/interviewer/user"
 )
@@ -73,11 +74,23 @@ func TestStartInterview(t *testing.T) {
 			defer showLogsIfFail(t, tc.name, buf)
 
 			repo := NewMockRepo()
+			userRepo := user.NewMockRepo()
+			billingRepo := billing.NewMockRepo()
+
 			if tc.failRepo {
 				repo.failRepo = true
 			}
 
-			interview, err := StartInterview(repo, tc.aiClient, tc.user, tc.length, tc.numQuestions, tc.difficulty)
+			interview, err := StartInterview(
+				repo,
+				userRepo,
+				billingRepo,
+				tc.aiClient,
+				tc.user,
+				tc.length,
+				tc.numQuestions,
+				tc.difficulty,
+			)
 
 			if tc.expectError && err == nil {
 				t.Fatalf("expected error but got nil")
