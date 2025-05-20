@@ -16,8 +16,8 @@ type User struct {
 	Password              []byte
 	SubscriptionTier      string
 	SubscriptionStatus    string
-	SubscriptionStartDate time.Time
-	SubscriptionEndDate   time.Time
+	SubscriptionStartDate *time.Time
+	SubscriptionEndDate   *time.Time
 	IndividualCredits     int
 	SubscriptionCredits   int
 	CreatedAt             time.Time

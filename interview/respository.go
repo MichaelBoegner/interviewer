@@ -81,7 +81,7 @@ func (r *Repository) GetInterviewSummariesByUserID(userID int) ([]Summary, error
 		SELECT id, created_at, score
 		FROM interviews
 		WHERE user_id = $1
-		ORDER BY started_at DESC
+		ORDER BY created_at DESC
 	`, userID)
 	if err != nil {
 		return nil, err

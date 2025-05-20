@@ -227,7 +227,7 @@ func (h *Handler) InterviewsHandler(w http.ResponseWriter, r *http.Request) {
 
 	userReturned, err := user.GetUser(h.UserRepo, userID)
 	if err != nil {
-		log.Printf("GetUsers error: %v", err)
+		log.Printf("GetUser error: %v", err)
 		return
 	}
 
