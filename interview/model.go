@@ -23,8 +23,14 @@ type Interview struct {
 	UpdatedAt       time.Time
 }
 
+type Summary struct {
+	ID        int       `json:"id"`
+	StartedAt time.Time `json:"created_at"`
+	Score     *int      `json:"score,omitempty"`
+}
+
 type InterviewRepo interface {
 	CreateInterview(interview *Interview) (int, error)
 	GetInterview(interviewID int) (*Interview, error)
-	GetInterviewsThisCycle(userID int, cycleStart, cycleEnd time.Time) (int, error)
+	GetInterviewSummariesByUserID(userID int) ([]Summary, error)
 }

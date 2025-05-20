@@ -43,10 +43,20 @@ func (m *MockRepo) GetInterview(interviewID int) (*Interview, error) {
 	return interview, nil
 }
 
-func (m *MockRepo) GetInterviewsThisCycle(userID int, cycleStart, cycleEnd time.Time) (int, error) {
+func (m *MockRepo) GetInterviewSummariesByUserID(userID int) ([]Summary, error) {
 	if m.failRepo {
-		return 0, errors.New("Mocked DB failure")
+		return nil, errors.New("Mocked DB failure")
 	}
 
-	return 1, nil
+	var summaries []Summary
+	score := 100
+	summary := Summary{
+		ID:        1,
+		StartedAt: time.Now().UTC(),
+		Score:     &score,
+	}
+
+	summaries = append(summaries, summary)
+
+	return summaries, nil
 }

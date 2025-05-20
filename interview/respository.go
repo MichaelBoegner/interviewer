@@ -3,7 +3,6 @@ package interview
 import (
 	"database/sql"
 	"fmt"
-	"time"
 )
 
 type Repository struct {
@@ -77,27 +76,26 @@ func (repo *Repository) GetInterview(interviewID int) (*Interview, error) {
 	return interview, nil
 }
 
-func (repo *Repository) GetInterviewsThisCycle(userID int, cycleStart, cycleEnd time.Time) (int, error) {
-	var count int
-
-	query := `
-		SELECT COUNT(id)
+func (r *Repository) GetInterviewSummariesByUserID(userID int) ([]Summary, error) {
+	rows, err := r.DB.Query(`
+		SELECT id, created_at, score
 		FROM interviews
-		WHERE id = $1 AND created_at >= $2 AND created_at <= $3
-		`
-
-	err := repo.DB.QueryRow(query,
-		userID,
-		cycleStart,
-		cycleEnd).
-		Scan(&count)
-
+		WHERE user_id = $1
+		ORDER BY started_at DESC
+	`, userID)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return 0, fmt.Errorf("no interviews found with userID %d", userID)
-		}
-		return 0, err
+		return nil, err
 	}
+	defer rows.Close()
 
-	return count, nil
+	var summaries []Summary
+	for rows.Next() {
+		var summary Summary
+		err := rows.Scan(&summary.ID, &summary.StartedAt, &summary.Score)
+		if err != nil {
+			return nil, err
+		}
+		summaries = append(summaries, summary)
+	}
+	return summaries, nil
 }

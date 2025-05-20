@@ -55,6 +55,7 @@ func NewServer() (*Server, error) {
 	mux.Handle("/api/conversations/append/", middleware.GetContext(http.HandlerFunc(handler.AppendConversationsHandler)))
 	mux.Handle("/api/auth/token", middleware.GetContext(http.HandlerFunc(handler.RefreshTokensHandler)))
 	mux.Handle("/api/payment/checkout", middleware.GetContext(http.HandlerFunc(handler.CreateCheckoutSessionHandler)))
+	mux.Handle("/api/dashboard", middleware.GetContext(http.HandlerFunc(handler.DashboardHandler)))
 	mux.Handle("/health", http.HandlerFunc(handler.HealthCheckHandler))
 
 	return &Server{mux: mux}, nil

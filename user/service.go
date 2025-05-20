@@ -63,11 +63,7 @@ func LoginUser(repo UserRepo, username, password string) (string, int, error) {
 }
 
 func GetUser(repo UserRepo, userID int) (*User, error) {
-	user := &User{
-		ID: userID,
-	}
-
-	userReturned, err := repo.GetUser(user)
+	userReturned, err := repo.GetUser(userID)
 	if err != nil {
 		log.Printf("GetUser failed: %v", err)
 		return nil, err

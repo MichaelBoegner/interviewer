@@ -11,6 +11,7 @@ import (
 
 	"github.com/michaelboegner/interviewer/billing"
 	"github.com/michaelboegner/interviewer/conversation"
+	"github.com/michaelboegner/interviewer/dashboard"
 	"github.com/michaelboegner/interviewer/interview"
 	"github.com/michaelboegner/interviewer/middleware"
 	"github.com/michaelboegner/interviewer/token"
@@ -603,4 +604,26 @@ func (h *Handler) BillingWebhookHandler(w http.ResponseWriter, r *http.Request) 
 	}
 
 	w.WriteHeader(http.StatusOK)
+}
+
+func (h *Handler) DashboardHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		RespondWithError(w, http.StatusMethodNotAllowed, "Method not allowed")
+		return
+	}
+
+	userID, ok := r.Context().Value(middleware.ContextKeyTokenParams).(int)
+	if !ok {
+		RespondWithError(w, http.StatusBadRequest, "Invalid ID")
+		return
+	}
+
+	dashboardData, err := dashboard.GetDashboardData(userID, h.UserRepo, h.InterviewRepo)
+	if err != nil {
+		log.Printf("dashboardService.GetDashboardData failed: %v", err)
+		RespondWithError(w, http.StatusInternalServerError, "Could not load dashboard")
+		return
+	}
+
+	RespondWithJSON(w, http.StatusOK, dashboardData)
 }

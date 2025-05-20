@@ -75,10 +75,11 @@ func (repo *Repository) GetPasswordandID(username string) (int, string, error) {
 	return id, hashedPassword, nil
 }
 
-func (repo *Repository) GetUser(user *User) (*User, error) {
+func (repo *Repository) GetUser(userID int) (*User, error) {
+	user := &User{}
 	err := repo.DB.QueryRow(`SELECT id, username, email,  
 							FROM users 
-							WHERE id= $1`, user.ID).Scan(
+							WHERE id= $1`, userID).Scan(
 		&user.ID,
 		&user.Username,
 		&user.Email,
