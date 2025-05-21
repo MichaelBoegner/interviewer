@@ -265,6 +265,12 @@ func (h *Handler) CreateConversationsHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
+	userID, ok := r.Context().Value(middleware.ContextKeyTokenParams).(int)
+	if !ok {
+		RespondWithError(w, http.StatusBadRequest, "Invalid ID")
+		return
+	}
+
 	params := &middleware.AcceptedVals{}
 	err := json.NewDecoder(r.Body).Decode(params)
 	if err != nil {
@@ -284,6 +290,11 @@ func (h *Handler) CreateConversationsHandler(w http.ResponseWriter, r *http.Requ
 	if err != nil {
 		log.Printf("GetInterview error: %v\n", err)
 		RespondWithError(w, http.StatusBadRequest, "Invalid ID")
+		return
+	}
+	if interviewReturned.UserId != userID {
+		log.Printf("interview.userid != token user_id")
+		RespondWithError(w, http.StatusUnauthorized, "Unauthorized")
 		return
 	}
 
@@ -313,6 +324,12 @@ func (h *Handler) AppendConversationsHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
+	userID, ok := r.Context().Value(middleware.ContextKeyTokenParams).(int)
+	if !ok {
+		RespondWithError(w, http.StatusBadRequest, "Invalid ID")
+		return
+	}
+
 	params := &middleware.AcceptedVals{}
 	err := json.NewDecoder(r.Body).Decode(params)
 	if err != nil {
@@ -336,6 +353,11 @@ func (h *Handler) AppendConversationsHandler(w http.ResponseWriter, r *http.Requ
 	if err != nil {
 		log.Printf("GetInterview error: %v\n", err)
 		RespondWithError(w, http.StatusBadRequest, "Invalid ID")
+		return
+	}
+	if interviewReturned.UserId != userID {
+		log.Printf("interview.userid != token user_id")
+		RespondWithError(w, http.StatusUnauthorized, "Unauthorized")
 		return
 	}
 
@@ -370,10 +392,28 @@ func (h *Handler) GetConversationHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
+	userID, ok := r.Context().Value(middleware.ContextKeyTokenParams).(int)
+	if !ok {
+		RespondWithError(w, http.StatusBadRequest, "Invalid ID")
+		return
+	}
+
 	interviewID, err := GetPathID(r, "/api/conversations/")
 	if err != nil {
 		log.Printf("PathID error: %v\n", err)
 		RespondWithError(w, http.StatusBadRequest, "Missing ID")
+		return
+	}
+
+	interviewReturned, err := interview.GetInterview(h.InterviewRepo, interviewID)
+	if err != nil {
+		log.Printf("GetInterview error: %v\n", err)
+		RespondWithError(w, http.StatusBadRequest, "Invalid ID")
+		return
+	}
+	if interviewReturned.UserId != userID {
+		log.Printf("interview.userid != token user_id")
+		RespondWithError(w, http.StatusUnauthorized, "Unauthorized")
 		return
 	}
 
