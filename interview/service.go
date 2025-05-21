@@ -1,7 +1,6 @@
 package interview
 
 import (
-	"fmt"
 	"log"
 	"time"
 
@@ -104,13 +103,13 @@ func canUseCredit(user *user.User) (string, error) {
 
 	switch {
 	case user.SubscriptionEndDate == nil:
-		return "", fmt.Errorf("no valid credits")
+		return "", ErrNoValidCredits
 	case user.SubscriptionStatus != "expired" && user.SubscriptionEndDate.After(now) && user.SubscriptionCredits > 0:
 		return "subscription", nil
 	case user.IndividualCredits > 0:
 		return "individual", nil
 	default:
-		return "", fmt.Errorf("no valid credits")
+		return "", ErrNoValidCredits
 	}
 }
 
@@ -119,6 +118,9 @@ func deductAndLogCredit(user *user.User, userRepo user.UserRepo, billingRepo bil
 	if err != nil {
 		log.Print(err)
 		return err
+	}
+	if creditType != "" {
+
 	}
 
 	err = userRepo.AddCredits(user.ID, -1, creditType)

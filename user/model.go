@@ -26,7 +26,7 @@ type User struct {
 
 type UserRepo interface {
 	CreateUser(user *User) (int, error)
-	GetPasswordandID(username string) (int, string, error)
+	GetPasswordandID(email string) (int, string, error)
 	GetUser(userID int) (*User, error)
 	GetUserByEmail(email string) (*User, error)
 	GetUserByCustomerID(customerID string) (*User, error)

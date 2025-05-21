@@ -42,8 +42,8 @@ func CreateUser(repo UserRepo, username, email, password string) (*User, error) 
 	// return nil, err
 }
 
-func LoginUser(repo UserRepo, username, password string) (string, int, error) {
-	id, hashedPassword, err := repo.GetPasswordandID(username)
+func LoginUser(repo UserRepo, email, password string) (string, int, error) {
+	id, hashedPassword, err := repo.GetPasswordandID(email)
 	if err != nil {
 		return "", 0, err
 	}

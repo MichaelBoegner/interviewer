@@ -1,6 +1,7 @@
 package interview
 
 import (
+	"errors"
 	"time"
 
 	"github.com/michaelboegner/interviewer/chatgpt"
@@ -28,6 +29,8 @@ type Summary struct {
 	StartedAt time.Time `json:"created_at"`
 	Score     *int      `json:"score,omitempty"`
 }
+
+var ErrNoValidCredits = errors.New("no valid credits")
 
 type InterviewRepo interface {
 	CreateInterview(interview *Interview) (int, error)

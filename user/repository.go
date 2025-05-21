@@ -58,11 +58,11 @@ func (repo *Repository) CreateUser(user *User) (int, error) {
 	return id, nil
 }
 
-func (repo *Repository) GetPasswordandID(username string) (int, string, error) {
+func (repo *Repository) GetPasswordandID(email string) (int, string, error) {
 	var hashedPassword string
 	var id int
-	err := repo.DB.QueryRow("SELECT id, password from users WHERE username = $1",
-		username,
+	err := repo.DB.QueryRow("SELECT id, password from users WHERE email = $1",
+		email,
 	).Scan(&id, &hashedPassword)
 	if err == sql.ErrNoRows {
 		log.Printf("Username invalid: %v", err)

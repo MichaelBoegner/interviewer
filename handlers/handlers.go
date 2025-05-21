@@ -123,14 +123,14 @@ func (h *Handler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 		RespondWithError(w, http.StatusInternalServerError, "Internal Server Error")
 	}
 
-	if params.Username == "" || params.Password == "" {
+	if params.Email == "" || params.Password == "" {
 		log.Printf("Invalid username or password.")
 		RespondWithError(w, http.StatusBadRequest, "Invalid username or password.")
 		return
 
 	}
 
-	jwToken, userID, err := user.LoginUser(h.UserRepo, params.Username, params.Password)
+	jwToken, userID, err := user.LoginUser(h.UserRepo, params.Email, params.Password)
 	if err != nil {
 		log.Printf("LoginUser error: %v", err)
 		RespondWithError(w, http.StatusUnauthorized, "Invalid username or password.")
@@ -242,6 +242,11 @@ func (h *Handler) InterviewsHandler(w http.ResponseWriter, r *http.Request) {
 		"easy")
 	if err != nil {
 		log.Printf("Interview failed to start: %v", err)
+		if errors.Is(err, interview.ErrNoValidCredits) {
+			RespondWithError(w, http.StatusPaymentRequired, "You do not have enough credits to start a new interview.")
+			return
+		}
+		RespondWithError(w, http.StatusInternalServerError, "Failed to start interview.")
 		return
 	}
 
