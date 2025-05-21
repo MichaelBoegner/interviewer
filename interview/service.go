@@ -102,9 +102,10 @@ func canUseCredit(user *user.User) (string, error) {
 	now := time.Now()
 
 	switch {
-	case user.SubscriptionEndDate == nil:
-		return "", ErrNoValidCredits
-	case user.SubscriptionStatus != "expired" && user.SubscriptionEndDate.After(now) && user.SubscriptionCredits > 0:
+	case user.SubscriptionEndDate != nil &&
+		user.SubscriptionEndDate.After(now) &&
+		user.SubscriptionStatus != "expired" &&
+		user.SubscriptionCredits > 0:
 		return "subscription", nil
 	case user.IndividualCredits > 0:
 		return "individual", nil

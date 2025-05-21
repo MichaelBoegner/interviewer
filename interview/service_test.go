@@ -16,6 +16,7 @@ import (
 )
 
 func TestStartInterview(t *testing.T) {
+	now := time.Now()
 	tests := []struct {
 		name         string
 		user         *user.User
@@ -32,7 +33,7 @@ func TestStartInterview(t *testing.T) {
 			user: &user.User{
 				ID:                    1,
 				SubscriptionTier:      "free",
-				SubscriptionStartDate: time.Now(),
+				SubscriptionStartDate: &now,
 			},
 			length:       30,
 			numQuestions: 3,
@@ -56,7 +57,7 @@ func TestStartInterview(t *testing.T) {
 			user: &user.User{
 				ID:                    1,
 				SubscriptionTier:      "free",
-				SubscriptionStartDate: time.Now(),
+				SubscriptionStartDate: &now,
 			},
 			length:       30,
 			numQuestions: 3,

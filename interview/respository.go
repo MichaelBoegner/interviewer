@@ -3,6 +3,7 @@ package interview
 import (
 	"database/sql"
 	"fmt"
+	"time"
 )
 
 type Repository struct {
@@ -17,8 +18,20 @@ func NewRepository(db *sql.DB) *Repository {
 
 func (repo *Repository) CreateInterview(interview *Interview) (int, error) {
 	query := `
-    INSERT INTO interviews (user_id, length, number_questions, difficulty, status, score, language, prompt, first_question, subtopic)
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+    INSERT INTO interviews (
+	user_id, 
+	length, 
+	number_questions, 
+	difficulty, 
+	status, 
+	score, 
+	language, 
+	prompt, 
+	first_question, 
+	subtopic,
+	created_at,
+	updated_at)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
     RETURNING id
     `
 
@@ -34,6 +47,8 @@ func (repo *Repository) CreateInterview(interview *Interview) (int, error) {
 		interview.Prompt,
 		interview.FirstQuestion,
 		interview.Subtopic,
+		time.Now().UTC(),
+		time.Now().UTC(),
 	).Scan(&id)
 
 	if err != nil {
