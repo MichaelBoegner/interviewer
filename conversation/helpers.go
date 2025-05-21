@@ -139,21 +139,16 @@ func ChatGPTResponseToString(chatGPTResponse *chatgpt.ChatGPTResponse) (string, 
 }
 
 func CheckConversationState(chatGPTResponse *chatgpt.ChatGPTResponse, conversation *Conversation) (bool, bool, bool, error) {
-	isFinished := false
-	moveToNewTopic := false
-	incrementQuestion := false
+	topic := conversation.Topics[conversation.CurrentTopic]
+	questionCount := len(topic.Questions)
 
-	if chatGPTResponse.NextTopic != PredefinedTopics[conversation.CurrentTopic].Name {
-		moveToNewTopic = true
+	isFinished := chatGPTResponse.Topic == "General Backend Knowledge" && questionCount == 2
+	switch {
+	case questionCount >= 2:
+		return true, false, isFinished, nil
+	case questionCount == 1:
+		return false, true, isFinished, nil
+	default:
+		return false, false, isFinished, nil
 	}
-
-	if chatGPTResponse.NextSubtopic != conversation.CurrentSubtopic {
-		incrementQuestion = true
-	}
-
-	if chatGPTResponse.Topic == "General Backend Knowledge" {
-		isFinished = true
-	}
-
-	return moveToNewTopic, incrementQuestion, isFinished, nil
 }

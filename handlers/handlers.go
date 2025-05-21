@@ -427,7 +427,7 @@ func (h *Handler) GetConversationHandler(w http.ResponseWriter, r *http.Request)
 	payload := &ReturnVals{
 		Conversation: conversationReturned,
 	}
-	RespondWithJSON(w, http.StatusCreated, payload)
+	RespondWithJSON(w, http.StatusOK, payload)
 }
 
 func (h *Handler) RequestResetHandler(w http.ResponseWriter, r *http.Request) {
