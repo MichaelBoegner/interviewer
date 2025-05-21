@@ -78,7 +78,7 @@ func (repo *Repository) GetPasswordandID(email string) (int, string, error) {
 func (repo *Repository) GetUser(userID int) (*User, error) {
 	user := &User{}
 
-	err := repo.DB.QueryRow(`SELECT id, username, email, individual_credits, subscription_credits, subscription_end_date, subscription_status
+	err := repo.DB.QueryRow(`SELECT id, username, email, individual_credits, subscription_credits, subscription_end_date, subscription_status, subscription_tier
 							FROM users 
 							WHERE id= $1`, userID).Scan(
 		&user.ID,
@@ -88,6 +88,7 @@ func (repo *Repository) GetUser(userID int) (*User, error) {
 		&user.SubscriptionCredits,
 		&user.SubscriptionEndDate,
 		&user.SubscriptionStatus,
+		&user.SubscriptionTier,
 	)
 
 	if err == sql.ErrNoRows {
