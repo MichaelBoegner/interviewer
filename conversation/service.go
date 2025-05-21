@@ -217,8 +217,8 @@ func AppendConversation(
 	return conversation, nil
 }
 
-func GetConversation(repo ConversationRepo, conversationID int) (*Conversation, error) {
-	conversation, err := repo.GetConversation(conversationID)
+func GetConversation(repo ConversationRepo, interviewID int) (*Conversation, error) {
+	conversation, err := repo.GetConversation(interviewID)
 	if err != nil {
 		return nil, err
 	}

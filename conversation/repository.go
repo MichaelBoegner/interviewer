@@ -60,14 +60,14 @@ func (repo *Repository) CreateConversation(conversation *Conversation) (int, err
 	return id, nil
 }
 
-func (repo *Repository) GetConversation(conversationID int) (*Conversation, error) {
+func (repo *Repository) GetConversation(interviewID int) (*Conversation, error) {
 	conversation := &Conversation{}
 
 	query := `SELECT id, interview_id, current_topic, current_subtopic, current_question_number, created_at, updated_at
 	FROM conversations
 	WHERE interview_id = $1
 	`
-	err := repo.DB.QueryRow(query, conversationID).Scan(
+	err := repo.DB.QueryRow(query, interviewID).Scan(
 		&conversation.ID,
 		&conversation.InterviewID,
 		&conversation.CurrentTopic,

@@ -339,7 +339,7 @@ func (h *Handler) AppendConversationsHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	conversationReturned, err := conversation.GetConversation(h.ConversationRepo, params.ConversationID)
+	conversationReturned, err := conversation.GetConversation(h.ConversationRepo, interviewID)
 	if err != nil {
 		log.Printf("GetConversation error: %v", err)
 		RespondWithError(w, http.StatusBadRequest, "Invalid ID.")
@@ -354,6 +354,32 @@ func (h *Handler) AppendConversationsHandler(w http.ResponseWriter, r *http.Requ
 		interviewReturned.Prompt)
 	if err != nil {
 		log.Printf("AppendConversation error: %v", err)
+		RespondWithError(w, http.StatusBadRequest, "Invalid ID.")
+		return
+	}
+
+	payload := &ReturnVals{
+		Conversation: conversationReturned,
+	}
+	RespondWithJSON(w, http.StatusCreated, payload)
+}
+
+func (h *Handler) GetConversationHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		RespondWithError(w, http.StatusMethodNotAllowed, "Method not allowed")
+		return
+	}
+
+	interviewID, err := GetPathID(r, "/api/conversations/")
+	if err != nil {
+		log.Printf("PathID error: %v\n", err)
+		RespondWithError(w, http.StatusBadRequest, "Missing ID")
+		return
+	}
+
+	conversationReturned, err := conversation.GetConversation(h.ConversationRepo, interviewID)
+	if err != nil {
+		log.Printf("GetConversation error: %v", err)
 		RespondWithError(w, http.StatusBadRequest, "Invalid ID.")
 		return
 	}

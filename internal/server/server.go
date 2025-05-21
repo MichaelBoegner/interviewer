@@ -53,6 +53,7 @@ func NewServer() (*Server, error) {
 	mux.Handle("/api/interviews", middleware.GetContext(http.HandlerFunc(handler.InterviewsHandler)))
 	mux.Handle("/api/conversations/create/", middleware.GetContext(http.HandlerFunc(handler.CreateConversationsHandler)))
 	mux.Handle("/api/conversations/append/", middleware.GetContext(http.HandlerFunc(handler.AppendConversationsHandler)))
+	mux.Handle("/api/conversations/", middleware.GetContext(http.HandlerFunc(handler.GetConversationHandler)))
 	mux.Handle("/api/auth/token", middleware.GetContext(http.HandlerFunc(handler.RefreshTokensHandler)))
 	mux.Handle("/api/payment/checkout", middleware.GetContext(http.HandlerFunc(handler.CreateCheckoutSessionHandler)))
 	mux.Handle("/api/user/dashboard", middleware.GetContext(http.HandlerFunc(handler.DashboardHandler)))
