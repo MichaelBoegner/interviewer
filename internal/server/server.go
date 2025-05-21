@@ -1,6 +1,7 @@
 package server
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 
@@ -25,7 +26,7 @@ func NewServer() (*Server, error) {
 
 	db, err := database.StartDB()
 	if err != nil {
-		log.Fatal(err)
+		return nil, fmt.Errorf("failed to start DB: %w", err)
 	}
 
 	interviewRepo := interview.NewRepository(db)
