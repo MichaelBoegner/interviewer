@@ -26,7 +26,7 @@ type Interview struct {
 
 type Summary struct {
 	ID        int       `json:"id"`
-	StartedAt time.Time `json:"created_at"`
+	StartedAt time.Time `json:"started_at"`
 	Score     *int      `json:"score,omitempty"`
 }
 
