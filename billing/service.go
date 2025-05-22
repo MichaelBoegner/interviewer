@@ -2,6 +2,9 @@ package billing
 
 import (
 	"bytes"
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -57,6 +60,13 @@ func (b *Billing) CreateCheckoutSession(userEmail string, variantID int) (string
 	}
 
 	return result.Data.Attributes.URL, nil
+}
+
+func (b *Billing) VerifyBillingSignature(signature string, body []byte, secret string) bool {
+	mac := hmac.New(sha256.New, []byte(secret))
+	mac.Write(body)
+	expected := hex.EncodeToString(mac.Sum(nil))
+	return hmac.Equal([]byte(expected), []byte(signature))
 }
 
 func (b *Billing) ApplyCredits(userRepo user.UserRepo, billingRepo BillingRepo, email string, variantID int) error {

@@ -563,6 +563,13 @@ func (h *Handler) BillingWebhookHandler(w http.ResponseWriter, r *http.Request) 
 	}
 	defer r.Body.Close()
 
+	signature := r.Header.Get("X-Signature")
+	if !h.Billing.VerifyBillingSignature(signature, body, os.Getenv("LEMON_WEBHOOK_SECRET")) {
+		log.Printf("Invalid Lemon Squeezy signature")
+		RespondWithError(w, http.StatusUnauthorized, "Invalid signature")
+		return
+	}
+
 	var webhookPayload billing.BillingWebhookPayload
 	err = json.Unmarshal(body, &webhookPayload)
 	if err != nil {
