@@ -11,6 +11,7 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/michaelboegner/interviewer/conversation"
 	"github.com/michaelboegner/interviewer/internal/mocks"
+	"github.com/michaelboegner/interviewer/interview"
 )
 
 func TestCreateConversation(t *testing.T) {
@@ -59,13 +60,14 @@ func TestCreateConversation(t *testing.T) {
 			defer showLogsIfFail(t, tc.name, buf)
 
 			repo := conversation.NewMockRepo()
+			interviewRepo := interview.NewMockRepo()
 			if tc.failRepo {
 				repo.FailRepo = true
 			}
 
 			ai := &mocks.MockOpenAIClient{}
 
-			convo, err := conversation.CreateConversation(repo, ai, tc.interviewID, tc.prompt, tc.firstQuestion, tc.subtopic, tc.message)
+			convo, err := conversation.CreateConversation(repo, interviewRepo, ai, tc.interviewID, tc.prompt, tc.firstQuestion, tc.subtopic, tc.message)
 
 			if tc.expectError && err == nil {
 				t.Fatalf("expected error but got nil")
@@ -91,6 +93,7 @@ func TestAppendConversation(t *testing.T) {
 	tests := []struct {
 		name        string
 		message     string
+		interviewID int
 		prompt      string
 		failRepo    bool
 		expectError bool
@@ -98,6 +101,7 @@ func TestAppendConversation(t *testing.T) {
 		{
 			name:        "AppendConversation_Success",
 			message:     "Answer1",
+			interviewID: 1,
 			prompt:      "Prompt",
 			failRepo:    false,
 			expectError: false,
@@ -105,6 +109,7 @@ func TestAppendConversation(t *testing.T) {
 		{
 			name:        "AppendConversation_RepoError",
 			message:     "Answer1",
+			interviewID: 1,
 			prompt:      "Prompt",
 			failRepo:    true,
 			expectError: true,
@@ -118,12 +123,13 @@ func TestAppendConversation(t *testing.T) {
 			defer showLogsIfFail(t, tc.name, buf)
 
 			repo := conversation.NewMockRepo()
+			interviewRepo := interview.NewMockRepo()
 			if tc.failRepo {
 				repo.FailRepo = true
 			}
 			ai := &mocks.MockOpenAIClient{}
 
-			convo, err := conversation.CreateConversation(repo, ai, 1, "Prompt", "Question1", "Subtopic1", "Answer1")
+			convo, err := conversation.CreateConversation(repo, interviewRepo, ai, 1, "Prompt", "Question1", "Subtopic1", "Answer1")
 			if err != nil {
 				if tc.failRepo {
 					return
@@ -131,7 +137,7 @@ func TestAppendConversation(t *testing.T) {
 				t.Fatalf("failed to create initial conversation: %v", err)
 			}
 
-			updatedConvo, err := conversation.AppendConversation(repo, ai, convo, tc.message, tc.prompt)
+			updatedConvo, err := conversation.AppendConversation(repo, interviewRepo, ai, tc.interviewID, convo, tc.message, tc.prompt)
 
 			if tc.expectError && err == nil {
 				t.Fatalf("expected error but got nil")

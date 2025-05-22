@@ -6,7 +6,7 @@ import (
 )
 
 type MockRepo struct {
-	failRepo bool
+	FailRepo bool
 }
 
 func NewMockRepo() *MockRepo {
@@ -14,7 +14,7 @@ func NewMockRepo() *MockRepo {
 }
 
 func (m *MockRepo) CreateInterview(interview *Interview) (int, error) {
-	if m.failRepo {
+	if m.FailRepo {
 		return 0, errors.New("Mocked DB failure")
 	}
 
@@ -22,7 +22,7 @@ func (m *MockRepo) CreateInterview(interview *Interview) (int, error) {
 }
 
 func (m *MockRepo) GetInterview(interviewID int) (*Interview, error) {
-	if m.failRepo {
+	if m.FailRepo {
 		return nil, errors.New("Mocked DB failure")
 	}
 
@@ -44,7 +44,7 @@ func (m *MockRepo) GetInterview(interviewID int) (*Interview, error) {
 }
 
 func (m *MockRepo) GetInterviewSummariesByUserID(userID int) ([]Summary, error) {
-	if m.failRepo {
+	if m.FailRepo {
 		return nil, errors.New("Mocked DB failure")
 	}
 
@@ -59,4 +59,12 @@ func (m *MockRepo) GetInterviewSummariesByUserID(userID int) ([]Summary, error) 
 	summaries = append(summaries, summary)
 
 	return summaries, nil
+}
+
+func (m *MockRepo) UpdateScore(interviewID, pointsEarned int) error {
+	if m.FailRepo {
+		return errors.New("Mocked DB failure")
+	}
+
+	return nil
 }

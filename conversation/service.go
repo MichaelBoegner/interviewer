@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/michaelboegner/interviewer/chatgpt"
+	"github.com/michaelboegner/interviewer/interview"
 )
 
 func CheckForConversation(repo ConversationRepo, interviewID int) (bool, error) {
@@ -14,6 +15,7 @@ func CheckForConversation(repo ConversationRepo, interviewID int) (bool, error) 
 
 func CreateConversation(
 	repo ConversationRepo,
+	interviewRepo interview.InterviewRepo,
 	openAI chatgpt.AIClient,
 	interviewID int,
 	prompt,
@@ -70,6 +72,12 @@ func CreateConversation(
 		return nil, err
 	}
 
+	err = interviewRepo.UpdateScore(interviewID, chatGPTResponse.Score)
+	if err != nil {
+		log.Printf("interviewRepo.UpdateScore failed: %v", err)
+		return nil, err
+	}
+
 	conversation.CurrentQuestionNumber++
 	conversation.CurrentSubtopic = chatGPTResponse.NextSubtopic
 	questionNumber++
@@ -100,7 +108,9 @@ func CreateConversation(
 
 func AppendConversation(
 	repo ConversationRepo,
+	interviewRepo interview.InterviewRepo,
 	openAI chatgpt.AIClient,
+	interviewID int,
 	conversation *Conversation,
 	message, prompt string) (*Conversation, error) {
 
@@ -122,6 +132,12 @@ func AppendConversation(
 	chatGPTResponse, chatGPTResponseString, err := GetChatGPTResponses(conversation, openAI)
 	if err != nil {
 		log.Printf("getChatGPTResponses failed: %v", err)
+		return nil, err
+	}
+
+	err = interviewRepo.UpdateScore(interviewID, chatGPTResponse.Score)
+	if err != nil {
+		log.Printf("interviewRepo.UpdateScore failed: %v", err)
 		return nil, err
 	}
 

@@ -91,8 +91,8 @@ func (repo *Repository) GetInterview(interviewID int) (*Interview, error) {
 	return interview, nil
 }
 
-func (r *Repository) GetInterviewSummariesByUserID(userID int) ([]Summary, error) {
-	rows, err := r.DB.Query(`
+func (repo *Repository) GetInterviewSummariesByUserID(userID int) ([]Summary, error) {
+	rows, err := repo.DB.Query(`
 		SELECT id, created_at, score
 		FROM interviews
 		WHERE user_id = $1
@@ -113,4 +113,18 @@ func (r *Repository) GetInterviewSummariesByUserID(userID int) ([]Summary, error
 		summaries = append(summaries, summary)
 	}
 	return summaries, nil
+}
+
+func (repo *Repository) UpdateScore(interviewID, pointsEarned int) error {
+	query := `
+		UPDATE interviews
+		SET
+			number_questions_answered = number_questions_answered + 1,
+			score_numerator = score_numerator + $1,
+			score = ROUND((score_numerator + $1)::decimal / ((number_questions_answered + 1) * 10) * 100),
+			updated_at = $2
+		WHERE id = $3
+	`
+	_, err := repo.DB.Exec(query, pointsEarned, time.Now().UTC(), interviewID)
+	return err
 }

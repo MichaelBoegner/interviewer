@@ -8,20 +8,22 @@ import (
 )
 
 type Interview struct {
-	Id              int
-	UserId          int
-	Length          int
-	NumberQuestions int
-	Difficulty      string
-	Status          string
-	Score           int
-	Language        string
-	Prompt          string
-	ChatGPTResponse *chatgpt.ChatGPTResponse
-	FirstQuestion   string
-	Subtopic        string
-	CreatedAt       time.Time
-	UpdatedAt       time.Time
+	Id                      int
+	UserId                  int
+	Length                  int
+	NumberQuestions         int
+	NumberQuestionsAnswered int
+	ScoreNumerator          int
+	Score                   int
+	Difficulty              string
+	Status                  string
+	Language                string
+	Prompt                  string
+	ChatGPTResponse         *chatgpt.ChatGPTResponse
+	FirstQuestion           string
+	Subtopic                string
+	CreatedAt               time.Time
+	UpdatedAt               time.Time
 }
 
 type Summary struct {
@@ -36,4 +38,5 @@ type InterviewRepo interface {
 	CreateInterview(interview *Interview) (int, error)
 	GetInterview(interviewID int) (*Interview, error)
 	GetInterviewSummariesByUserID(userID int) ([]Summary, error)
+	UpdateScore(interviewID, pointsEarned int) error
 }

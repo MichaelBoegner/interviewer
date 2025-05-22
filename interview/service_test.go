@@ -1,4 +1,4 @@
-package interview
+package interview_test
 
 import (
 	"fmt"
@@ -12,6 +12,7 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/michaelboegner/interviewer/billing"
 	"github.com/michaelboegner/interviewer/internal/mocks"
+	"github.com/michaelboegner/interviewer/interview"
 	"github.com/michaelboegner/interviewer/user"
 )
 
@@ -25,7 +26,7 @@ func TestStartInterview(t *testing.T) {
 		difficulty   string
 		aiClient     *mocks.MockOpenAIClient
 		failRepo     bool
-		expected     *Interview
+		expected     *interview.Interview
 		expectError  bool
 	}{
 		{
@@ -39,7 +40,7 @@ func TestStartInterview(t *testing.T) {
 			numQuestions: 3,
 			difficulty:   "easy",
 			aiClient:     &mocks.MockOpenAIClient{},
-			expected: &Interview{
+			expected: &interview.Interview{
 				UserId:          1,
 				Length:          30,
 				NumberQuestions: 3,
@@ -74,15 +75,15 @@ func TestStartInterview(t *testing.T) {
 			log.SetOutput(&buf)
 			defer showLogsIfFail(t, tc.name, buf)
 
-			repo := NewMockRepo()
+			repo := interview.NewMockRepo()
 			userRepo := user.NewMockRepo()
 			billingRepo := billing.NewMockRepo()
 
 			if tc.failRepo {
-				repo.failRepo = true
+				repo.FailRepo = true
 			}
 
-			interview, err := StartInterview(
+			interviewStarted, err := interview.StartInterview(
 				repo,
 				userRepo,
 				billingRepo,
@@ -102,10 +103,10 @@ func TestStartInterview(t *testing.T) {
 
 			if !tc.expectError {
 				expected := tc.expected
-				got := interview
+				got := interviewStarted
 
 				if diff := cmp.Diff(expected, got,
-					cmpopts.IgnoreFields(Interview{}, "Id", "CreatedAt", "UpdatedAt", "Prompt", "ChatGPTResponse"),
+					cmpopts.IgnoreFields(interview.Interview{}, "Id", "CreatedAt", "UpdatedAt", "Prompt", "ChatGPTResponse"),
 				); diff != "" {
 					t.Errorf("Interview mismatch (-want +got):\n%s", diff)
 				}
@@ -118,15 +119,15 @@ func TestGetInterview(t *testing.T) {
 	tests := []struct {
 		name        string
 		interviewID int
-		setup       *Interview
+		setup       *interview.Interview
 		failRepo    bool
-		expected    *Interview
+		expected    *interview.Interview
 		expectError bool
 	}{
 		{
 			name:        "GetInterview_Success",
 			interviewID: 1,
-			setup: &Interview{
+			setup: &interview.Interview{
 				Id:              1,
 				UserId:          1,
 				Length:          30,
@@ -140,7 +141,7 @@ func TestGetInterview(t *testing.T) {
 				CreatedAt:       time.Now().UTC(),
 				UpdatedAt:       time.Now().UTC(),
 			},
-			expected: &Interview{
+			expected: &interview.Interview{
 				Id:              1,
 				UserId:          1,
 				Length:          30,
@@ -168,9 +169,9 @@ func TestGetInterview(t *testing.T) {
 			log.SetOutput(&buf)
 			defer showLogsIfFail(t, tc.name, buf)
 
-			repo := NewMockRepo()
+			repo := interview.NewMockRepo()
 			if tc.failRepo {
-				repo.failRepo = true
+				repo.FailRepo = true
 			}
 			if tc.setup != nil {
 				_, err := repo.CreateInterview(tc.setup)
@@ -179,7 +180,7 @@ func TestGetInterview(t *testing.T) {
 				}
 			}
 
-			got, err := GetInterview(repo, tc.interviewID)
+			got, err := interview.GetInterview(repo, tc.interviewID)
 
 			if tc.expectError && err == nil {
 				t.Fatalf("expected error but got nil")
@@ -192,7 +193,7 @@ func TestGetInterview(t *testing.T) {
 				expected := tc.expected
 
 				if diff := cmp.Diff(expected, got,
-					cmpopts.IgnoreFields(Interview{}, "CreatedAt", "UpdatedAt"),
+					cmpopts.IgnoreFields(interview.Interview{}, "CreatedAt", "UpdatedAt"),
 				); diff != "" {
 					t.Errorf("Interview mismatch (-want +got):\n%s", diff)
 				}

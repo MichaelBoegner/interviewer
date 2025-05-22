@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"io"
@@ -300,6 +301,7 @@ func (h *Handler) CreateConversationsHandler(w http.ResponseWriter, r *http.Requ
 
 	conversationReturned, err := conversation.CreateConversation(
 		h.ConversationRepo,
+		h.InterviewRepo,
 		h.OpenAI,
 		interviewID,
 		interviewReturned.Prompt,
@@ -370,7 +372,9 @@ func (h *Handler) AppendConversationsHandler(w http.ResponseWriter, r *http.Requ
 
 	conversationReturned, err = conversation.AppendConversation(
 		h.ConversationRepo,
+		h.InterviewRepo,
 		h.OpenAI,
+		interviewID,
 		conversationReturned,
 		params.Message,
 		interviewReturned.Prompt)
@@ -691,6 +695,10 @@ func (h *Handler) DashboardHandler(w http.ResponseWriter, r *http.Request) {
 
 	dashboardData, err := dashboard.GetDashboardData(userID, h.UserRepo, h.InterviewRepo)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			RespondWithError(w, http.StatusUnauthorized, "User not found")
+			return
+		}
 		log.Printf("dashboardService.GetDashboardData failed: %v", err)
 		RespondWithError(w, http.StatusInternalServerError, "Could not load dashboard")
 		return
