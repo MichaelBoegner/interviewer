@@ -94,6 +94,7 @@ func TestAppendConversation(t *testing.T) {
 		name        string
 		message     string
 		interviewID int
+		userID      int
 		prompt      string
 		failRepo    bool
 		expectError bool
@@ -102,6 +103,7 @@ func TestAppendConversation(t *testing.T) {
 			name:        "AppendConversation_Success",
 			message:     "Answer1",
 			interviewID: 1,
+			userID:      1,
 			prompt:      "Prompt",
 			failRepo:    false,
 			expectError: false,
@@ -110,6 +112,7 @@ func TestAppendConversation(t *testing.T) {
 			name:        "AppendConversation_RepoError",
 			message:     "Answer1",
 			interviewID: 1,
+			userID:      1,
 			prompt:      "Prompt",
 			failRepo:    true,
 			expectError: true,
@@ -137,7 +140,7 @@ func TestAppendConversation(t *testing.T) {
 				t.Fatalf("failed to create initial conversation: %v", err)
 			}
 
-			updatedConvo, err := conversation.AppendConversation(repo, interviewRepo, ai, tc.interviewID, convo, tc.message, tc.prompt)
+			updatedConvo, err := conversation.AppendConversation(repo, interviewRepo, ai, tc.interviewID, tc.userID, convo, tc.message, tc.prompt)
 
 			if tc.expectError && err == nil {
 				t.Fatalf("expected error but got nil")

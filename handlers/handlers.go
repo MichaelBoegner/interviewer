@@ -229,6 +229,7 @@ func (h *Handler) InterviewsHandler(w http.ResponseWriter, r *http.Request) {
 	userReturned, err := user.GetUser(h.UserRepo, userID)
 	if err != nil {
 		log.Printf("GetUser error: %v", err)
+		RespondWithError(w, http.StatusInternalServerError, "Failed to find user.")
 		return
 	}
 
@@ -258,6 +259,98 @@ func (h *Handler) InterviewsHandler(w http.ResponseWriter, r *http.Request) {
 
 	RespondWithJSON(w, http.StatusCreated, payload)
 	return
+}
+
+func (h *Handler) GetInterviewHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		RespondWithError(w, http.StatusMethodNotAllowed, "Method not allowed")
+		return
+	}
+
+	userID, ok := r.Context().Value(middleware.ContextKeyTokenParams).(int)
+	if !ok {
+		RespondWithError(w, http.StatusBadRequest, "Invalid user ID")
+		return
+	}
+
+	interviewID, err := GetPathID(r, "/api/interviews/")
+	if err != nil {
+		log.Printf("GetPathID failed: %v", err)
+		RespondWithError(w, http.StatusBadRequest, "Invalid interview ID")
+		return
+	}
+
+	interviewReturned, err := interview.GetInterview(h.InterviewRepo, interviewID)
+	if err != nil {
+		log.Printf("GetInterview failed: %v", err)
+		RespondWithError(w, http.StatusNotFound, "Interview not found")
+		return
+	}
+	if interviewReturned.UserId != userID {
+		log.Printf("User ID mismatch on interview fetch")
+		RespondWithError(w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
+
+	payload := ReturnVals{
+		InterviewID: interviewReturned.Id,
+		Status:      interviewReturned.Status,
+		Score:       interviewReturned.Score,
+		CreatedAt:   interviewReturned.CreatedAt,
+		UpdatedAt:   interviewReturned.UpdatedAt,
+	}
+
+	RespondWithJSON(w, http.StatusOK, payload)
+}
+
+func (h *Handler) UpdateInterviewStatusHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPatch {
+		RespondWithError(w, http.StatusMethodNotAllowed, "Method not allowed")
+		return
+	}
+
+	userID, ok := r.Context().Value(middleware.ContextKeyTokenParams).(int)
+	if !ok {
+		RespondWithError(w, http.StatusBadRequest, "Invalid user ID")
+		return
+	}
+
+	interviewID, err := GetPathID(r, "/api/interviews/")
+	if err != nil {
+		RespondWithError(w, http.StatusBadRequest, "Invalid interview ID")
+		return
+	}
+
+	var payload struct {
+		Status string `json:"status"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil || (payload.Status != "paused" && payload.Status != "active") {
+		RespondWithError(w, http.StatusBadRequest, "Invalid status")
+		return
+	}
+
+	interviewReturned, err := interview.GetInterview(h.InterviewRepo, interviewID)
+	if err != nil {
+		log.Printf("GetInterview error: %v\n", err)
+		RespondWithError(w, http.StatusBadRequest, "Invalid ID")
+		return
+	}
+
+	err = ValidateInterviewStatusTransition(interviewReturned.Status, payload.Status)
+	if err != nil {
+		log.Printf("ValidateInterviewStatusTransition failed: %v", err)
+		RespondWithError(w, http.StatusBadRequest, "Invalid status transition")
+		return
+	}
+
+	err = h.InterviewRepo.UpdateStatus(interviewID, userID, payload.Status)
+	if err != nil {
+		log.Printf("UpdateInterviewStatus failed: %v", err)
+		RespondWithError(w, http.StatusInternalServerError, "Could not update status")
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
 }
 
 func (h *Handler) CreateConversationsHandler(w http.ResponseWriter, r *http.Request) {
@@ -296,6 +389,10 @@ func (h *Handler) CreateConversationsHandler(w http.ResponseWriter, r *http.Requ
 	if interviewReturned.UserId != userID {
 		log.Printf("interview.userid != token user_id")
 		RespondWithError(w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
+	if interviewReturned.Status != "active" {
+		RespondWithError(w, http.StatusConflict, "Interview is not active")
 		return
 	}
 
@@ -362,6 +459,10 @@ func (h *Handler) AppendConversationsHandler(w http.ResponseWriter, r *http.Requ
 		RespondWithError(w, http.StatusUnauthorized, "Unauthorized")
 		return
 	}
+	if interviewReturned.Status != "active" {
+		RespondWithError(w, http.StatusConflict, "Interview is not active")
+		return
+	}
 
 	conversationReturned, err := conversation.GetConversation(h.ConversationRepo, interviewID)
 	if err != nil {
@@ -375,6 +476,7 @@ func (h *Handler) AppendConversationsHandler(w http.ResponseWriter, r *http.Requ
 		h.InterviewRepo,
 		h.OpenAI,
 		interviewID,
+		userID,
 		conversationReturned,
 		params.Message,
 		interviewReturned.Prompt)
@@ -565,7 +667,7 @@ func (h *Handler) BillingWebhookHandler(w http.ResponseWriter, r *http.Request) 
 
 	signature := r.Header.Get("X-Signature")
 	if !h.Billing.VerifyBillingSignature(signature, body, os.Getenv("LEMON_WEBHOOK_SECRET")) {
-		log.Printf("Invalid Lemon Squeezy signature")
+		log.Printf("Invalid billing event signature")
 		RespondWithError(w, http.StatusUnauthorized, "Invalid signature")
 		return
 	}

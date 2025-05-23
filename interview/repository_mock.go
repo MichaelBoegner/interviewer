@@ -68,3 +68,11 @@ func (m *MockRepo) UpdateScore(interviewID, pointsEarned int) error {
 
 	return nil
 }
+
+func (m *MockRepo) UpdateStatus(interviewID, userID int, status string) error {
+	if m.FailRepo {
+		return errors.New("Mocked DB failure")
+	}
+
+	return nil
+}

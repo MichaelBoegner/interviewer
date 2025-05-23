@@ -110,7 +110,8 @@ func AppendConversation(
 	repo ConversationRepo,
 	interviewRepo interview.InterviewRepo,
 	openAI chatgpt.AIClient,
-	interviewID int,
+	interviewID,
+	userID int,
 	conversation *Conversation,
 	message, prompt string) (*Conversation, error) {
 
@@ -149,10 +150,16 @@ func AppendConversation(
 
 	if isFinished {
 		conversation.CurrentTopic = 0
-		conversation.CurrentSubtopic = "Finished"
+		conversation.CurrentSubtopic = "finished"
 		conversation.CurrentQuestionNumber = 0
 
-		_, err := repo.UpdateConversationCurrents(conversationID, conversation.CurrentTopic, 0, conversation.CurrentSubtopic)
+		err := interviewRepo.UpdateStatus(interviewID, userID, "finished")
+		if err != nil {
+			log.Printf("interviewRepo.UpdateStatus failed: %v", err)
+			return nil, err
+		}
+
+		_, err = repo.UpdateConversationCurrents(conversationID, conversation.CurrentTopic, 0, conversation.CurrentSubtopic)
 		if err != nil {
 			log.Printf("UpdateConversationTopic error: %v", err)
 			return nil, err

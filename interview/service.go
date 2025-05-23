@@ -68,7 +68,7 @@ func StartInterview(
 		Length:          length,
 		NumberQuestions: numberQuestions,
 		Difficulty:      difficulty,
-		Status:          "Running",
+		Status:          "active",
 		Score:           100,
 		Language:        "Python",
 		Prompt:          prompt,

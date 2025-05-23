@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"database/sql"
+	"time"
 
 	"github.com/michaelboegner/interviewer/billing"
 	"github.com/michaelboegner/interviewer/chatgpt"
@@ -45,6 +46,10 @@ type ReturnVals struct {
 	Users          map[int]user.User          `json:"users,omitempty"`
 	Conversation   *conversation.Conversation `json:"conversation,omitempty"`
 	User           *user.User                 `json:"user,omitempty"`
+	Status         string                     `json:"status,omitempty"`
+	Score          int                        `json:"score,omitempty"`
+	CreatedAt      time.Time                  `json:"created_at,omitempty"`
+	UpdatedAt      time.Time                  `json:"updated_at,omitempty"`
 }
 
 type Handler struct {

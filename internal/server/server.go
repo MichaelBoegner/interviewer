@@ -52,6 +52,16 @@ func NewServer() (*Server, error) {
 
 	mux.Handle("/api/users/", middleware.GetContext(http.HandlerFunc(handler.GetUsersHandler)))
 	mux.Handle("/api/interviews", middleware.GetContext(http.HandlerFunc(handler.InterviewsHandler)))
+	mux.Handle("/api/interviews/", middleware.GetContext(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			handler.GetInterviewHandler(w, r)
+		case http.MethodPatch:
+			handler.UpdateInterviewStatusHandler(w, r)
+		default:
+			handlers.RespondWithError(w, http.StatusMethodNotAllowed, "Method not allowed")
+		}
+	})))
 	mux.Handle("/api/conversations/create/", middleware.GetContext(http.HandlerFunc(handler.CreateConversationsHandler)))
 	mux.Handle("/api/conversations/append/", middleware.GetContext(http.HandlerFunc(handler.AppendConversationsHandler)))
 	mux.Handle("/api/conversations/", middleware.GetContext(http.HandlerFunc(handler.GetConversationHandler)))

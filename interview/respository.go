@@ -128,3 +128,9 @@ func (repo *Repository) UpdateScore(interviewID, pointsEarned int) error {
 	_, err := repo.DB.Exec(query, pointsEarned, time.Now().UTC(), interviewID)
 	return err
 }
+
+func (repo *Repository) UpdateStatus(interviewID, userID int, status string) error {
+	query := `UPDATE interviews SET status = $1, updated_at = NOW() WHERE id = $2 AND user_id = $3`
+	_, err := repo.DB.Exec(query, status, interviewID, userID)
+	return err
+}

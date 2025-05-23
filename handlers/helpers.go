@@ -3,11 +3,33 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
 	"strings"
 )
+
+func ValidateInterviewStatusTransition(currentStatus, nextStatus string) error {
+	validTransitions := map[string][]string{
+		"not_started": {"active"},
+		"active":      {"paused", "finished"},
+		"paused":      {"active"},
+		"finished":    {},
+	}
+
+	allowed, ok := validTransitions[currentStatus]
+	if !ok {
+		return fmt.Errorf("invalid current state: %s", currentStatus)
+	}
+
+	for _, a := range allowed {
+		if a == nextStatus {
+			return nil
+		}
+	}
+	return fmt.Errorf("invalid state transition: %s → %s", currentStatus, nextStatus)
+}
 
 func GetPathID(r *http.Request, prefix string) (int, error) {
 	path := strings.TrimPrefix(r.URL.Path, prefix)
