@@ -1,6 +1,7 @@
 package chatgpt
 
 import (
+	"fmt"
 	"os"
 	"time"
 )
@@ -19,6 +20,15 @@ type ChatGPTResponse struct {
 
 type OpenAIClient struct {
 	APIKey string
+}
+
+type OpenAIError struct {
+	StatusCode int
+	Message    string
+}
+
+func (e *OpenAIError) Error() string {
+	return fmt.Sprintf("OpenAI error %d: %s", e.StatusCode, e.Message)
 }
 
 func NewOpenAI() *OpenAIClient {

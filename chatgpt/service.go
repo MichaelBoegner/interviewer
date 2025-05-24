@@ -47,9 +47,13 @@ func (c *OpenAIClient) GetChatGPTResponseInterview(prompt string) (*ChatGPTRespo
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(resp.Body)
-		log.Printf("API call failed with status code: %d, response: %s", resp.StatusCode, body)
-		return nil, fmt.Errorf("API call failed with status code: %d", resp.StatusCode)
+		var errResp struct {
+			Error struct {
+				Message string `json:"message"`
+			} `json:"error"`
+		}
+		json.NewDecoder(resp.Body).Decode(&errResp)
+		return nil, &OpenAIError{StatusCode: resp.StatusCode, Message: errResp.Error.Message}
 	}
 
 	body, err := io.ReadAll(resp.Body)
@@ -110,9 +114,13 @@ func (c *OpenAIClient) GetChatGPTResponseConversation(conversationHistory []map[
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(resp.Body)
-		log.Printf("API call failed with status code: %d, response: %s", resp.StatusCode, body)
-		return nil, fmt.Errorf("API call failed with status code: %d", resp.StatusCode)
+		var errResp struct {
+			Error struct {
+				Message string `json:"message"`
+			} `json:"error"`
+		}
+		json.NewDecoder(resp.Body).Decode(&errResp)
+		return nil, &OpenAIError{StatusCode: resp.StatusCode, Message: errResp.Error.Message}
 	}
 
 	body, err := io.ReadAll(resp.Body)

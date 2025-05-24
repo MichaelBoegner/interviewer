@@ -11,6 +11,7 @@ import (
 	"strconv"
 
 	"github.com/michaelboegner/interviewer/billing"
+	"github.com/michaelboegner/interviewer/chatgpt"
 	"github.com/michaelboegner/interviewer/conversation"
 	"github.com/michaelboegner/interviewer/dashboard"
 	"github.com/michaelboegner/interviewer/interview"
@@ -243,11 +244,17 @@ func (h *Handler) InterviewsHandler(w http.ResponseWriter, r *http.Request) {
 		3,
 		"easy")
 	if err != nil {
-		log.Printf("Interview failed to start: %v", err)
+		var openaiErr *chatgpt.OpenAIError
+		if errors.As(err, &openaiErr) {
+			log.Printf("OpenAI error: %v", openaiErr)
+			RespondWithError(w, openaiErr.StatusCode, openaiErr.Message)
+			return
+		}
 		if errors.Is(err, interview.ErrNoValidCredits) {
 			RespondWithError(w, http.StatusPaymentRequired, "You do not have enough credits to start a new interview.")
 			return
 		}
+		log.Printf("Interview failed to start: %v", err)
 		RespondWithError(w, http.StatusInternalServerError, "Failed to start interview.")
 		return
 	}
@@ -406,6 +413,12 @@ func (h *Handler) CreateConversationsHandler(w http.ResponseWriter, r *http.Requ
 		interviewReturned.Subtopic,
 		params.Message)
 	if err != nil {
+		var openaiErr *chatgpt.OpenAIError
+		if errors.As(err, &openaiErr) {
+			log.Printf("OpenAI error: %v", openaiErr)
+			RespondWithError(w, openaiErr.StatusCode, openaiErr.Message)
+			return
+		}
 		log.Printf("CreateConversation error: %v", err)
 		RespondWithError(w, http.StatusBadRequest, "Invalid interview_id")
 		return
@@ -481,6 +494,12 @@ func (h *Handler) AppendConversationsHandler(w http.ResponseWriter, r *http.Requ
 		params.Message,
 		interviewReturned.Prompt)
 	if err != nil {
+		var openaiErr *chatgpt.OpenAIError
+		if errors.As(err, &openaiErr) {
+			log.Printf("OpenAI error: %v", openaiErr)
+			RespondWithError(w, openaiErr.StatusCode, openaiErr.Message)
+			return
+		}
 		log.Printf("AppendConversation error: %v", err)
 		RespondWithError(w, http.StatusBadRequest, "Invalid ID.")
 		return
@@ -536,6 +555,29 @@ func (h *Handler) GetConversationHandler(w http.ResponseWriter, r *http.Request)
 	RespondWithJSON(w, http.StatusOK, payload)
 }
 
+func (h *Handler) ResetPasswordHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		RespondWithError(w, http.StatusMethodNotAllowed, "Method not allowed")
+		return
+	}
+
+	var params PasswordResetPayload
+	if err := json.NewDecoder(r.Body).Decode(&params); err != nil {
+		log.Printf("Decoding payload failed: %v", err)
+		RespondWithError(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+	err := user.ResetPassword(h.UserRepo, params.NewPassword, params.Token)
+	if err != nil {
+		log.Printf("ResetPasswordHandler failed: %v", err)
+		RespondWithError(w, http.StatusUnauthorized, "Invalid or expired token")
+		return
+	}
+
+	payload := ReturnVals{}
+	RespondWithJSON(w, http.StatusOK, payload)
+}
+
 func (h *Handler) RequestResetHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		RespondWithError(w, http.StatusMethodNotAllowed, "Method not allowed")
@@ -567,29 +609,6 @@ func (h *Handler) RequestResetHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}(params.Email, resetURL)
-
-	payload := ReturnVals{}
-	RespondWithJSON(w, http.StatusOK, payload)
-}
-
-func (h *Handler) ResetPasswordHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		RespondWithError(w, http.StatusMethodNotAllowed, "Method not allowed")
-		return
-	}
-
-	var params PasswordResetPayload
-	if err := json.NewDecoder(r.Body).Decode(&params); err != nil {
-		log.Printf("Decoding payload failed: %v", err)
-		RespondWithError(w, http.StatusBadRequest, "Invalid request body")
-		return
-	}
-	err := user.ResetPassword(h.UserRepo, params.NewPassword, params.Token)
-	if err != nil {
-		log.Printf("ResetPasswordHandler failed: %v", err)
-		RespondWithError(w, http.StatusUnauthorized, "Invalid or expired token")
-		return
-	}
 
 	payload := ReturnVals{}
 	RespondWithJSON(w, http.StatusOK, payload)
