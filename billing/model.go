@@ -14,11 +14,38 @@ type Billing struct {
 	VariantIDPro        int
 	VariantIDPremium    int
 }
-
 type CheckoutPayload struct {
-	VariantID int
-	Email     string
+	Data CheckoutData `json:"data"`
 }
+
+type CheckoutData struct {
+	Type          string                `json:"type"`
+	Attributes    CheckoutAttributes    `json:"attributes"`
+	Relationships CheckoutRelationships `json:"relationships"`
+}
+
+type CheckoutAttributes struct {
+	CheckoutData CheckoutCustomerInfo `json:"checkout_data"`
+}
+
+type CheckoutCustomerInfo struct {
+	Email string `json:"email"`
+}
+
+type CheckoutRelationships struct {
+	Store   Relationship `json:"store"`
+	Variant Relationship `json:"variant"`
+}
+
+type Relationship struct {
+	Data RelationshipData `json:"data"`
+}
+
+type RelationshipData struct {
+	Type string `json:"type"`
+	ID   string `json:"id"`
+}
+
 type CheckoutResponse struct {
 	Data struct {
 		Attributes struct {
@@ -85,7 +112,7 @@ func NewBilling() (*Billing, error) {
 		return nil, fmt.Errorf("invalid PREMIUM ID: %w", err)
 	}
 	return &Billing{
-		APIKey:              os.Getenv("BILLING_SECRET_KEY"),
+		APIKey:              os.Getenv("LEMON_API_KEY"),
 		VariantIDIndividual: individualID,
 		VariantIDPro:        proID,
 		VariantIDPremium:    premiumID,

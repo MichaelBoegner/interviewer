@@ -10,6 +10,8 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"os"
+	"strconv"
 	"time"
 
 	"github.com/michaelboegner/interviewer/user"
@@ -17,8 +19,28 @@ import (
 
 func (b *Billing) CreateCheckoutSession(userEmail string, variantID int) (string, error) {
 	payload := CheckoutPayload{
-		VariantID: variantID,
-		Email:     userEmail,
+		Data: CheckoutData{
+			Type: "checkouts",
+			Attributes: CheckoutAttributes{
+				CheckoutData: CheckoutCustomerInfo{
+					Email: userEmail,
+				},
+			},
+			Relationships: CheckoutRelationships{
+				Store: Relationship{
+					Data: RelationshipData{
+						Type: "stores",
+						ID:   os.Getenv("LEMON_STORE_ID"),
+					},
+				},
+				Variant: Relationship{
+					Data: RelationshipData{
+						Type: "variants",
+						ID:   strconv.Itoa(variantID),
+					},
+				},
+			},
+		},
 	}
 
 	body, err := json.Marshal(payload)
