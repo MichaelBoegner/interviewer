@@ -18,6 +18,7 @@ type User struct {
 	SubscriptionStatus    string
 	SubscriptionStartDate *time.Time
 	SubscriptionEndDate   *time.Time
+	SubscriptionID        string
 	IndividualCredits     int
 	SubscriptionCredits   int
 	CreatedAt             time.Time
@@ -32,7 +33,7 @@ type UserRepo interface {
 	GetUserByCustomerID(customerID string) (*User, error)
 	UpdatePasswordByEmail(email string, password []byte) error
 	AddCredits(userID, credits int, creditType string) error
-	UpdateSubscriptionData(userID int, status, tier string, startsAt, endsAt time.Time) error
+	UpdateSubscriptionData(userID int, status, tier, subscriptionID string, startsAt, endsAt time.Time) error
 	UpdateSubscriptionStatusData(userID int, status string) error
 }
 

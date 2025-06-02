@@ -61,7 +61,8 @@ type BillingWebhookPayload struct {
 	} `json:"meta"`
 
 	Data struct {
-		Attributes json.RawMessage `json:"attributes"`
+		SubscriptionID string          `json:"id"`
+		Attributes     json.RawMessage `json:"attributes"`
 	} `json:"data"`
 }
 

@@ -196,20 +196,22 @@ func (repo *Repository) AddCredits(userID, credits int, creditType string) error
 	return nil
 }
 
-func (repo *Repository) UpdateSubscriptionData(userID int, status, tier string, startsAt, endsAt time.Time) error {
+func (repo *Repository) UpdateSubscriptionData(userID int, status, tier, subscriptionID string, startsAt, endsAt time.Time) error {
 	query := `
 		UPDATE users
 		SET subscription_status = $1,
 		    subscription_tier = $2,
-		    subscription_start_date = $3,
-		    subscription_end_date = $4,
-		    updated_at = $5
-		WHERE id = $6
+			subscription_id = $3,
+		    subscription_start_date = $4,
+		    subscription_end_date = $5,
+		    updated_at = $6
+		WHERE id = $7
 	`
 
 	_, err := repo.DB.Exec(query,
 		status,
 		tier,
+		subscriptionID,
 		startsAt.UTC(),
 		endsAt.UTC(),
 		time.Now().UTC(),

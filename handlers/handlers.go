@@ -698,7 +698,7 @@ func (h *Handler) BillingWebhookHandler(w http.ResponseWriter, r *http.Request) 
 		RespondWithError(w, http.StatusBadRequest, "Invalid JSON")
 		return
 	}
-
+	subscriptionID := webhookPayload.Data.SubscriptionID
 	webhookID := webhookPayload.Meta.WebhookID
 	exists, err := h.BillingRepo.HasWebhookBeenProcessed(webhookID)
 	if err != nil {
@@ -735,7 +735,7 @@ func (h *Handler) BillingWebhookHandler(w http.ResponseWriter, r *http.Request) 
 			return
 		}
 
-		err = h.Billing.CreateSubscription(h.UserRepo, SubCreatedAttrs)
+		err = h.Billing.CreateSubscription(h.UserRepo, SubCreatedAttrs, subscriptionID)
 	case "subscription_cancelled":
 		if err := json.Unmarshal(webhookPayload.Data.Attributes, &emailAttribute); err != nil {
 			log.Printf("Unmarshal subscription_cancelled failed: %v", err)
@@ -786,7 +786,7 @@ func (h *Handler) BillingWebhookHandler(w http.ResponseWriter, r *http.Request) 
 			return
 		}
 
-		err = h.Billing.UpdateSubscription(h.UserRepo, SubChangedAttrs)
+		err = h.Billing.UpdateSubscription(h.UserRepo, SubChangedAttrs, subscriptionID)
 	default:
 		log.Printf("Unhandled event type: %s", eventType)
 		RespondWithError(w, http.StatusNotImplemented, "Unhandled event type")

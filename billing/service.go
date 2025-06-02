@@ -140,7 +140,7 @@ func (b *Billing) ApplyCredits(userRepo user.UserRepo, billingRepo BillingRepo, 
 	return nil
 }
 
-func (b *Billing) CreateSubscription(userRepo user.UserRepo, subCreatedAttrs SubscriptionAttributes) error {
+func (b *Billing) CreateSubscription(userRepo user.UserRepo, subCreatedAttrs SubscriptionAttributes, subscriptionID string) error {
 	user, err := userRepo.GetUserByEmail(subCreatedAttrs.UserEmail)
 	if err != nil {
 		log.Printf("repo.GetUserByEmail failed: %v", err)
@@ -162,6 +162,7 @@ func (b *Billing) CreateSubscription(userRepo user.UserRepo, subCreatedAttrs Sub
 		user.ID,
 		"active",
 		tier,
+		subscriptionID,
 		subCreatedAttrs.StartsAt,
 		subCreatedAttrs.EndsAt,
 	)
@@ -325,7 +326,7 @@ func (b *Billing) ChangeSubscription(userRepo user.UserRepo, billingRepo Billing
 	return nil
 }
 
-func (b *Billing) UpdateSubscription(userRepo user.UserRepo, subUpdatedAttrs SubscriptionAttributes) error {
+func (b *Billing) UpdateSubscription(userRepo user.UserRepo, subUpdatedAttrs SubscriptionAttributes, subscriptionID string) error {
 	user, err := userRepo.GetUserByEmail(subUpdatedAttrs.UserEmail)
 	if err != nil {
 		log.Printf("repo.GetUserByEmail failed: %v", err)
@@ -347,6 +348,7 @@ func (b *Billing) UpdateSubscription(userRepo user.UserRepo, subUpdatedAttrs Sub
 		user.ID,
 		subUpdatedAttrs.Status,
 		tier,
+		subscriptionID,
 		subUpdatedAttrs.StartsAt,
 		subUpdatedAttrs.EndsAt,
 	)
