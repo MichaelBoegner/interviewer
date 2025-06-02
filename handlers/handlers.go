@@ -670,6 +670,35 @@ func (h *Handler) CreateCheckoutSessionHandler(w http.ResponseWriter, r *http.Re
 	RespondWithJSON(w, http.StatusOK, CheckoutResponse{CheckoutURL: url})
 }
 
+func (h *Handler) CancelSubscriptionHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		RespondWithError(w, http.StatusMethodNotAllowed, "Method not allowed")
+		return
+	}
+
+	userID, ok := r.Context().Value(middleware.ContextKeyTokenParams).(int)
+	if !ok {
+		RespondWithError(w, http.StatusBadRequest, "Invalid user ID")
+		return
+	}
+
+	userReturned, err := user.GetUser(h.UserRepo, userID)
+	if err != nil {
+		log.Printf("GetUser failed: %v", err)
+		RespondWithError(w, http.StatusInternalServerError, "Could not retrieve user")
+		return
+	}
+
+	err = h.Billing.DeleteSubscription(userReturned.SubscriptionID)
+	if err != nil {
+		log.Printf("DeleteSubscription failed: %v", err)
+		RespondWithError(w, http.StatusInternalServerError, "Could not cancel subscription")
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+}
+
 func (h *Handler) BillingWebhookHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		RespondWithError(w, http.StatusMethodNotAllowed, "Method not allowed")
