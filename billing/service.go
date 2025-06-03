@@ -86,6 +86,8 @@ func (b *Billing) CreateCheckoutSession(userEmail string, variantID int) (string
 
 func (b *Billing) DeleteSubscription(subscriptionID string) error {
 	client := &http.Client{Timeout: 10 * time.Second}
+	//DEBUG
+	fmt.Printf("subscriptionid: %v", subscriptionID)
 	req, err := http.NewRequest("DELETE", "https://api.lemonsqueezy.com/v1/subscriptions/"+subscriptionID, nil)
 	if err != nil {
 		return err
