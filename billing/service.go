@@ -17,7 +17,7 @@ import (
 	"github.com/michaelboegner/interviewer/user"
 )
 
-func (b *Billing) CreateCheckoutSession(userEmail string, variantID int) (string, error) {
+func (b *Billing) RequestCheckoutSession(userEmail string, variantID int) (string, error) {
 	payload := CheckoutPayload{
 		Data: CheckoutData{
 			Type: "checkouts",
@@ -84,10 +84,9 @@ func (b *Billing) CreateCheckoutSession(userEmail string, variantID int) (string
 	return result.Data.Attributes.URL, nil
 }
 
-func (b *Billing) DeleteSubscription(subscriptionID string) error {
+func (b *Billing) RequestDeleteSubscription(subscriptionID string) error {
 	client := &http.Client{Timeout: 10 * time.Second}
-	//DEBUG
-	fmt.Printf("subscriptionid: %v", subscriptionID)
+
 	req, err := http.NewRequest("DELETE", "https://api.lemonsqueezy.com/v1/subscriptions/"+subscriptionID, nil)
 	if err != nil {
 		return err
@@ -95,6 +94,46 @@ func (b *Billing) DeleteSubscription(subscriptionID string) error {
 
 	req.Header.Set("Authorization", "Bearer "+b.APIKey)
 	req.Header.Set("Accept", "application/vnd.api+json")
+
+	res, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode != 200 {
+		bodyBytes, _ := io.ReadAll(res.Body)
+		return fmt.Errorf("cancel failed: %s", string(bodyBytes))
+	}
+
+	return nil
+}
+
+func (b *Billing) RequestResumeSubscription(subscriptionID string) error {
+	client := &http.Client{Timeout: 10 * time.Second}
+
+	payload := map[string]interface{}{
+		"data": map[string]interface{}{
+			"type": "subscriptions",
+			"id":   subscriptionID,
+			"attributes": map[string]bool{
+				"cancelled": false,
+			},
+		},
+	}
+	jsonData, err := json.Marshal(payload)
+	if err != nil {
+		return fmt.Errorf("failed to marshal payload: %w", err)
+	}
+
+	req, err := http.NewRequest("PATCH", "https://api.lemonsqueezy.com/v1/subscriptions/"+subscriptionID, bytes.NewBuffer(jsonData))
+	if err != nil {
+		return err
+	}
+
+	req.Header.Set("Authorization", "Bearer "+b.APIKey)
+	req.Header.Set("Accept", "application/vnd.api+json")
+	req.Header.Set("Content-Type", "application/vnd.api+json")
 
 	res, err := client.Do(req)
 	if err != nil {
