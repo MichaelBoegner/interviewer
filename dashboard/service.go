@@ -21,11 +21,13 @@ func GetDashboardData(userID int, userRepo user.UserRepo, interviewRepo intervie
 	}
 
 	return &DashboardData{
-		Email:               user.Email,
-		Plan:                user.SubscriptionTier,
-		Status:              user.SubscriptionStatus,
-		IndividualCredits:   user.IndividualCredits,
-		SubscriptionCredits: user.SubscriptionCredits,
-		PastInterviews:      interviews,
+		Email:                 user.Email,
+		Plan:                  user.SubscriptionTier,
+		Status:                user.SubscriptionStatus,
+		SubscriptionStartDate: user.SubscriptionStartDate,
+		SubscriptionEndDate:   user.SubscriptionEndDate,
+		IndividualCredits:     user.IndividualCredits,
+		SubscriptionCredits:   user.SubscriptionCredits,
+		PastInterviews:        interviews,
 	}, nil
 }

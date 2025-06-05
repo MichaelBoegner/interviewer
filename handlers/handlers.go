@@ -885,7 +885,7 @@ func (h *Handler) DashboardHandler(w http.ResponseWriter, r *http.Request) {
 			RespondWithError(w, http.StatusUnauthorized, "User not found")
 			return
 		}
-		log.Printf("dashboardService.GetDashboardData failed: %v", err)
+		log.Printf("dashboard.GetDashboardData failed: %v", err)
 		RespondWithError(w, http.StatusInternalServerError, "Could not load dashboard")
 		return
 	}

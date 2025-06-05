@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS users (
     subscription_status TEXT DEFAULT 'inactive',
     subscription_start_date TIMESTAMP,
     subscription_end_date TIMESTAMP,
-    subscription_id TEXT,
+    subscription_id TEXT DEFAULT '0',
     
 
     individual_credits INT DEFAULT 0,
