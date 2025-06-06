@@ -300,11 +300,12 @@ func (h *Handler) GetInterviewHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	payload := ReturnVals{
-		InterviewID: interviewReturned.Id,
-		Status:      interviewReturned.Status,
-		Score:       interviewReturned.Score,
-		CreatedAt:   interviewReturned.CreatedAt,
-		UpdatedAt:   interviewReturned.UpdatedAt,
+		InterviewID:   interviewReturned.Id,
+		Status:        interviewReturned.Status,
+		Score:         interviewReturned.Score,
+		FirstQuestion: interviewReturned.FirstQuestion,
+		CreatedAt:     interviewReturned.CreatedAt,
+		UpdatedAt:     interviewReturned.UpdatedAt,
 	}
 
 	RespondWithJSON(w, http.StatusOK, payload)
