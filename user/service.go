@@ -12,30 +12,50 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-func CreateUser(repo UserRepo, username, email, password string) (*User, error) {
-	now := time.Now().UTC()
-
+func VerificationToken(email, username, password string) (string, error) {
 	passwordHashed, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.MinCost)
 	if err != nil {
-		log.Printf("Error: %v\n", err)
-		return nil, err
+		return "", err
+	}
+
+	claims := jwt.MapClaims{
+		"email":         email,
+		"username":      username,
+		"password_hash": string(passwordHashed),
+		"purpose":       "verify_email",
+		"exp":           time.Now().Add(15 * time.Minute).Unix(),
+	}
+
+	return jwt.NewWithClaims(jwt.SigningMethodHS256, claims).
+		SignedString([]byte(os.Getenv("JWT_SECRET")))
+}
+
+func CreateUser(repo UserRepo, tokenStr string) (*User, error) {
+	claims := &EmailClaims{}
+	tkn, err := jwt.ParseWithClaims(tokenStr, claims, func(token *jwt.Token) (interface{}, error) {
+		return []byte(os.Getenv("JWT_SECRET")), nil
+	})
+	if err != nil || !tkn.Valid {
+		return nil, errors.New("invalid or expired token")
+	}
+
+	if claims.Purpose != "verify_email" {
+		return nil, errors.New("token used for wrong purpose")
 	}
 
 	user := &User{
-		Username:  username,
-		Email:     email,
-		Password:  passwordHashed,
-		CreatedAt: now,
-		UpdatedAt: now,
+		Email:     claims.Email,
+		Username:  claims.Username,
+		Password:  []byte(claims.PasswordHash),
+		CreatedAt: time.Now().UTC(),
+		UpdatedAt: time.Now().UTC(),
 	}
 
 	id, err := repo.CreateUser(user)
 	if err != nil {
-		log.Printf("CreateUser failed: %v", err)
 		return nil, err
 	}
 	user.ID = id
-
 	return user, nil
 	// For preventing user creation in deployment:
 	// err := errors.New("We are not quite yet fully live. Check back again in the future!")

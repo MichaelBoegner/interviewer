@@ -3,6 +3,8 @@ package user
 import (
 	"errors"
 	"time"
+
+	"github.com/golang-jwt/jwt/v5"
 )
 
 type Users struct {
@@ -23,6 +25,14 @@ type User struct {
 	SubscriptionCredits   int
 	CreatedAt             time.Time
 	UpdatedAt             time.Time
+}
+
+type EmailClaims struct {
+	Email        string `json:"email"`
+	Username     string `json:"username"`
+	PasswordHash string `json:"password_hash"`
+	Purpose      string `json:"purpose"`
+	jwt.RegisteredClaims
 }
 
 type UserRepo interface {

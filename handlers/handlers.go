@@ -31,25 +31,56 @@ func (h *Handler) HealthCheckHandler(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
+func (h *Handler) RequestVerificationHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		RespondWithError(w, http.StatusMethodNotAllowed, "Method not allowed")
+		return
+	}
+
+	var req struct {
+		Email    string `json:"email"`
+		Username string `json:"username"`
+		Password string `json:"password"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		RespondWithError(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	verificationJWT, err := user.VerificationToken(req.Email, req.Username, req.Password)
+	if err != nil {
+		log.Printf("GenerateEmailVerificationToken failed: %v", err)
+		RespondWithError(w, http.StatusInternalServerError, "Failed to create token")
+		return
+	}
+
+	verifyURL := os.Getenv("FRONTEND_URL") + "verify-email?token=" + verificationJWT
+	go func() {
+		if err := h.Mailer.SendVerificationEmail(req.Email, verifyURL); err != nil {
+			log.Printf("SendVerificationEmail failed: %v", err)
+		}
+	}()
+
+	RespondWithJSON(w, http.StatusOK, map[string]string{"message": "Verification email sent"})
+}
+
 func (h *Handler) CreateUsersHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		RespondWithError(w, http.StatusMethodNotAllowed, "Method not allowed")
 		return
 	}
 
-	params := &middleware.AcceptedVals{}
-	err := json.NewDecoder(r.Body).Decode(params)
+	var req struct {
+		Token string `json:"token"`
+	}
+	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
 		log.Printf("Decoding params failed: %v", err)
 		RespondWithError(w, http.StatusInternalServerError, "Internal Server Error")
-	}
-
-	if params.Username == "" || params.Email == "" || params.Password == "" {
-		log.Printf("Missing params in usersHandler.")
-		RespondWithError(w, http.StatusBadRequest, "Username, Email, and Password required")
 		return
 	}
-	userCreated, err := user.CreateUser(h.UserRepo, params.Username, params.Email, params.Password)
+
+	userCreated, err := user.CreateUser(h.UserRepo, req.Token)
 	if err != nil {
 		log.Printf("CreateUser error: %v", err)
 		if errors.Is(err, user.ErrDuplicateEmail) || errors.Is(err, user.ErrDuplicateUsername) || errors.Is(err, user.ErrDuplicateUser) {
@@ -556,29 +587,6 @@ func (h *Handler) GetConversationHandler(w http.ResponseWriter, r *http.Request)
 	RespondWithJSON(w, http.StatusOK, payload)
 }
 
-func (h *Handler) ResetPasswordHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		RespondWithError(w, http.StatusMethodNotAllowed, "Method not allowed")
-		return
-	}
-
-	var params PasswordResetPayload
-	if err := json.NewDecoder(r.Body).Decode(&params); err != nil {
-		log.Printf("Decoding payload failed: %v", err)
-		RespondWithError(w, http.StatusBadRequest, "Invalid request body")
-		return
-	}
-	err := user.ResetPassword(h.UserRepo, params.NewPassword, params.Token)
-	if err != nil {
-		log.Printf("ResetPasswordHandler failed: %v", err)
-		RespondWithError(w, http.StatusUnauthorized, "Invalid or expired token")
-		return
-	}
-
-	payload := ReturnVals{}
-	RespondWithJSON(w, http.StatusOK, payload)
-}
-
 func (h *Handler) RequestResetHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		RespondWithError(w, http.StatusMethodNotAllowed, "Method not allowed")
@@ -610,6 +618,29 @@ func (h *Handler) RequestResetHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}(params.Email, resetURL)
+
+	payload := ReturnVals{}
+	RespondWithJSON(w, http.StatusOK, payload)
+}
+
+func (h *Handler) ResetPasswordHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		RespondWithError(w, http.StatusMethodNotAllowed, "Method not allowed")
+		return
+	}
+
+	var params PasswordResetPayload
+	if err := json.NewDecoder(r.Body).Decode(&params); err != nil {
+		log.Printf("Decoding payload failed: %v", err)
+		RespondWithError(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+	err := user.ResetPassword(h.UserRepo, params.NewPassword, params.Token)
+	if err != nil {
+		log.Printf("ResetPasswordHandler failed: %v", err)
+		RespondWithError(w, http.StatusUnauthorized, "Invalid or expired token")
+		return
+	}
 
 	payload := ReturnVals{}
 	RespondWithJSON(w, http.StatusOK, payload)

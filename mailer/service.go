@@ -13,7 +13,7 @@ func (m *Mailer) SendPasswordReset(email, resetURL string) error {
 		"from":    "Interviewer Support <support@mail.interviewer.dev>",
 		"to":      email,
 		"subject": "Reset your password",
-		"html":    "<p>" + fmt.Sprintf("To reset your password, click here: %s", resetURL) + "</p>",
+		"html":    "<p>" + fmt.Sprintf("To reset your password, click <a href=\"%s\">here</a>", resetURL) + "</p>",
 	}
 
 	body, err := json.Marshal(payload)
@@ -41,5 +41,30 @@ func (m *Mailer) SendPasswordReset(email, resetURL string) error {
 		return fmt.Errorf("Resend error: %s", resp.Status)
 	}
 
+	return nil
+}
+
+func (m *Mailer) SendVerificationEmail(email, verifyURL string) error {
+	payload := map[string]any{
+		"from":    "Interviewer <support@mail.interviewer.dev>",
+		"to":      email,
+		"subject": "Verify your Interviewer account",
+		"html":    fmt.Sprintf("<p>Click <a href=\"%s\">here</a> to verify your account.</p>", verifyURL),
+	}
+	body, _ := json.Marshal(payload)
+
+	req, _ := http.NewRequest("POST", m.BaseURL+"/emails", bytes.NewBuffer(body))
+	req.Header.Set("Authorization", "Bearer "+m.APIKey)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= 400 {
+		return fmt.Errorf("resend error: %s", resp.Status)
+	}
 	return nil
 }
