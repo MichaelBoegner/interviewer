@@ -64,6 +64,39 @@ func (h *Handler) RequestVerificationHandler(w http.ResponseWriter, r *http.Requ
 	RespondWithJSON(w, http.StatusOK, map[string]string{"message": "Verification email sent"})
 }
 
+func (h *Handler) CheckEmailHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		RespondWithError(w, http.StatusMethodNotAllowed, "Method not allowed")
+		return
+	}
+
+	var req struct {
+		Email string `json:"email"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		log.Printf("Decoding check-email body failed: %v", err)
+		RespondWithError(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+	if req.Email == "" {
+		RespondWithError(w, http.StatusBadRequest, "Email required")
+		return
+	}
+
+	err := user.GetUserByEmail(h.UserRepo, req.Email)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			RespondWithJSON(w, http.StatusOK, map[string]bool{"exists": false})
+			return
+		}
+		log.Printf("CheckEmailHandler internal error: %v", err)
+		RespondWithError(w, http.StatusInternalServerError, "Internal server error")
+		return
+	}
+
+	RespondWithJSON(w, http.StatusOK, map[string]bool{"exists": true})
+}
+
 func (h *Handler) CreateUsersHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		RespondWithError(w, http.StatusMethodNotAllowed, "Method not allowed")
@@ -84,7 +117,7 @@ func (h *Handler) CreateUsersHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("CreateUser error: %v", err)
 		if errors.Is(err, user.ErrDuplicateEmail) || errors.Is(err, user.ErrDuplicateUsername) || errors.Is(err, user.ErrDuplicateUser) {
-			RespondWithError(w, http.StatusConflict, "Email or username already exists")
+			RespondWithError(w, http.StatusConflict, "Email already exists")
 			return
 		}
 		// For preventing user creation in frontend.
@@ -855,6 +888,11 @@ func (h *Handler) BillingWebhookHandler(w http.ResponseWriter, r *http.Request) 
 		if err := json.Unmarshal(webhookPayload.Data.Attributes, &SubRenewAttrs); err != nil {
 			log.Printf("Unmarshal subscription_payment_success failed: %v", err)
 			RespondWithError(w, http.StatusBadRequest, "Invalid subscription_payment_success payload")
+			return
+		}
+
+		if SubRenewAttrs.BillingReason == "initial" {
+			log.Println("Skipping credits on initial charge (already granted via order_created)")
 			return
 		}
 

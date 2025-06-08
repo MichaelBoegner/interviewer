@@ -129,7 +129,7 @@ func Test_CreateUsersHandler_Integration(t *testing.T) {
 			}`,
 			expectedStatus: http.StatusConflict,
 			respBody: handlers.ReturnVals{
-				Error: "Email or username already exists",
+				Error: "Email already exists",
 			},
 		},
 		{
@@ -156,7 +156,7 @@ func Test_CreateUsersHandler_Integration(t *testing.T) {
 			}`,
 			expectedStatus: http.StatusConflict,
 			respBody: handlers.ReturnVals{
-				Error: "Email or username already exists",
+				Error: "Email already exists",
 			},
 		},
 		{

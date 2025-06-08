@@ -91,6 +91,16 @@ func GetUser(repo UserRepo, userID int) (*User, error) {
 	return userReturned, nil
 }
 
+func GetUserByEmail(repo UserRepo, email string) error {
+	_, err := repo.GetUserByEmail(email)
+	if err != nil {
+		log.Printf("repo.GetUserByEmail failed: %v", err)
+		return err
+	}
+
+	return nil
+}
+
 func RequestPasswordReset(repo UserRepo, email string) (string, error) {
 	user, err := repo.GetUserByEmail(email)
 	if err != nil {

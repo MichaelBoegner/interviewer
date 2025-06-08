@@ -82,8 +82,9 @@ type SubscriptionAttributes struct {
 }
 
 type SubscriptionRenewAttributes struct {
-	UserEmail string `json:"user_email"`
-	Total     int    `json:"total"`
+	UserEmail     string `json:"user_email"`
+	Total         int    `json:"total"`
+	BillingReason string `json:"billing_reason"`
 }
 
 type CreditTransaction struct {

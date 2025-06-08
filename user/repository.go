@@ -65,7 +65,7 @@ func (repo *Repository) GetPasswordandID(email string) (int, string, error) {
 		email,
 	).Scan(&id, &hashedPassword)
 	if err == sql.ErrNoRows {
-		log.Printf("Username invalid: %v", err)
+		log.Printf("email invalid: %v", err)
 		return 0, "", err
 	} else if err != nil {
 		log.Printf("Error querying database: %v\n", err)
