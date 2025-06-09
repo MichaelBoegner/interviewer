@@ -189,6 +189,19 @@ func (repo *Repository) AddCredits(userID, credits int, creditType string) error
 		return fmt.Errorf("invalid credit type: %s", creditType)
 	}
 
+	if credits < 0 {
+		var current int
+		err := repo.DB.QueryRow(fmt.Sprintf("SELECT %s FROM users WHERE id = $1", column), userID).Scan(&current)
+		if err != nil {
+			log.Printf("repo.DB.QueryRow failed: %v", err)
+			return fmt.Errorf("fetch current credit balance failed: %w", err)
+		}
+
+		if current < -credits {
+			credits = -current
+		}
+	}
+
 	query := fmt.Sprintf(`
 		UPDATE users
 		SET %s = %s + $1, updated_at = $2
@@ -204,7 +217,8 @@ func (repo *Repository) AddCredits(userID, credits int, creditType string) error
 		log.Printf("AddCredits failed: %v", err)
 		return err
 	}
-
+	//DEBUG
+	fmt.Printf("AddCredits firing: %v", creditType)
 	return nil
 }
 

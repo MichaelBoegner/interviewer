@@ -66,7 +66,7 @@ type BillingWebhookPayload struct {
 	} `json:"data"`
 }
 
-type OrderCreatedAttributes struct {
+type OrderAttributes struct {
 	UserEmail      string `json:"user_email"`
 	FirstOrderItem struct {
 		VariantID int `json:"variant_id"`

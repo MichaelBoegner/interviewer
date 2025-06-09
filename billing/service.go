@@ -205,6 +205,59 @@ func (b *Billing) ApplyCredits(userRepo user.UserRepo, billingRepo BillingRepo, 
 	return nil
 }
 
+func (b *Billing) DeductCredits(userRepo user.UserRepo, billingRepo BillingRepo, orderAttrs OrderAttributes) error {
+	user, err := userRepo.GetUserByEmail(orderAttrs.UserEmail)
+	if err != nil {
+		log.Printf("repo.GetUserByEmail failed: %v", err)
+		return err
+	}
+
+	var (
+		credits    int
+		creditType string
+		reason     string
+	)
+
+	variantID := orderAttrs.FirstOrderItem.VariantID
+	switch variantID {
+	case b.VariantIDIndividual:
+		//DEBUG
+		fmt.Printf("individual case firing")
+		credits = 1
+		creditType = "individual"
+		reason = "Individual interview refund"
+	case b.VariantIDPro:
+		credits = 10
+		creditType = "subscription"
+		reason = "Pro subscription monthly credit refund"
+	case b.VariantIDPremium:
+		credits = 20
+		creditType = "subscription"
+		reason = "Premium subscription monthly credit refund"
+	default:
+		log.Printf("ERROR: unknown variantID: %d", variantID)
+		return fmt.Errorf("unknown variant ID: %d", variantID)
+	}
+
+	if err := userRepo.AddCredits(user.ID, -credits, creditType); err != nil {
+		log.Printf("repo.DeductCredits failed: %v", err)
+		return err
+	}
+
+	tx := CreditTransaction{
+		UserID:     user.ID,
+		Amount:     -credits,
+		CreditType: creditType,
+		Reason:     reason,
+	}
+	if err := billingRepo.LogCreditTransaction(tx); err != nil {
+		log.Printf("Warning: refund deduction succeeded but failed to log transaction: %v", err)
+		return err
+	}
+
+	return nil
+}
+
 func (b *Billing) CreateSubscription(userRepo user.UserRepo, subCreatedAttrs SubscriptionAttributes, subscriptionID string) error {
 	user, err := userRepo.GetUserByEmail(subCreatedAttrs.UserEmail)
 	if err != nil {

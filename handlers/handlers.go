@@ -842,14 +842,14 @@ func (h *Handler) BillingWebhookHandler(w http.ResponseWriter, r *http.Request) 
 	eventType := webhookPayload.Meta.EventName
 	switch eventType {
 	case "order_created":
-		var orderCreatedAttributes billing.OrderCreatedAttributes
-		if err := json.Unmarshal(webhookPayload.Data.Attributes, &orderCreatedAttributes); err != nil {
+		var orderAttrs billing.OrderAttributes
+		if err := json.Unmarshal(webhookPayload.Data.Attributes, &orderAttrs); err != nil {
 			log.Printf("Unmarshal order_created failed: %v", err)
 			RespondWithError(w, http.StatusBadRequest, "Invalid order_created payload")
 			return
 		}
 
-		err = h.Billing.ApplyCredits(h.UserRepo, h.BillingRepo, orderCreatedAttributes.UserEmail, orderCreatedAttributes.FirstOrderItem.VariantID)
+		err = h.Billing.ApplyCredits(h.UserRepo, h.BillingRepo, orderAttrs.UserEmail, orderAttrs.FirstOrderItem.VariantID)
 	case "subscription_created":
 		var SubCreatedAttrs billing.SubscriptionAttributes
 		if err := json.Unmarshal(webhookPayload.Data.Attributes, &SubCreatedAttrs); err != nil {
@@ -915,6 +915,22 @@ func (h *Handler) BillingWebhookHandler(w http.ResponseWriter, r *http.Request) 
 		}
 
 		err = h.Billing.UpdateSubscription(h.UserRepo, SubChangedAttrs, subscriptionID)
+	case "order_refunded":
+		var orderAttrs billing.OrderAttributes
+		if err := json.Unmarshal(webhookPayload.Data.Attributes, &orderAttrs); err != nil {
+			log.Printf("Unmarshal order_created failed: %v", err)
+			RespondWithError(w, http.StatusBadRequest, "Invalid order_created payload")
+			return
+		}
+
+		err = h.Billing.DeductCredits(h.UserRepo, h.BillingRepo, orderAttrs)
+	case "subscription_payment_failed", "subscription_payment_recovered":
+		if err := json.Unmarshal(webhookPayload.Data.Attributes, &emailAttribute); err != nil {
+			log.Printf("Unmarshal %s failed: %v", eventType, err)
+			RespondWithError(w, http.StatusBadRequest, "Invalid payment status payload")
+			return
+		}
+		log.Printf("Payment event: %s for user %s", eventType, emailAttribute.UserEmail)
 	default:
 		log.Printf("Unhandled event type: %s", eventType)
 		RespondWithError(w, http.StatusNotImplemented, "Unhandled event type")
