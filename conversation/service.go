@@ -47,7 +47,7 @@ func CreateConversation(
 	topicID := conversation.CurrentTopic
 	questionNumber := conversation.CurrentQuestionNumber
 
-	conversationID, err := repo.CreateConversation(conversation)
+	err := repo.CreateConversation(conversation)
 	if err != nil {
 		log.Printf("CreateConversation failed: %v", err)
 		return nil, err
