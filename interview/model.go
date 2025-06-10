@@ -9,6 +9,7 @@ import (
 
 type Interview struct {
 	Id                      int
+	ConversationID          int
 	UserId                  int
 	Length                  int
 	NumberQuestions         int
@@ -35,6 +36,7 @@ type Summary struct {
 var ErrNoValidCredits = errors.New("no valid credits")
 
 type InterviewRepo interface {
+	LinkConversation(interviewID, conversationID int) error
 	CreateInterview(interview *Interview) (int, error)
 	GetInterview(interviewID int) (*Interview, error)
 	GetInterviewSummariesByUserID(userID int) ([]Summary, error)

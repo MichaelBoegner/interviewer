@@ -1,5 +1,6 @@
 CREATE TABLE IF NOT EXISTS interviews (
-    id SERIAL PRIMARY KEY,                 
+    id SERIAL PRIMARY KEY,  
+    conversation_id int,                
     user_id INT REFERENCES users(id),         
     length INT NOT NULL,                   
     number_questions INT NOT NULL,         

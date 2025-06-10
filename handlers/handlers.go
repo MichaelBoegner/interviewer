@@ -294,7 +294,7 @@ func (h *Handler) InterviewsHandler(w http.ResponseWriter, r *http.Request) {
 	userReturned, err := user.GetUser(h.UserRepo, userID)
 	if err != nil {
 		log.Printf("GetUser error: %v", err)
-		RespondWithError(w, http.StatusInternalServerError, "Failed to find user.")
+		RespondWithError(w, http.StatusInternalServerError, "Failed to find user")
 		return
 	}
 
@@ -321,6 +321,18 @@ func (h *Handler) InterviewsHandler(w http.ResponseWriter, r *http.Request) {
 		log.Printf("Interview failed to start: %v", err)
 		RespondWithError(w, http.StatusInternalServerError, "Failed to start interview.")
 		return
+	}
+
+	conversationID, err := conversation.CreateEmptyConversation(h.ConversationRepo, interviewStarted.Id)
+	if err != nil {
+		log.Printf("conversation.CreateEmptyConversation failed: %v", err)
+		RespondWithError(w, http.StatusInternalServerError, "Internal server error")
+	}
+
+	err = interview.LinkConversation(h.InterviewRepo, interviewStarted.Id, conversationID)
+	if err != nil {
+		log.Printf("interview.LinkConversation failed: %v", err)
+		RespondWithError(w, http.StatusInternalServerError, "Internal server error")
 	}
 
 	payload := ReturnVals{
@@ -468,11 +480,18 @@ func (h *Handler) CreateConversationsHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	conversationReturned, err := conversation.CreateConversation(
+	conversationReturned, err := conversation.GetConversation(h.ConversationRepo, interviewID)
+	if err != nil {
+		log.Printf("conversation.GetConversation failed: %v", err)
+		RespondWithError(w, http.StatusBadRequest, "Invalid ID")
+	}
+
+	conversationCreated, err := conversation.CreateConversation(
 		h.ConversationRepo,
 		h.InterviewRepo,
 		h.OpenAI,
 		interviewID,
+		conversationReturned.ID,
 		interviewReturned.Prompt,
 		interviewReturned.FirstQuestion,
 		interviewReturned.Subtopic,
@@ -490,7 +509,7 @@ func (h *Handler) CreateConversationsHandler(w http.ResponseWriter, r *http.Requ
 	}
 
 	payload := &ReturnVals{
-		Conversation: conversationReturned,
+		Conversation: conversationCreated,
 	}
 	RespondWithJSON(w, http.StatusCreated, payload)
 }

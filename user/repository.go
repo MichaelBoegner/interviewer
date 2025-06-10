@@ -218,7 +218,7 @@ func (repo *Repository) AddCredits(userID, credits int, creditType string) error
 		return err
 	}
 	//DEBUG
-	fmt.Printf("AddCredits firing: %v", creditType)
+	fmt.Printf("AddCredits firing: %v\n\n", creditType)
 	return nil
 }
 

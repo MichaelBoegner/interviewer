@@ -89,6 +89,16 @@ func StartInterview(
 	return interview, nil
 }
 
+func LinkConversation(interviewRepo InterviewRepo, interviewID, conversationID int) error {
+	err := interviewRepo.LinkConversation(interviewID, conversationID)
+	if err != nil {
+		log.Printf("interviewRepo.LinkConversation failed: %v", err)
+		return err
+	}
+
+	return nil
+}
+
 func GetInterview(interviewRepo InterviewRepo, interviewID int) (*Interview, error) {
 	interview, err := interviewRepo.GetInterview(interviewID)
 	if err != nil {

@@ -13,11 +13,22 @@ func CheckForConversation(repo ConversationRepo, interviewID int) (bool, error) 
 	return repo.CheckForConversation(interviewID)
 }
 
+func CreateEmptyConversation(repo ConversationRepo, interviewID int) (int, error) {
+	conversationID, err := repo.CreateEmptyConversation(interviewID)
+	if err != nil {
+		log.Printf("CreateConversation failed: %v", err)
+		return 0, err
+	}
+
+	return conversationID, nil
+}
+
 func CreateConversation(
 	repo ConversationRepo,
 	interviewRepo interview.InterviewRepo,
 	openAI chatgpt.AIClient,
-	interviewID int,
+	interviewID,
+	conversationID int,
 	prompt,
 	firstQuestion,
 	subtopic,
@@ -25,12 +36,11 @@ func CreateConversation(
 	now := time.Now().UTC()
 
 	conversation := &Conversation{
-		InterviewID:           interviewID,
+		ID:                    conversationID,
 		Topics:                PredefinedTopics,
 		CurrentTopic:          1,
 		CurrentSubtopic:       subtopic,
 		CurrentQuestionNumber: 1,
-		CreatedAt:             now,
 		UpdatedAt:             now,
 	}
 

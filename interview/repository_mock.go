@@ -76,3 +76,11 @@ func (m *MockRepo) UpdateStatus(interviewID, userID int, status string) error {
 
 	return nil
 }
+
+func (m *MockRepo) LinkConversation(interviewID, conversationID int) error {
+	if m.FailRepo {
+		return errors.New("Mocked DB failure")
+	}
+
+	return nil
+}

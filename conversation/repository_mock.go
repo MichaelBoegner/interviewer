@@ -133,3 +133,11 @@ func (m *MockRepo) UpdateConversationCurrents(conversationID, currentQuestionNum
 
 	return 1, nil
 }
+
+func (m *MockRepo) CreateEmptyConversation(interviewID int) (int, error) {
+	if m.FailRepo {
+		return 0, errors.New("Mocked DB failure")
+	}
+
+	return 1, nil
+}

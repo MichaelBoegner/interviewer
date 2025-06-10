@@ -3,6 +3,7 @@ package interview
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"time"
 )
 
@@ -56,6 +57,21 @@ func (repo *Repository) CreateInterview(interview *Interview) (int, error) {
 	}
 
 	return id, nil
+}
+
+func (repo *Repository) LinkConversation(interviewID, conversationID int) error {
+	query := `
+		UPDATE interviews
+		SET conversation_id = $1, updated_at = $2
+		WHERE id = $3
+	`
+	_, err := repo.DB.Exec(query, conversationID, time.Now().UTC(), interviewID)
+	if err != nil {
+		log.Printf("LinkConversation failed: %v", err)
+		return err
+	}
+
+	return nil
 }
 
 func (repo *Repository) GetInterview(interviewID int) (*Interview, error) {

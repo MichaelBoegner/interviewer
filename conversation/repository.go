@@ -34,30 +34,50 @@ func (repo *Repository) CheckForConversation(interviewID int) (bool, error) {
 	return true, nil
 }
 
-func (repo *Repository) CreateConversation(conversation *Conversation) (int, error) {
+func (repo *Repository) CreateEmptyConversation(interviewID int) (int, error) {
 	var id int
-	query := `
-		INSERT INTO conversations (interview_id, current_topic, current_subtopic, current_question_number, created_at, updated_at) 
-		VALUES ($1, $2, $3, $4, $5, $6)
-		RETURNING id
-		`
+	now := time.Now().UTC()
 
-	err := repo.DB.QueryRow(query,
-		conversation.InterviewID,
-		conversation.CurrentTopic,
-		conversation.CurrentSubtopic,
-		conversation.CurrentQuestionNumber,
-		conversation.CreatedAt,
-		conversation.UpdatedAt,
-	).Scan(&id)
-	if err == sql.ErrNoRows {
-		return 0, err
-	} else if err != nil {
-		log.Printf("Error querying conversation: %v\n", err)
+	query := `
+		INSERT INTO conversations (interview_id, created_at, updated_at)
+		VALUES ($1, $2, $3)
+		RETURNING id
+	`
+
+	err := repo.DB.QueryRow(query, interviewID, now, now).Scan(&id)
+	if err != nil {
+		log.Printf("CreateEmptyConversation failed: %v", err)
 		return 0, err
 	}
 
 	return id, nil
+}
+
+func (repo *Repository) CreateConversation(conversation *Conversation) error {
+	query := `
+		UPDATE conversations
+		SET current_topic = $1,
+		    current_subtopic = $2,
+		    current_question_number = $3,
+		    updated_at = $4
+		WHERE id = $5
+	`
+
+	_, err := repo.DB.Exec(query,
+		conversation.CurrentTopic,
+		conversation.CurrentSubtopic,
+		conversation.CurrentQuestionNumber,
+		conversation.UpdatedAt,
+		conversation.ID,
+	)
+	if err == sql.ErrNoRows {
+		return err
+	} else if err != nil {
+		log.Printf("Error querying conversation: %v\n", err)
+		return err
+	}
+
+	return nil
 }
 
 func (repo *Repository) GetConversation(interviewID int) (*Conversation, error) {
