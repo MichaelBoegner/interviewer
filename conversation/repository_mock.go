@@ -68,7 +68,7 @@ func (m *MockRepo) GetConversation(interviewID int) (*Conversation, error) {
 	return conversationResponse, nil
 }
 
-func (m *MockRepo) CreateConversation(conversation *Conversation) error {
+func (m *MockRepo) CreateConversation(interviewId int, conversation *Conversation) error {
 	if m.FailRepo {
 		return errors.New("Mocked DB failure")
 	}
@@ -127,14 +127,6 @@ func (m *MockRepo) GetQuestions(Conversation *Conversation) ([]*Question, error)
 }
 
 func (m *MockRepo) UpdateConversationCurrents(conversationID, currentQuestionNumber, topicID int, subtopic string) (int, error) {
-	if m.FailRepo {
-		return 0, errors.New("Mocked DB failure")
-	}
-
-	return 1, nil
-}
-
-func (m *MockRepo) CreateEmptyConversation(interviewID int) (int, error) {
 	if m.FailRepo {
 		return 0, errors.New("Mocked DB failure")
 	}

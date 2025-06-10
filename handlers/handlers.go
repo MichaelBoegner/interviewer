@@ -323,7 +323,7 @@ func (h *Handler) InterviewsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	conversationID, err := conversation.CreateEmptyConversation(h.ConversationRepo, interviewStarted.Id)
+	conversationID, err := conversation.CreateEmptyConversation(h.ConversationRepo, interviewStarted.Id, interviewStarted.Subtopic)
 	if err != nil {
 		log.Printf("conversation.CreateEmptyConversation failed: %v", err)
 		RespondWithError(w, http.StatusInternalServerError, "Internal server error")
@@ -336,8 +336,9 @@ func (h *Handler) InterviewsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	payload := ReturnVals{
-		InterviewID:   interviewStarted.Id,
-		FirstQuestion: interviewStarted.FirstQuestion,
+		InterviewID:    interviewStarted.Id,
+		FirstQuestion:  interviewStarted.FirstQuestion,
+		ConversationID: conversationID,
 	}
 
 	RespondWithJSON(w, http.StatusCreated, payload)
@@ -490,8 +491,8 @@ func (h *Handler) CreateConversationsHandler(w http.ResponseWriter, r *http.Requ
 		h.ConversationRepo,
 		h.InterviewRepo,
 		h.OpenAI,
+		conversationReturned,
 		interviewID,
-		conversationReturned.ID,
 		interviewReturned.Prompt,
 		interviewReturned.FirstQuestion,
 		interviewReturned.Subtopic,

@@ -34,50 +34,36 @@ func (repo *Repository) CheckForConversation(interviewID int) (bool, error) {
 	return true, nil
 }
 
-func (repo *Repository) CreateEmptyConversation(interviewID int) (int, error) {
+func (repo *Repository) CreateConversation(interviewID int, conversation *Conversation) (int, error) {
 	var id int
 	now := time.Now().UTC()
 
 	query := `
-		INSERT INTO conversations (interview_id, created_at, updated_at)
-		VALUES ($1, $2, $3)
+		INSERT INTO conversations (
+			interview_id, 
+			current_topic, 
+			current_subtopic, 
+			current_question_number, 
+			created_at, 
+			updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6)
 		RETURNING id
 	`
 
-	err := repo.DB.QueryRow(query, interviewID, now, now).Scan(&id)
+	err := repo.DB.QueryRow(query,
+		interviewID,
+		conversation.CurrentTopic,
+		conversation.CurrentSubtopic,
+		conversation.CurrentQuestionNumber,
+		now,
+		now,
+	).Scan(&id)
 	if err != nil {
-		log.Printf("CreateEmptyConversation failed: %v", err)
+		log.Printf("CreateConversation failed: %v", err)
 		return 0, err
 	}
 
 	return id, nil
-}
-
-func (repo *Repository) CreateConversation(conversation *Conversation) error {
-	query := `
-		UPDATE conversations
-		SET current_topic = $1,
-		    current_subtopic = $2,
-		    current_question_number = $3,
-		    updated_at = $4
-		WHERE id = $5
-	`
-
-	_, err := repo.DB.Exec(query,
-		conversation.CurrentTopic,
-		conversation.CurrentSubtopic,
-		conversation.CurrentQuestionNumber,
-		conversation.UpdatedAt,
-		conversation.ID,
-	)
-	if err == sql.ErrNoRows {
-		return err
-	} else if err != nil {
-		log.Printf("Error querying conversation: %v\n", err)
-		return err
-	}
-
-	return nil
 }
 
 func (repo *Repository) GetConversation(interviewID int) (*Conversation, error) {

@@ -66,9 +66,8 @@ type Message struct {
 
 type ConversationRepo interface {
 	CheckForConversation(interviewID int) (bool, error)
-	CreateEmptyConversation(interviewID int) (int, error)
 	GetConversation(interviewID int) (*Conversation, error)
-	CreateConversation(conversation *Conversation) error
+	CreateConversation(interviewId int, conversation *Conversation) (int, error)
 	UpdateConversationCurrents(conversationID, currentQuestionNumber, topicID int, subtopic string) (int, error)
 	CreateQuestion(conversation *Conversation, prompt string) (int, error)
 	AddQuestion(question *Question) (int, error)

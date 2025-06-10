@@ -3,7 +3,6 @@ package conversation
 import (
 	"errors"
 	"log"
-	"time"
 
 	"github.com/michaelboegner/interviewer/chatgpt"
 	"github.com/michaelboegner/interviewer/interview"
@@ -13,8 +12,15 @@ func CheckForConversation(repo ConversationRepo, interviewID int) (bool, error) 
 	return repo.CheckForConversation(interviewID)
 }
 
-func CreateEmptyConversation(repo ConversationRepo, interviewID int) (int, error) {
-	conversationID, err := repo.CreateEmptyConversation(interviewID)
+func CreateEmptyConversation(repo ConversationRepo, interviewID int, subTopic string) (int, error) {
+	conversation := &Conversation{
+		Topics:                PredefinedTopics,
+		CurrentTopic:          1,
+		CurrentSubtopic:       subTopic,
+		CurrentQuestionNumber: 1,
+	}
+
+	conversationID, err := repo.CreateConversation(interviewID, conversation)
 	if err != nil {
 		log.Printf("CreateConversation failed: %v", err)
 		return 0, err
@@ -27,33 +33,18 @@ func CreateConversation(
 	repo ConversationRepo,
 	interviewRepo interview.InterviewRepo,
 	openAI chatgpt.AIClient,
-	interviewID,
-	conversationID int,
+	conversation *Conversation,
+	interviewID int,
 	prompt,
 	firstQuestion,
 	subtopic,
 	message string) (*Conversation, error) {
-	now := time.Now().UTC()
 
-	conversation := &Conversation{
-		ID:                    conversationID,
-		Topics:                PredefinedTopics,
-		CurrentTopic:          1,
-		CurrentSubtopic:       subtopic,
-		CurrentQuestionNumber: 1,
-		UpdatedAt:             now,
-	}
-
+	conversationID := conversation.ID
 	topicID := conversation.CurrentTopic
 	questionNumber := conversation.CurrentQuestionNumber
 
-	err := repo.CreateConversation(conversation)
-	if err != nil {
-		log.Printf("CreateConversation failed: %v", err)
-		return nil, err
-	}
-	conversation.ID = conversationID
-	_, err = repo.CreateQuestion(conversation, firstQuestion)
+	_, err := repo.CreateQuestion(conversation, firstQuestion)
 	if err != nil {
 		log.Printf("CreateQuestion failed: %v", err)
 		return nil, err
