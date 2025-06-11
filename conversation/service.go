@@ -137,15 +137,6 @@ func AppendConversation(
 		return nil, err
 	}
 
-	// // DEBUG
-	// var parsed chatgpt.ChatGPTResponse
-	// err = json.Unmarshal([]byte(chatGPTResponseString), &parsed)
-	// if err != nil {
-	// 	log.Printf("failed to unmarshal ChatGPT response: %v", err)
-	// 	return nil, err
-	// }
-	// fmt.Print(parsed)
-
 	err = interviewRepo.UpdateScore(interviewID, chatGPTResponse.Score)
 	if err != nil {
 		log.Printf("interviewRepo.UpdateScore failed: %v", err)
@@ -263,29 +254,26 @@ func GetConversation(repo ConversationRepo, interviewID int) (*Conversation, err
 		return nil, err
 	}
 
-	for topicID := 1; topicID <= conversation.CurrentTopic; topicID++ {
+	for _, question := range questionsReturned {
+		topicID := question.TopicID
 		topic := conversation.Topics[topicID]
 		topic.ConversationID = conversation.ID
-		topic.Questions = make(map[int]*Question)
 
-		for _, question := range questionsReturned {
-			if question.TopicID != topicID {
-				continue
-			}
-
-			topic.Questions[question.QuestionNumber] = question
-
-			messagesReturned, err := repo.GetMessages(conversation.ID, topicID, question.QuestionNumber)
-			if err != nil {
-				log.Printf("repo.GetMessages failed: %v\n", err)
-				return nil, err
-			}
-
-			question.Messages = append(question.Messages, messagesReturned...)
-
-			conversation.Topics[topicID] = topic
-			conversation.Topics[topicID].Questions[question.QuestionNumber] = question
+		if topic.Questions == nil {
+			topic.Questions = make(map[int]*Question)
 		}
+
+		topic.Questions[question.QuestionNumber] = question
+
+		messagesReturned, err := repo.GetMessages(conversation.ID, topicID, question.QuestionNumber)
+		if err != nil {
+			log.Printf("repo.GetMessages failed: %v\n", err)
+			return nil, err
+		}
+
+		question.Messages = append(question.Messages, messagesReturned...)
+		topic.Questions[question.QuestionNumber] = question
+		conversation.Topics[topicID] = topic
 	}
 
 	return conversation, nil
