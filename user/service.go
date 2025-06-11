@@ -62,24 +62,30 @@ func CreateUser(repo UserRepo, tokenStr string) (*User, error) {
 	// return nil, err
 }
 
-func LoginUser(repo UserRepo, email, password string) (string, int, error) {
-	id, hashedPassword, err := repo.GetPasswordandID(email)
+func LoginUser(repo UserRepo, email, password string) (string, string, int, error) {
+	userID, hashedPassword, err := repo.GetPasswordandID(email)
 	if err != nil {
-		return "", 0, err
+		return "", "", 0, err
+	}
+
+	user, err := repo.GetUser(userID)
+	if err != nil {
+		log.Printf("repo.GetUser failed: %v", err)
+		return "", "", 0, err
 	}
 
 	err = bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
 	if err != nil {
-		return "", 0, err
+		return "", "", 0, err
 	}
 
-	jwToken, err := token.CreateJWT(strconv.Itoa(id), 0)
+	jwToken, err := token.CreateJWT(strconv.Itoa(userID), 0)
 	if err != nil {
 		log.Printf("JWT creation failed: %v", err)
-		return "", 0, err
+		return "", "", 0, err
 	}
 
-	return jwToken, id, nil
+	return jwToken, user.Username, userID, nil
 }
 
 func GetUser(repo UserRepo, userID int) (*User, error) {

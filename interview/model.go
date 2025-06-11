@@ -8,23 +8,23 @@ import (
 )
 
 type Interview struct {
-	Id                      int
-	ConversationID          int
-	UserId                  int
-	Length                  int
-	NumberQuestions         int
-	NumberQuestionsAnswered int
-	ScoreNumerator          int
-	Score                   int
-	Difficulty              string
-	Status                  string
-	Language                string
-	Prompt                  string
-	ChatGPTResponse         *chatgpt.ChatGPTResponse
-	FirstQuestion           string
-	Subtopic                string
-	CreatedAt               time.Time
-	UpdatedAt               time.Time
+	Id                      int                      `json:"id"`
+	ConversationID          int                      `json:"conversation_id"`
+	UserId                  int                      `json:"user_id"`
+	Length                  int                      `json:"length"`
+	NumberQuestions         int                      `json:"number_questions"`
+	NumberQuestionsAnswered int                      `json:"number_questions_answered"`
+	ScoreNumerator          int                      `json:"score_numerator"`
+	Score                   int                      `json:"score"`
+	Difficulty              string                   `json:"difficulty"`
+	Status                  string                   `json:"status"`
+	Language                string                   `json:"language"`
+	Prompt                  string                   `json:"prompt"`
+	ChatGPTResponse         *chatgpt.ChatGPTResponse `json:"chatgpt_response,omitempty"`
+	FirstQuestion           string                   `json:"first_question"`
+	Subtopic                string                   `json:"subtopic"`
+	CreatedAt               time.Time                `json:"created_at,omitempty"`
+	UpdatedAt               time.Time                `json:"updated_at,omitempty"`
 }
 
 type Summary struct {

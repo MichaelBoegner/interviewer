@@ -196,7 +196,7 @@ func (h *Handler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 	}
 
-	jwToken, userID, err := user.LoginUser(h.UserRepo, params.Email, params.Password)
+	jwToken, username, userID, err := user.LoginUser(h.UserRepo, params.Email, params.Password)
 	if err != nil {
 		log.Printf("LoginUser error: %v", err)
 		RespondWithError(w, http.StatusUnauthorized, "Invalid username or password.")
@@ -212,7 +212,7 @@ func (h *Handler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 	payload := ReturnVals{
 		UserID:       userID,
-		Username:     params.Username,
+		Username:     username,
 		JWToken:      jwToken,
 		RefreshToken: refreshToken,
 	}
@@ -377,12 +377,7 @@ func (h *Handler) GetInterviewHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	payload := ReturnVals{
-		InterviewID:   interviewReturned.Id,
-		Status:        interviewReturned.Status,
-		Score:         interviewReturned.Score,
-		FirstQuestion: interviewReturned.FirstQuestion,
-		CreatedAt:     interviewReturned.CreatedAt,
-		UpdatedAt:     interviewReturned.UpdatedAt,
+		Interview: interviewReturned,
 	}
 
 	RespondWithJSON(w, http.StatusOK, payload)

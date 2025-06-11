@@ -29,7 +29,7 @@ func (m *MockRepo) GetConversation(interviewID int) (*Conversation, error) {
 	conversationResponse := &Conversation{
 		ID:          1,
 		InterviewID: 1,
-		Topics:      PredefinedTopics,
+		Topics:      ClonePredefinedTopics(),
 		CreatedAt:   time.Now().UTC(),
 		UpdatedAt:   time.Now().UTC(),
 	}

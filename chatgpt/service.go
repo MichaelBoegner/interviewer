@@ -23,8 +23,8 @@ func (c *OpenAIClient) GetChatGPTResponseInterview(prompt string) (*ChatGPTRespo
 	requestBody, err := json.Marshal(map[string]interface{}{
 		"model":       "gpt-4",
 		"messages":    messagesArray,
-		"max_tokens":  150,
-		"temperature": 0.7,
+		"max_tokens":  1000,
+		"temperature": 0.3,
 	})
 	if err != nil {
 		return nil, err
@@ -90,8 +90,8 @@ func (c *OpenAIClient) GetChatGPTResponseConversation(conversationHistory []map[
 	requestBody, err := json.Marshal(map[string]interface{}{
 		"model":       "gpt-4",
 		"messages":    conversationHistory,
-		"max_tokens":  150,
-		"temperature": 0.7,
+		"max_tokens":  1000,
+		"temperature": 0.3,
 	})
 	if err != nil {
 		return nil, err

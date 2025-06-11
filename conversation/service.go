@@ -14,7 +14,7 @@ func CheckForConversation(repo ConversationRepo, interviewID int) (bool, error) 
 
 func CreateEmptyConversation(repo ConversationRepo, interviewID int, subTopic string) (int, error) {
 	conversation := &Conversation{
-		Topics:                PredefinedTopics,
+		Topics:                ClonePredefinedTopics(),
 		CurrentTopic:          1,
 		CurrentSubtopic:       subTopic,
 		CurrentQuestionNumber: 1,
@@ -137,6 +137,15 @@ func AppendConversation(
 		return nil, err
 	}
 
+	// // DEBUG
+	// var parsed chatgpt.ChatGPTResponse
+	// err = json.Unmarshal([]byte(chatGPTResponseString), &parsed)
+	// if err != nil {
+	// 	log.Printf("failed to unmarshal ChatGPT response: %v", err)
+	// 	return nil, err
+	// }
+	// fmt.Print(parsed)
+
 	err = interviewRepo.UpdateScore(interviewID, chatGPTResponse.Score)
 	if err != nil {
 		log.Printf("interviewRepo.UpdateScore failed: %v", err)
@@ -247,7 +256,7 @@ func GetConversation(repo ConversationRepo, interviewID int) (*Conversation, err
 		return nil, err
 	}
 
-	conversation.Topics = PredefinedTopics
+	conversation.Topics = ClonePredefinedTopics()
 
 	questionsReturned, err := repo.GetQuestions(conversation)
 	if err != nil {

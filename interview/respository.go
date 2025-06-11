@@ -77,7 +77,21 @@ func (repo *Repository) LinkConversation(interviewID, conversationID int) error 
 func (repo *Repository) GetInterview(interviewID int) (*Interview, error) {
 
 	query := `
-	SELECT id, user_id, length, number_questions, difficulty, status, score, language, prompt, first_question, subtopic
+	SELECT 
+		id, 
+		conversation_id,
+		user_id, 
+		length, 
+		number_questions, 
+		difficulty, 
+		status, 
+		score, 
+		language, 
+		prompt, 
+		first_question, 
+		subtopic,
+		updated_at,
+		created_at
 	FROM interviews
 	WHERE id = $1
 	`
@@ -86,6 +100,7 @@ func (repo *Repository) GetInterview(interviewID int) (*Interview, error) {
 	err := repo.DB.QueryRow(query,
 		interviewID).Scan(
 		&interview.Id,
+		&interview.ConversationID,
 		&interview.UserId,
 		&interview.Length,
 		&interview.NumberQuestions,
@@ -95,7 +110,9 @@ func (repo *Repository) GetInterview(interviewID int) (*Interview, error) {
 		&interview.Language,
 		&interview.Prompt,
 		&interview.FirstQuestion,
-		&interview.Subtopic)
+		&interview.Subtopic,
+		&interview.UpdatedAt,
+		&interview.CreatedAt)
 
 	if err != nil {
 		if err == sql.ErrNoRows {

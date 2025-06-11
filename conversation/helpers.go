@@ -36,10 +36,12 @@ func GetConversationHistory(conversation *Conversation) ([]map[string]string, er
 	var arrayOfTopics []string
 	var currentTopic string
 
-	currentTopic = PredefinedTopics[conversation.CurrentTopic].Name
+	predefinedTopics := ClonePredefinedTopics()
+
+	currentTopic = predefinedTopics[conversation.CurrentTopic].Name
 
 	for topic := 1; topic < conversation.CurrentTopic; topic++ {
-		arrayOfTopics = append(arrayOfTopics, PredefinedTopics[topic].Name)
+		arrayOfTopics = append(arrayOfTopics, predefinedTopics[topic].Name)
 	}
 
 	systemPrompt := map[string]string{
@@ -67,8 +69,8 @@ func GetConversationHistory(conversation *Conversation) ([]map[string]string, er
 			"    \"topic\": \"current topic\",\n"+
 			"    \"subtopic\": \"current subtopic\",\n"+
 			"    \"question\": \"previous question\",\n"+
-			"    \"score\": the score (1-10) you think the previous answer deserves, default to 0 if you don't have a score,\n"+
-			"    \"feedback\": \"brief feedback\",\n"+
+			"    \"score\": the score (1-10) you think the previous answer deserves. Treat a score of 7 as the minimum passing threshold. Only give 8–10 for answers that are complete, technically sound, and reflect senior-level expertise. Use scores 1–6 freely to reflect any gaps, vagueness, or missed edge cases. Default to 0 if no score is possible,\n"+
+			"    \"feedback\": \"Provide extensive, hyper-critical, detailed feedback. Analyze the answer thoroughly: identify strengths, but scrutinize for any gaps in logic, coverage, or technical depth. If anything is missing, vague, or glossed over, call it out. Hold them to a high bar—clarity, completeness, edge cases, best practices, and tradeoffs. End with one specific improvement they should focus on next time.\",\n"+
 			"    \"next_question\": \"next question\",\n"+
 			"    \"next_topic\": \"next topic\",\n"+
 			"    \"next_subtopic\": \"next subtopic\"\n"+
@@ -151,4 +153,16 @@ func CheckConversationState(chatGPTResponse *chatgpt.ChatGPTResponse, conversati
 	default:
 		return false, false, isFinished, nil
 	}
+}
+
+func ClonePredefinedTopics() map[int]Topic {
+	topics := make(map[int]Topic)
+	for id, topic := range PredefinedTopics {
+		topics[id] = Topic{
+			ID:        topic.ID,
+			Name:      topic.Name,
+			Questions: make(map[int]*Question), // fresh for each conversation
+		}
+	}
+	return topics
 }
