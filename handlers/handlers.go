@@ -315,7 +315,7 @@ func (h *Handler) InterviewsHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if errors.Is(err, interview.ErrNoValidCredits) {
-			RespondWithError(w, http.StatusPaymentRequired, "You do not have enough credits to start a new interview.")
+			RespondWithError(w, http.StatusPaymentRequired, "You do not have enough credits to start a new interview or your subscription has expired.")
 			return
 		}
 		log.Printf("Interview failed to start: %v", err)
