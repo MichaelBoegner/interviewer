@@ -271,3 +271,20 @@ func (repo *Repository) UpdateSubscriptionStatusData(userID int, status string) 
 
 	return nil
 }
+
+func (repo *Repository) HasActiveOrCancelledSubscription(email string) (bool, error) {
+	query := `
+		SELECT EXISTS (
+			SELECT 1 FROM users
+			WHERE email = $1 AND subscription_tier != 'free' AND subscription_status IN ('active', 'cancelled')
+		)
+	`
+	var exists bool
+	err := repo.DB.QueryRow(query, email).Scan(&exists)
+	if err != nil {
+		log.Printf("repo.DB.QueryRow failed: %v", err)
+		return exists, err
+	}
+
+	return exists, err
+}

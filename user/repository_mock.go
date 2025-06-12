@@ -121,3 +121,11 @@ func (m *MockRepo) UpdateSubscriptionStatusData(userID int, status string) error
 
 	return nil
 }
+
+func (m *MockRepo) HasActiveOrCancelledSubscription(email string) (bool, error) {
+	if m.failRepo {
+		return false, errors.New("Mocked DB failure")
+	}
+
+	return true, nil
+}

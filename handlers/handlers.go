@@ -865,6 +865,11 @@ func (h *Handler) BillingWebhookHandler(w http.ResponseWriter, r *http.Request) 
 		}
 
 		err = h.Billing.ApplyCredits(h.UserRepo, h.BillingRepo, orderAttrs.UserEmail, orderAttrs.FirstOrderItem.VariantID)
+		if err != nil {
+			log.Printf("h.Billing.ApplyCredits failed: %v", err)
+			RespondWithError(w, http.StatusInternalServerError, "Failed to update user")
+			return
+		}
 	case "subscription_created":
 		var SubCreatedAttrs billing.SubscriptionAttributes
 		if err := json.Unmarshal(webhookPayload.Data.Attributes, &SubCreatedAttrs); err != nil {
@@ -873,7 +878,23 @@ func (h *Handler) BillingWebhookHandler(w http.ResponseWriter, r *http.Request) 
 			return
 		}
 
+		exists, err := h.UserRepo.HasActiveOrCancelledSubscription(SubCreatedAttrs.UserEmail)
+		if err != nil {
+			log.Printf("Subscription duplicate check failed: %v", err)
+			RespondWithError(w, http.StatusInternalServerError, "Subscription check failed")
+			return
+		}
+		if exists {
+			log.Printf("Duplicate subscription attempt blocked for %s", SubCreatedAttrs.UserEmail)
+			return
+		}
+
 		err = h.Billing.CreateSubscription(h.UserRepo, SubCreatedAttrs, subscriptionID)
+		if err != nil {
+			log.Printf("h.Billing.CreateSubscription failed: %v", err)
+			RespondWithError(w, http.StatusInternalServerError, "Failed to update user")
+			return
+		}
 	case "subscription_cancelled":
 		if err := json.Unmarshal(webhookPayload.Data.Attributes, &emailAttribute); err != nil {
 			log.Printf("Unmarshal subscription_cancelled failed: %v", err)
@@ -882,6 +903,11 @@ func (h *Handler) BillingWebhookHandler(w http.ResponseWriter, r *http.Request) 
 		}
 
 		err = h.Billing.CancelSubscription(h.UserRepo, emailAttribute.UserEmail)
+		if err != nil {
+			log.Printf("h.Billing.CancelSubscription failed: %v", err)
+			RespondWithError(w, http.StatusInternalServerError, "Failed to update user")
+			return
+		}
 	case "subscription_resumed":
 		if err := json.Unmarshal(webhookPayload.Data.Attributes, &emailAttribute); err != nil {
 			log.Printf("Unmarshal subscription_resumed failed: %v", err)
@@ -890,6 +916,11 @@ func (h *Handler) BillingWebhookHandler(w http.ResponseWriter, r *http.Request) 
 		}
 
 		err = h.Billing.ResumeSubscription(h.UserRepo, emailAttribute.UserEmail)
+		if err != nil {
+			log.Printf("h.Billing.ResumeSubscription failed: %v", err)
+			RespondWithError(w, http.StatusInternalServerError, "Failed to update user")
+			return
+		}
 	case "subscription_expired":
 		if err := json.Unmarshal(webhookPayload.Data.Attributes, &emailAttribute); err != nil {
 			log.Printf("Unmarshal subscription_expired failed: %v", err)
@@ -898,6 +929,11 @@ func (h *Handler) BillingWebhookHandler(w http.ResponseWriter, r *http.Request) 
 		}
 
 		err = h.Billing.ExpireSubscription(h.UserRepo, emailAttribute.UserEmail)
+		if err != nil {
+			log.Printf("h.Billing.ExpireSubscription failed: %v", err)
+			RespondWithError(w, http.StatusInternalServerError, "Failed to update user")
+			return
+		}
 	case "subscription_payment_success":
 		var SubRenewAttrs billing.SubscriptionRenewAttributes
 		if err := json.Unmarshal(webhookPayload.Data.Attributes, &SubRenewAttrs); err != nil {
@@ -912,6 +948,11 @@ func (h *Handler) BillingWebhookHandler(w http.ResponseWriter, r *http.Request) 
 		}
 
 		err = h.Billing.RenewSubscription(h.UserRepo, h.BillingRepo, SubRenewAttrs)
+		if err != nil {
+			log.Printf("h.Billing.RenewSubscription failed: %v", err)
+			RespondWithError(w, http.StatusInternalServerError, "Failed to update user")
+			return
+		}
 	case "subscription_plan_changed":
 		var SubChangedAttrs billing.SubscriptionAttributes
 		if err := json.Unmarshal(webhookPayload.Data.Attributes, &SubChangedAttrs); err != nil {
@@ -921,6 +962,11 @@ func (h *Handler) BillingWebhookHandler(w http.ResponseWriter, r *http.Request) 
 		}
 
 		err = h.Billing.ChangeSubscription(h.UserRepo, h.BillingRepo, SubChangedAttrs)
+		if err != nil {
+			log.Printf("h.Billing.ChangeSubscription failed: %v", err)
+			RespondWithError(w, http.StatusInternalServerError, "Failed to update user")
+			return
+		}
 	case "subscription_updated":
 		var SubChangedAttrs billing.SubscriptionAttributes
 		if err := json.Unmarshal(webhookPayload.Data.Attributes, &SubChangedAttrs); err != nil {
@@ -930,6 +976,11 @@ func (h *Handler) BillingWebhookHandler(w http.ResponseWriter, r *http.Request) 
 		}
 
 		err = h.Billing.UpdateSubscription(h.UserRepo, SubChangedAttrs, subscriptionID)
+		if err != nil {
+			log.Printf("h.Billing.UpdateSubscription failed: %v", err)
+			RespondWithError(w, http.StatusInternalServerError, "Failed to update user")
+			return
+		}
 	case "order_refunded":
 		var orderAttrs billing.OrderAttributes
 		if err := json.Unmarshal(webhookPayload.Data.Attributes, &orderAttrs); err != nil {
@@ -939,6 +990,11 @@ func (h *Handler) BillingWebhookHandler(w http.ResponseWriter, r *http.Request) 
 		}
 
 		err = h.Billing.DeductCredits(h.UserRepo, h.BillingRepo, orderAttrs)
+		if err != nil {
+			log.Printf("h.Billing.DeductCredits failed: %v", err)
+			RespondWithError(w, http.StatusInternalServerError, "Failed to update user")
+			return
+		}
 	case "subscription_payment_failed", "subscription_payment_recovered":
 		if err := json.Unmarshal(webhookPayload.Data.Attributes, &emailAttribute); err != nil {
 			log.Printf("Unmarshal %s failed: %v", eventType, err)

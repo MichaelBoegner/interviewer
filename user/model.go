@@ -45,6 +45,7 @@ type UserRepo interface {
 	AddCredits(userID, credits int, creditType string) error
 	UpdateSubscriptionData(userID int, status, tier, subscriptionID string, startsAt, endsAt time.Time) error
 	UpdateSubscriptionStatusData(userID int, status string) error
+	HasActiveOrCancelledSubscription(email string) (bool, error)
 }
 
 var (
