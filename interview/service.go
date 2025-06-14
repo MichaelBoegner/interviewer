@@ -127,7 +127,7 @@ func canUseCredit(user *user.User) (string, error) {
 func deductAndLogCredit(user *user.User, userRepo user.UserRepo, billingRepo billing.BillingRepo) error {
 	creditType, err := canUseCredit(user)
 	if err != nil {
-		log.Print(err)
+		log.Print("canUseCredit failed", err)
 		return err
 	}
 	if creditType != "" {

@@ -808,6 +808,58 @@ func (h *Handler) ResumeSubscriptionHandler(w http.ResponseWriter, r *http.Reque
 	w.WriteHeader(http.StatusOK)
 }
 
+func (h *Handler) ChangePlanHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		RespondWithError(w, http.StatusMethodNotAllowed, "Method not allowed")
+		return
+	}
+
+	userID, ok := r.Context().Value(middleware.ContextKeyTokenParams).(int)
+	if !ok {
+		RespondWithError(w, http.StatusUnauthorized, "Invalid user ID")
+		return
+	}
+
+	var params CheckoutRequest
+	if err := json.NewDecoder(r.Body).Decode(&params); err != nil || params.Tier == "" {
+		log.Printf("jsonNewDecoder failed: %v", err)
+		RespondWithError(w, http.StatusBadRequest, "Missing or invalid tier")
+		return
+	}
+
+	user, err := user.GetUser(h.UserRepo, userID)
+	if err != nil {
+		RespondWithError(w, http.StatusInternalServerError, "Could not find user")
+		return
+	}
+
+	var priceID string
+	switch params.Tier {
+	case "pro":
+		priceID = os.Getenv("LEMON_VARIANT_ID_PRO")
+	case "premium":
+		priceID = os.Getenv("LEMON_VARIANT_ID_PREMIUM")
+	default:
+		RespondWithError(w, http.StatusBadRequest, "Invalid tier")
+		return
+	}
+
+	priceIDInt, err := strconv.Atoi(priceID)
+	if err != nil {
+		log.Printf("strconv.Atoi() failed: %v", err)
+		RespondWithError(w, http.StatusInternalServerError, "Internal server error")
+		return
+	}
+
+	if err := h.Billing.RequestUpdateSubscriptionVariant(user.SubscriptionID, priceIDInt); err != nil {
+		log.Printf("UpdateLemonSubscriptionVariant failed: %v", err)
+		RespondWithError(w, http.StatusInternalServerError, "Failed to update subscription")
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+}
+
 func (h *Handler) BillingWebhookHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		RespondWithError(w, http.StatusMethodNotAllowed, "Method not allowed")

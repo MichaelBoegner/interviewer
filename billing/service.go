@@ -149,6 +149,37 @@ func (b *Billing) RequestResumeSubscription(subscriptionID string) error {
 	return nil
 }
 
+func (b *Billing) RequestUpdateSubscriptionVariant(subscriptionID string, newVariantID int) error {
+	payload := map[string]interface{}{
+		"data": map[string]interface{}{
+			"type": "subscriptions",
+			"id":   subscriptionID,
+			"attributes": map[string]interface{}{
+				"variant_id": newVariantID,
+			},
+		},
+	}
+	body, _ := json.Marshal(payload)
+
+	req, _ := http.NewRequest("PATCH", "https://api.lemonsqueezy.com/v1/subscriptions/"+subscriptionID, bytes.NewBuffer(body))
+	req.Header.Set("Authorization", "Bearer "+b.APIKey)
+	req.Header.Set("Content-Type", "application/vnd.api+json")
+	req.Header.Set("Accept", "application/vnd.api+json")
+
+	client := &http.Client{Timeout: 10 * time.Second}
+	res, err := client.Do(req)
+	if err != nil {
+		return fmt.Errorf("patch failed: %w", err)
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode >= 300 {
+		bodyBytes, _ := io.ReadAll(res.Body)
+		return fmt.Errorf("lemon error: %s", string(bodyBytes))
+	}
+	return nil
+}
+
 func (b *Billing) VerifyBillingSignature(signature string, body []byte, secret string) bool {
 	mac := hmac.New(sha256.New, []byte(secret))
 	mac.Write(body)
@@ -221,8 +252,6 @@ func (b *Billing) DeductCredits(userRepo user.UserRepo, billingRepo BillingRepo,
 	variantID := orderAttrs.FirstOrderItem.VariantID
 	switch variantID {
 	case b.VariantIDIndividual:
-		//DEBUG
-		fmt.Printf("individual case firing")
 		credits = 1
 		creditType = "individual"
 		reason = "Individual interview refund"

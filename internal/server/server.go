@@ -71,6 +71,7 @@ func NewServer() (*Server, error) {
 	mux.Handle("/api/payment/checkout", middleware.GetContext(http.HandlerFunc(handler.CreateCheckoutSessionHandler)))
 	mux.Handle("/api/payment/cancel", middleware.GetContext(http.HandlerFunc(handler.CancelSubscriptionHandler)))
 	mux.Handle("/api/payment/resume", middleware.GetContext(http.HandlerFunc(handler.ResumeSubscriptionHandler)))
+	mux.Handle("/api/payment/change-plan", middleware.GetContext(http.HandlerFunc(handler.ChangePlanHandler)))
 	mux.Handle("/api/user/dashboard", middleware.GetContext(http.HandlerFunc(handler.DashboardHandler)))
 	mux.Handle("/health", http.HandlerFunc(handler.HealthCheckHandler))
 
