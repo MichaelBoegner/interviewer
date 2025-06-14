@@ -116,11 +116,19 @@ func (repo *Repository) GetUser(userID int) (*User, error) {
 
 func (repo *Repository) GetUserByEmail(email string) (*User, error) {
 	var user = &User{}
-	err := repo.DB.QueryRow("SELECT id, username, email, subscription_tier FROM users WHERE email= $1", email).Scan(
+	err := repo.DB.QueryRow(`SELECT 
+								id, 
+								username, 
+								email, 
+								subscription_tier, 
+								subscription_credits
+							FROM users 
+							WHERE email= $1`, email).Scan(
 		&user.ID,
 		&user.Username,
 		&user.Email,
 		&user.SubscriptionTier,
+		&user.SubscriptionCredits,
 	)
 
 	if err == sql.ErrNoRows {
@@ -217,8 +225,7 @@ func (repo *Repository) AddCredits(userID, credits int, creditType string) error
 		log.Printf("AddCredits failed: %v", err)
 		return err
 	}
-	//DEBUG
-	fmt.Printf("AddCredits firing: %v\n\n", creditType)
+
 	return nil
 }
 
