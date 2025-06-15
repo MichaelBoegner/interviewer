@@ -252,7 +252,7 @@ func (repo *Repository) AddMessage(conversationID, topic_id, questionNumber int,
 		questionNumber,
 		message.Author,
 		message.Content,
-		time.Now().UTC(),
+		message.CreatedAt,
 	).Scan(&questionNumber)
 	if err == sql.ErrNoRows {
 		return 0, err

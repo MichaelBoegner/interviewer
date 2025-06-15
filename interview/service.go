@@ -61,7 +61,6 @@ func StartInterview(
 		log.Printf("getChatGPTResponse err: %v\n", err)
 		return nil, err
 	}
-	chatGPTResponse.CreatedAt = now
 
 	interview := &Interview{
 		UserId:          user.ID,

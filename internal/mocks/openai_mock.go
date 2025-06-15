@@ -36,7 +36,6 @@ var (
 		NextQuestion: "Question1",
 		NextTopic:    "Introduction",
 		NextSubtopic: "Subtopic1",
-		CreatedAt:    now,
 	}
 	responseConversationCreated = &chatgpt.ChatGPTResponse{
 		Topic:        "Introduction",
@@ -47,7 +46,6 @@ var (
 		NextQuestion: "Question2",
 		NextTopic:    "Introduction",
 		NextSubtopic: "Subtopic2",
-		CreatedAt:    now,
 	}
 	responseConversationAppended = &chatgpt.ChatGPTResponse{
 		Topic:        "Introduction",
@@ -58,7 +56,6 @@ var (
 		NextQuestion: "Question1",
 		NextTopic:    "Coding",
 		NextSubtopic: "Subtopic1",
-		CreatedAt:    now,
 	}
 
 	responseConversationIsFinished = &chatgpt.ChatGPTResponse{
@@ -70,7 +67,6 @@ var (
 		NextQuestion: "Question2",
 		NextTopic:    "General Backend Knowledge",
 		NextSubtopic: "Subtopic2",
-		CreatedAt:    now,
 	}
 )
 
