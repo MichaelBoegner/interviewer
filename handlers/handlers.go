@@ -980,7 +980,7 @@ func (h *Handler) BillingWebhookHandler(w http.ResponseWriter, r *http.Request) 
 			return
 		}
 
-		err = h.Billing.ExpireSubscription(h.UserRepo, emailAttribute.UserEmail)
+		err = h.Billing.ExpireSubscription(h.UserRepo, h.BillingRepo, emailAttribute.UserEmail)
 		if err != nil {
 			log.Printf("h.Billing.ExpireSubscription failed: %v", err)
 			RespondWithError(w, http.StatusInternalServerError, "Failed to update user")

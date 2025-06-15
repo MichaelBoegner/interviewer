@@ -26,7 +26,7 @@ func StartInterview(
 	}
 
 	now := time.Now().UTC()
-	prompt := "You are conducting a structured backend development interview for a senior level role. " +
+	prompt := "You are conducting a structured coding-language-agnostic, backend development interview. " +
 		"The interview follows **six topics in this order**:\n\n" +
 		"1. **Introduction**\n" +
 		"2. **Coding**\n" +
@@ -51,9 +51,9 @@ func StartInterview(
 		"    \"question\": \"previous question\",\n" +
 		"    \"score\": the score (1-10) you think the previous answer deserves. Treat a score of 7 as the minimum passing threshold. Only give 8–10 for answers that are complete, technically sound, and reflect senior-level expertise. Use scores 1–6 freely to reflect any gaps, vagueness, or missed edge cases. Default to 0 if no score is possible,\n" +
 		"    \"feedback\": \"keep feedback brief\",\n" +
-		"    \"next_question\": \"next question\",\n" +
-		"    \"next_topic\": \"next topic\",\n" +
+		"    \"next_topic\": \"next topic based strictly on the above topic list\",\n" +
 		"    \"next_subtopic\": \"next subtopic\"\n" +
+		"    \"next_question\": \"next question\",\n" +
 		"}"
 
 	chatGPTResponse, err := ai.GetChatGPTResponseInterview(prompt)

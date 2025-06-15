@@ -359,7 +359,7 @@ func (b *Billing) ResumeSubscription(userRepo user.UserRepo, email string) error
 	return nil
 }
 
-func (b *Billing) ExpireSubscription(userRepo user.UserRepo, email string) error {
+func (b *Billing) ExpireSubscription(userRepo user.UserRepo, billingRepo BillingRepo, email string) error {
 	user, err := userRepo.GetUserByEmail(email)
 	if err != nil {
 		log.Printf("repo.GetUserByEmail failed: %v", err)
@@ -373,6 +373,24 @@ func (b *Billing) ExpireSubscription(userRepo user.UserRepo, email string) error
 	if err != nil {
 		log.Printf("CancelSubscriptionData failed: %v", err)
 		return err
+	}
+
+	if user.SubscriptionCredits > 0 {
+		err = userRepo.AddCredits(user.ID, -user.SubscriptionCredits, "subscription")
+		if err != nil {
+			log.Printf("repo.AddCredits failed: %v", err)
+			return err
+		}
+
+		tx := CreditTransaction{
+			UserID:     user.ID,
+			Amount:     -user.SubscriptionCredits,
+			CreditType: "subscription",
+			Reason:     "Zeroed out credits on subscription expiration",
+		}
+		if err := billingRepo.LogCreditTransaction(tx); err != nil {
+			log.Printf("Warning: zero-out succeeded but failed to log transaction: %v", err)
+		}
 	}
 
 	return nil

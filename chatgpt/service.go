@@ -24,7 +24,7 @@ func (c *OpenAIClient) GetChatGPTResponseInterview(prompt string) (*ChatGPTRespo
 		"model":       "gpt-4",
 		"messages":    messagesArray,
 		"max_tokens":  1000,
-		"temperature": 0.3,
+		"temperature": 0.2,
 	})
 	if err != nil {
 		return nil, err
@@ -91,7 +91,7 @@ func (c *OpenAIClient) GetChatGPTResponseConversation(conversationHistory []map[
 		"model":       "gpt-4",
 		"messages":    conversationHistory,
 		"max_tokens":  1000,
-		"temperature": 0.3,
+		"temperature": 0.2,
 	})
 	if err != nil {
 		return nil, err
