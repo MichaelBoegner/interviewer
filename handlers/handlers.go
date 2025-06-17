@@ -47,6 +47,11 @@ func (h *Handler) RequestVerificationHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
+	if !allowedEmails[req.Email] {
+		RespondWithError(w, http.StatusBadRequest, "We are not yet currently live. Try again later!")
+		return
+	}
+
 	verificationJWT, err := user.VerificationToken(req.Email, req.Username, req.Password)
 	if err != nil {
 		log.Printf("GenerateEmailVerificationToken failed: %v", err)
