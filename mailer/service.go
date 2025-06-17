@@ -13,7 +13,12 @@ func (m *Mailer) SendPasswordReset(email, resetURL string) error {
 		"from":    "Interviewer Support <support@mail.interviewer.dev>",
 		"to":      email,
 		"subject": "Reset your password",
-		"html":    "<p>" + fmt.Sprintf("To reset your password, click <a href=\"%s\">here</a>", resetURL) + "</p>",
+		"html": fmt.Sprintf(`
+	<p>
+		We received a request to reset your password.<br><br>
+		If you made this request, click <a href="%s">here</a> to reset your password.<br><br>
+		If you didn’t request a password reset, you can safely ignore this email.
+	</p>`, resetURL) + signature,
 	}
 
 	body, err := json.Marshal(payload)
@@ -45,11 +50,17 @@ func (m *Mailer) SendPasswordReset(email, resetURL string) error {
 }
 
 func (m *Mailer) SendVerificationEmail(email, verifyURL string) error {
+
 	payload := map[string]any{
-		"from":    "Interviewer <support@mail.interviewer.dev>",
+		"from":    "Interviewer Support <support@mail.interviewer.dev>",
 		"to":      email,
 		"subject": "Verify your Interviewer account",
-		"html":    fmt.Sprintf("<p>Click <a href=\"%s\">here</a> to verify your account.</p>", verifyURL),
+		"html": fmt.Sprintf(`
+	<p>
+		Hey there!<br><br>
+		Thanks for signing up for Interviewer. We're excited to help you prep for your next big opportunity!<br><br>
+		Click <a href="%s">here</a> to verify your account and get started.
+	</p>`, verifyURL) + signature,
 	}
 	body, _ := json.Marshal(payload)
 
