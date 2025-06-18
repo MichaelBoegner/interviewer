@@ -64,9 +64,10 @@ type Handler struct {
 
 var allowedEmails = map[string]bool{
 	"cmikeb@gmail.com":        true,
+	"cmikeb+test1@gmail.com":  true,
 	"sandburn@gmail.com":      true,
 	"germain.brion@gmail.com": true,
-	"JaminOtte@gmail.com":     true,
+	"jaminotte@gmail.com":     true,
 	"tarynmarin@gmail.com":    true,
 	"adammallory83@gmail.com": true,
 	"mo_nattan@hotmail.com":   true,

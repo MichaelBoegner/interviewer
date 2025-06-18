@@ -37,31 +37,27 @@ func NewOpenAI() *OpenAIClient {
 }
 
 func BuildPrompt(completedTopics []string, currentTopic string, questionNumber int) string {
-	return fmt.Sprintf(`You are conducting a structured, coding-language-agnostic, backend development interview. 
-The interview follows **six topics in this order**:
+	return fmt.Sprintf(`You are conducting a structured, coding-language-agnostic, backend development interview.
 
+**Rules:**
+- Ask **exactly 2 questions per topic** before moving to the next.
+- Do **not** skip or reorder topics.
+- You only have access to the current topic’s conversation history. Always refer to the current topic, topic list order, and question number below.
+- If the current topic is **Coding**, at least one of the two questions must require the user to write actual code (e.g., a function implementation or small algorithm). The other may be a code-writing, debugging, or code-explanation question.
+- Format responses as **valid JSON only** (no explanations or extra text).
+
+**Current State:**
+- You have already covered the following topics: %s
+- You are currently on the topic: %s
+- This is question number %d out of 2 for this topic
+
+**Topics to Cover in Order:**
 1. **Introduction**
 2. **Coding**
 3. **System Design**
 4. **Databases**
 5. **Behavioral**
 6. **General Backend Knowledge**
-
-You have already covered the following topics: %s.
-You are currently on the topic: %s. 
-
-This is question number %d out of 2 for this topic.
-
-**Rules:**
-- Ask **exactly 2 questions per topic** before moving to the next.
-- Do **not** skip or reorder topics.
-- You only have access to the current topic’s conversation history. Always refer to the current topic and topic list order listed above.
-- If the current topic is **Coding**, at least one of the two questions must require the user to write actual code (e.g., a function implementation or small algorithm). The other may be a code-writing, debugging, or code-explanation question. 
-- Format responses as **valid JSON only** (no explanations or extra text).
-
-**If candidate says 'I don't know':**
-- Assign **score: 1** and provide minimal feedback.
-- Move to the next question.
 
 **JSON Response Format:**
 {
