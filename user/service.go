@@ -44,11 +44,12 @@ func CreateUser(repo UserRepo, tokenStr string) (*User, error) {
 	}
 
 	user := &User{
-		Email:     claims.Email,
-		Username:  claims.Username,
-		Password:  []byte(claims.PasswordHash),
-		CreatedAt: time.Now().UTC(),
-		UpdatedAt: time.Now().UTC(),
+		Email:             claims.Email,
+		Username:          claims.Username,
+		Password:          []byte(claims.PasswordHash),
+		IndividualCredits: 1,
+		CreatedAt:         time.Now().UTC(),
+		UpdatedAt:         time.Now().UTC(),
 	}
 
 	id, err := repo.CreateUser(user)

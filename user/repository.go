@@ -24,8 +24,8 @@ func (repo *Repository) CreateUser(user *User) (int, error) {
 	now := time.Now().UTC()
 
 	query := `
-		INSERT INTO users (username, password, email, created_at, updated_at) 
-		VALUES ($1, $2, $3, $4, $5)
+		INSERT INTO users (username, password, email, individual_credits, created_at, updated_at) 
+		VALUES ($1, $2, $3, $4, $5, $6)
 		RETURNING id
 	`
 
@@ -33,6 +33,7 @@ func (repo *Repository) CreateUser(user *User) (int, error) {
 		user.Username,
 		user.Password,
 		user.Email,
+		user.IndividualCredits,
 		now,
 		now,
 	).Scan(&id)

@@ -65,6 +65,8 @@ type Handler struct {
 var allowedEmails = map[string]bool{
 	"cmikeb@gmail.com":        true,
 	"cmikeb+test1@gmail.com":  true,
+	"cmikeb+test2@gmail.com":  true,
+	"cmikeb+test3@gmail.com":  true,
 	"sandburn@gmail.com":      true,
 	"germain.brion@gmail.com": true,
 	"jaminotte@gmail.com":     true,
@@ -72,6 +74,8 @@ var allowedEmails = map[string]bool{
 	"adammallory83@gmail.com": true,
 	"mo_nattan@hotmail.com":   true,
 	"rbldevries@gmail.com":    true,
+	"memanseur@gmail.com":     true,
+	"unstrung@gmail.com":      true,
 }
 
 func NewHandler(
