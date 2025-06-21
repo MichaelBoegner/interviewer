@@ -128,3 +128,52 @@ func (m *Mailer) SendWelcome(email string) error {
 	}
 	return nil
 }
+
+func (m *Mailer) SendDeletionConfirmation(email string) error {
+	payload := map[string]any{
+		"from":    "Interviewer Support <support@mail.interviewer.dev>",
+		"to":      email,
+		"subject": "Your Interviewer account has been deleted",
+		"html": `
+<p>
+	We're sorry to see you go, but your Interviewer account has been successfully deleted.
+</p>
+<p>
+	Any remaining interview credits have been deactivated, and if you had an active subscription, it has been fully canceled. You will not be charged again.
+</p>
+<p>
+	If you change your mind, you're always welcome to create a new account at any time.
+</p>
+<p>
+	Thanks again for giving Interviewer a try — we genuinely appreciate it and wish you all the best in your interview journey.
+</p>
+` + signature,
+	}
+
+	body, err := json.Marshal(payload)
+	if err != nil {
+		log.Printf("Marshal failed: %v", err)
+		return err
+	}
+
+	req, err := http.NewRequest("POST", fmt.Sprintf("%s/emails", m.BaseURL), bytes.NewBuffer(body))
+	if err != nil {
+		log.Printf("Mailer NewRequest failed: %v", err)
+		return err
+	}
+	req.Header.Set("Authorization", "Bearer "+m.APIKey)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		log.Printf("Mailer Client Do failed: %v", err)
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= 400 {
+		return fmt.Errorf("Resend error: %s", resp.Status)
+	}
+
+	return nil
+}

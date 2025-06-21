@@ -210,10 +210,31 @@ func (h *Handler) DeleteUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	userReturned, err := user.GetUser(h.UserRepo, userID)
+	if err != nil {
+		log.Printf("GetUser error: %v", err)
+		RespondWithError(w, http.StatusInternalServerError, "Failed to find user")
+		return
+	}
+
+	err = h.Billing.CancelSubscription(h.UserRepo, userReturned.Email)
+	if err != nil {
+		log.Printf("h.Billing.CancelSubscription failed: %v", err)
+		RespondWithError(w, http.StatusInternalServerError, "Failed to update user")
+		return
+	}
+
 	err = user.MarkUserDeleted(h.UserRepo, userID)
 	if err != nil {
 		log.Printf("DeleteUser failed: %v", err)
 		RespondWithError(w, http.StatusInternalServerError, "Failed to delete user")
+		return
+	}
+
+	err = h.Mailer.SendDeletionConfirmation(userReturned.Email)
+	if err != nil {
+		log.Printf("h.Mailer.SendDeletionConfirmation failed: %v", err)
+		RespondWithError(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
 

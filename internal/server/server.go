@@ -51,30 +51,108 @@ func NewServer() (*Server, error) {
 	mux.Handle("/api/auth/request-reset", http.HandlerFunc(handler.RequestResetHandler))
 	mux.Handle("/api/auth/reset-password", http.HandlerFunc(handler.ResetPasswordHandler))
 	mux.Handle("/api/webhooks/billing", http.HandlerFunc(handler.BillingWebhookHandler))
-
-	mux.Handle("/api/users/", middleware.GetContext(http.HandlerFunc(handler.GetUsersHandler)))
-	mux.Handle("/api/users/delete/", middleware.GetContext(http.HandlerFunc(handler.DeleteUserHandler)))
-	mux.Handle("/api/interviews", middleware.GetContext(http.HandlerFunc(handler.InterviewsHandler)))
-	mux.Handle("/api/interviews/", middleware.GetContext(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		switch r.Method {
-		case http.MethodGet:
-			handler.GetInterviewHandler(w, r)
-		case http.MethodPatch:
-			handler.UpdateInterviewStatusHandler(w, r)
-		default:
-			handlers.RespondWithError(w, http.StatusMethodNotAllowed, "Method not allowed")
-		}
-	})))
-	mux.Handle("/api/conversations/create/", middleware.GetContext(http.HandlerFunc(handler.CreateConversationsHandler)))
-	mux.Handle("/api/conversations/append/", middleware.GetContext(http.HandlerFunc(handler.AppendConversationsHandler)))
-	mux.Handle("/api/conversations/", middleware.GetContext(http.HandlerFunc(handler.GetConversationHandler)))
-	mux.Handle("/api/auth/token", middleware.GetContext(http.HandlerFunc(handler.RefreshTokensHandler)))
-	mux.Handle("/api/payment/checkout", middleware.GetContext(http.HandlerFunc(handler.CreateCheckoutSessionHandler)))
-	mux.Handle("/api/payment/cancel", middleware.GetContext(http.HandlerFunc(handler.CancelSubscriptionHandler)))
-	mux.Handle("/api/payment/resume", middleware.GetContext(http.HandlerFunc(handler.ResumeSubscriptionHandler)))
-	mux.Handle("/api/payment/change-plan", middleware.GetContext(http.HandlerFunc(handler.ChangePlanHandler)))
-	mux.Handle("/api/user/dashboard", middleware.GetContext(http.HandlerFunc(handler.DashboardHandler)))
 	mux.Handle("/health", http.HandlerFunc(handler.HealthCheckHandler))
+
+	mux.Handle("/api/users/",
+		middleware.GetContext(
+			middleware.ValidateUserActive(userRepo)(
+				http.HandlerFunc(handler.GetUsersHandler),
+			),
+		),
+	)
+	mux.Handle("/api/users/delete/",
+		middleware.GetContext(
+			middleware.ValidateUserActive(userRepo)(
+				http.HandlerFunc(handler.DeleteUserHandler),
+			),
+		),
+	)
+	mux.Handle("/api/interviews",
+		middleware.GetContext(
+			middleware.ValidateUserActive(userRepo)(
+				http.HandlerFunc(handler.InterviewsHandler),
+			),
+		),
+	)
+	mux.Handle("/api/interviews/",
+		middleware.GetContext(
+			middleware.ValidateUserActive(userRepo)(
+				http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					switch r.Method {
+					case http.MethodGet:
+						handler.GetInterviewHandler(w, r)
+					case http.MethodPatch:
+						handler.UpdateInterviewStatusHandler(w, r)
+					default:
+						handlers.RespondWithError(w, http.StatusMethodNotAllowed, "Method not allowed")
+					}
+				}),
+			),
+		),
+	)
+	mux.Handle("/api/conversations/create/",
+		middleware.GetContext(
+			middleware.ValidateUserActive(userRepo)(
+				http.HandlerFunc(handler.CreateConversationsHandler),
+			),
+		),
+	)
+	mux.Handle("/api/conversations/append/",
+		middleware.GetContext(
+			middleware.ValidateUserActive(userRepo)(
+				http.HandlerFunc(handler.AppendConversationsHandler),
+			),
+		),
+	)
+	mux.Handle("/api/conversations/",
+		middleware.GetContext(
+			middleware.ValidateUserActive(userRepo)(
+				http.HandlerFunc(handler.GetConversationHandler),
+			),
+		),
+	)
+	mux.Handle("/api/auth/token",
+		middleware.GetContext(
+			middleware.ValidateUserActive(userRepo)(
+				http.HandlerFunc(handler.RefreshTokensHandler),
+			),
+		),
+	)
+	mux.Handle("/api/payment/checkout",
+		middleware.GetContext(
+			middleware.ValidateUserActive(userRepo)(
+				http.HandlerFunc(handler.CreateCheckoutSessionHandler),
+			),
+		),
+	)
+	mux.Handle("/api/payment/cancel",
+		middleware.GetContext(
+			middleware.ValidateUserActive(userRepo)(
+				http.HandlerFunc(handler.CancelSubscriptionHandler),
+			),
+		),
+	)
+	mux.Handle("/api/payment/resume",
+		middleware.GetContext(
+			middleware.ValidateUserActive(userRepo)(
+				http.HandlerFunc(handler.ResumeSubscriptionHandler),
+			),
+		),
+	)
+	mux.Handle("/api/payment/change-plan",
+		middleware.GetContext(
+			middleware.ValidateUserActive(userRepo)(
+				http.HandlerFunc(handler.ChangePlanHandler),
+			),
+		),
+	)
+	mux.Handle("/api/user/dashboard",
+		middleware.GetContext(
+			middleware.ValidateUserActive(userRepo)(
+				http.HandlerFunc(handler.DashboardHandler),
+			),
+		),
+	)
 
 	return &Server{mux: mux}, nil
 }

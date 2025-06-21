@@ -12,6 +12,7 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/michaelboegner/interviewer/conversation"
+	"github.com/michaelboegner/interviewer/user"
 )
 
 type AcceptedVals struct {
@@ -96,6 +97,27 @@ func GetContext(next http.Handler) http.Handler {
 
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
+}
+
+func ValidateUserActive(userRepo *user.Repository) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			userID, ok := r.Context().Value(ContextKeyTokenParams).(int)
+			if !ok {
+				respondWithError(w, http.StatusUnauthorized, "Invalid context")
+				return
+			}
+
+			user, err := userRepo.GetUser(userID)
+			if err != nil || user.AccountStatus == "deleted" {
+				log.Printf("Blocked access for deleted user ID %d", userID)
+				respondWithError(w, http.StatusUnauthorized, "Account deactivated")
+				return
+			}
+
+			next.ServeHTTP(w, r)
+		})
+	}
 }
 
 func isAccessToken(tokenString string) bool {
