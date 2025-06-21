@@ -58,9 +58,6 @@ func CreateUser(repo UserRepo, tokenStr string) (*User, error) {
 	}
 	user.ID = id
 	return user, nil
-	// For preventing user creation in deployment:
-	// err := errors.New("We are not quite yet fully live. Check back again in the future!")
-	// return nil, err
 }
 
 func LoginUser(repo UserRepo, email, password string) (string, string, int, error) {
@@ -73,6 +70,10 @@ func LoginUser(repo UserRepo, email, password string) (string, string, int, erro
 	if err != nil {
 		log.Printf("repo.GetUser failed: %v", err)
 		return "", "", 0, err
+	}
+
+	if user.AccountStatus != "active" {
+		return "", "", 0, ErrAccountDeleted
 	}
 
 	err = bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
@@ -96,6 +97,16 @@ func GetUser(repo UserRepo, userID int) (*User, error) {
 		return nil, err
 	}
 	return userReturned, nil
+}
+
+func MarkUserDeleted(repo UserRepo, userId int) error {
+	err := repo.MarkUserDeleted(userId)
+	if err != nil {
+		log.Printf("repo.DeleteUser failed: %v", err)
+		return err
+	}
+
+	return nil
 }
 
 func GetUserByEmail(repo UserRepo, email string) error {

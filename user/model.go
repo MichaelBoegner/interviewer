@@ -23,6 +23,7 @@ type User struct {
 	SubscriptionID        string
 	IndividualCredits     int
 	SubscriptionCredits   int
+	AccountStatus         string
 	CreatedAt             time.Time
 	UpdatedAt             time.Time
 }
@@ -37,6 +38,7 @@ type EmailClaims struct {
 
 type UserRepo interface {
 	CreateUser(user *User) (int, error)
+	MarkUserDeleted(userID int) error
 	GetPasswordandID(email string) (int, string, error)
 	GetUser(userID int) (*User, error)
 	GetUserByEmail(email string) (*User, error)
@@ -52,4 +54,5 @@ var (
 	ErrDuplicateEmail    = errors.New("duplicate email")
 	ErrDuplicateUsername = errors.New("duplicate username")
 	ErrDuplicateUser     = errors.New("duplicate user")
+	ErrAccountDeleted    = errors.New("Account is no longer active")
 )

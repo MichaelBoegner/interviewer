@@ -14,7 +14,7 @@ const signature = `
 			Founder • <a href="https://interviewer.dev" style="color: #007bff; text-decoration: none;">Interviewer</a><br>
 			<a href="mailto:support@mail.interviewer.dev" style="color: #000;">support@mail.interviewer.dev</a><br>
 		</p>
-		<p style="color: gray; font-size: 12px; margin-top: 8px;">
+		<p style="color: gray; font-size: 12px; margin-top: 4px;">
 			Everything gets easier with practice!
 		</p>
 	`

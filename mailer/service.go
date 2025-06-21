@@ -79,3 +79,52 @@ func (m *Mailer) SendVerificationEmail(email, verifyURL string) error {
 	}
 	return nil
 }
+
+func (m *Mailer) SendWelcome(email string) error {
+	payload := map[string]any{
+		"from":    "Interviewer Support <support@mail.interviewer.dev>",
+		"to":      email,
+		"subject": "Welcome to Interviewer!",
+		"html": `
+<p>
+	Your Interviewer account has been successfully verified!
+</p>
+<p>
+	To help you get started, we've added <strong>one free interview</strong> to your account.
+</p>
+<p>
+	Head over to your dashboard to begin your first mock interview.
+</p>
+<div style="margin-top: 30px;">
+	<a href="https://interviewer.dev/dashboard" style="
+		background-color: #4CAF50;
+		color: white;
+		padding: 12px 24px;
+		text-decoration: none;
+		border-radius: 4px;
+		display: inline-block;
+		font-size: 16px;
+		font-family: sans-serif;
+	">
+		Go to Dashboard
+	</a>
+</div>
+` + signature,
+	}
+	body, _ := json.Marshal(payload)
+
+	req, _ := http.NewRequest("POST", m.BaseURL+"/emails", bytes.NewBuffer(body))
+	req.Header.Set("Authorization", "Bearer "+m.APIKey)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= 400 {
+		return fmt.Errorf("resend error: %s", resp.Status)
+	}
+	return nil
+}

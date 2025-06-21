@@ -20,16 +20,33 @@ func NewRepository(db *sql.DB) *Repository {
 }
 
 func (repo *Repository) CreateUser(user *User) (int, error) {
-	var id int
 	now := time.Now().UTC()
 
-	query := `
+	var dummy int
+	checkQuery := `
+		SELECT 1 FROM users
+		WHERE account_status = 'deleted'
+		AND email LIKE '%' || $1
+		LIMIT 1
+	`
+	err := repo.DB.QueryRow(checkQuery, user.Email).Scan(&dummy)
+	if err == sql.ErrNoRows {
+		user.IndividualCredits = 1
+	} else if err != nil {
+		log.Printf("Email reuse check failed: %v\n", err)
+		return 0, err
+	} else {
+		user.IndividualCredits = 0
+	}
+
+	var id int
+	insertQuery := `
 		INSERT INTO users (username, password, email, individual_credits, created_at, updated_at) 
 		VALUES ($1, $2, $3, $4, $5, $6)
 		RETURNING id
 	`
 
-	err := repo.DB.QueryRow(query,
+	err = repo.DB.QueryRow(insertQuery,
 		user.Username,
 		user.Password,
 		user.Email,
@@ -40,7 +57,6 @@ func (repo *Repository) CreateUser(user *User) (int, error) {
 	if err == sql.ErrNoRows {
 		return 0, err
 	} else if err != nil {
-
 		if pgErr, ok := err.(*pq.Error); ok && pgErr.Code == "23505" {
 			switch pgErr.Constraint {
 			case "users_email_key":
@@ -57,6 +73,28 @@ func (repo *Repository) CreateUser(user *User) (int, error) {
 	}
 
 	return id, nil
+}
+
+func (repo *Repository) MarkUserDeleted(userID int) error {
+	query := `
+		UPDATE users
+		SET 
+			account_status = 'deleted',
+			email = CONCAT('deleted_', id, '_', email),
+			username = CONCAT('deleted_user_', id),
+			password = '',
+			subscription_id = '',
+			updated_at = $1
+		WHERE id = $2
+	`
+
+	_, err := repo.DB.Exec(query, time.Now().UTC(), userID)
+	if err != nil {
+		log.Printf("MarkUserDeleted failed: %v\n", err)
+		return err
+	}
+
+	return nil
 }
 
 func (repo *Repository) GetPasswordandID(email string) (int, string, error) {
@@ -89,7 +127,8 @@ func (repo *Repository) GetUser(userID int) (*User, error) {
 								subscription_end_date, 
 								subscription_status, 
 								subscription_tier, 
-								subscription_id
+								subscription_id,
+								account_status
 							FROM users 
 							WHERE id= $1`, userID).Scan(
 		&user.ID,
@@ -102,6 +141,7 @@ func (repo *Repository) GetUser(userID int) (*User, error) {
 		&user.SubscriptionStatus,
 		&user.SubscriptionTier,
 		&user.SubscriptionID,
+		&user.AccountStatus,
 	)
 
 	if err == sql.ErrNoRows {

@@ -125,8 +125,13 @@ func (h *Handler) CreateUsersHandler(w http.ResponseWriter, r *http.Request) {
 			RespondWithError(w, http.StatusConflict, "Email already exists")
 			return
 		}
-		// For preventing user creation in frontend.
-		// noNewUsers := fmt.Sprintf("%s", err)
+		RespondWithError(w, http.StatusInternalServerError, "Internal server error")
+		return
+	}
+
+	err = h.Mailer.SendWelcome(userCreated.Email)
+	if err != nil {
+		log.Printf("h.Mailer.SendWelcome failed: %v", err)
 		RespondWithError(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
@@ -137,7 +142,6 @@ func (h *Handler) CreateUsersHandler(w http.ResponseWriter, r *http.Request) {
 		Email:    userCreated.Email,
 	}
 	RespondWithJSON(w, http.StatusCreated, payload)
-	return
 }
 
 func (h *Handler) GetUsersHandler(w http.ResponseWriter, r *http.Request) {
@@ -181,6 +185,41 @@ func (h *Handler) GetUsersHandler(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
+func (h *Handler) DeleteUserHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodDelete {
+		RespondWithError(w, http.StatusMethodNotAllowed, "Method not allowed")
+		return
+	}
+
+	userID, ok := r.Context().Value(middleware.ContextKeyTokenParams).(int)
+	if !ok {
+		RespondWithError(w, http.StatusBadRequest, "Invalid ID")
+		return
+	}
+
+	userIDParam, err := GetPathID(r, "/api/users/delete/")
+	if err != nil {
+		log.Printf("GetPathID error: %v\n", err)
+		RespondWithError(w, http.StatusBadRequest, "UserID required")
+		return
+	}
+
+	if userID != userIDParam {
+		log.Printf("UserID mismatch: %v vs. %v", userID, userIDParam)
+		RespondWithError(w, http.StatusUnauthorized, "Invalid ID")
+		return
+	}
+
+	err = user.MarkUserDeleted(h.UserRepo, userID)
+	if err != nil {
+		log.Printf("DeleteUser failed: %v", err)
+		RespondWithError(w, http.StatusInternalServerError, "Failed to delete user")
+		return
+	}
+
+	RespondWithJSON(w, http.StatusOK, map[string]string{"message": "User deleted successfully"})
+}
+
 func (h *Handler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		RespondWithError(w, http.StatusMethodNotAllowed, "Method not allowed")
@@ -204,6 +243,10 @@ func (h *Handler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	jwToken, username, userID, err := user.LoginUser(h.UserRepo, params.Email, params.Password)
 	if err != nil {
 		log.Printf("LoginUser error: %v", err)
+		if errors.Is(err, user.ErrAccountDeleted) {
+			RespondWithError(w, http.StatusUnauthorized, user.ErrAccountDeleted.Error())
+			return
+		}
 		RespondWithError(w, http.StatusUnauthorized, "Invalid username or password.")
 		return
 	}
@@ -223,7 +266,6 @@ func (h *Handler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	RespondWithJSON(w, http.StatusOK, payload)
-	return
 }
 
 func (h *Handler) RefreshTokensHandler(w http.ResponseWriter, r *http.Request) {
@@ -281,7 +323,6 @@ func (h *Handler) RefreshTokensHandler(w http.ResponseWriter, r *http.Request) {
 		RefreshToken: refreshToken,
 	}
 	RespondWithJSON(w, http.StatusOK, payload)
-	return
 }
 
 func (h *Handler) InterviewsHandler(w http.ResponseWriter, r *http.Request) {
@@ -347,7 +388,6 @@ func (h *Handler) InterviewsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	RespondWithJSON(w, http.StatusCreated, payload)
-	return
 }
 
 func (h *Handler) GetInterviewHandler(w http.ResponseWriter, r *http.Request) {

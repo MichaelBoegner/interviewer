@@ -53,6 +53,7 @@ func NewServer() (*Server, error) {
 	mux.Handle("/api/webhooks/billing", http.HandlerFunc(handler.BillingWebhookHandler))
 
 	mux.Handle("/api/users/", middleware.GetContext(http.HandlerFunc(handler.GetUsersHandler)))
+	mux.Handle("/api/users/delete/", middleware.GetContext(http.HandlerFunc(handler.DeleteUserHandler)))
 	mux.Handle("/api/interviews", middleware.GetContext(http.HandlerFunc(handler.InterviewsHandler)))
 	mux.Handle("/api/interviews/", middleware.GetContext(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {

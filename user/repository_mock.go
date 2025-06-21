@@ -37,6 +37,14 @@ func (m *MockRepo) CreateUser(user *User) (int, error) {
 	return 1, nil
 }
 
+func (m *MockRepo) MarkUserDeleted(userID int) error {
+	if m.failRepo {
+		return errors.New("Mocked DB failure")
+	}
+
+	return nil
+}
+
 func (m *MockRepo) GetUser(userID int) (*User, error) {
 	if m.failRepo {
 		return nil, errors.New("Mocked DB failure")
