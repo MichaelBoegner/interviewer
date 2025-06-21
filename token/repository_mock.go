@@ -29,3 +29,11 @@ func (m *MockRepo) GetStoredRefreshToken(userID int) (string, error) {
 
 	return "abc123", nil
 }
+
+func (m *MockRepo) DeleteRefreshToken(userID int) error {
+	if m.failRepo {
+		return errors.New("Mocked DB failure")
+	}
+
+	return nil
+}

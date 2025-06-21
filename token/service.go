@@ -70,6 +70,16 @@ func CreateRefreshToken(repo TokenRepo, userID int) (string, error) {
 	return refreshToken.RefreshToken, nil
 }
 
+func DeleteRefreshToken(repo TokenRepo, userID int) error {
+	err := repo.DeleteRefreshToken(userID)
+	if err != nil {
+		log.Printf("repo.DeleteRefreshToken failed: %v", err)
+		return err
+	}
+
+	return nil
+}
+
 func GetStoredRefreshToken(repo TokenRepo, userID int) (string, error) {
 	storedToken, err := repo.GetStoredRefreshToken(userID)
 	if err != nil {

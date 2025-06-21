@@ -231,6 +231,13 @@ func (h *Handler) DeleteUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	err = token.DeleteRefreshToken(h.TokenRepo, userID)
+	if err != nil {
+		log.Printf("DeleteRefreshTokensForUser failed: %v", err)
+		RespondWithError(w, http.StatusInternalServerError, "Internal server error")
+		return
+	}
+
 	err = h.Mailer.SendDeletionConfirmation(userReturned.Email)
 	if err != nil {
 		log.Printf("h.Mailer.SendDeletionConfirmation failed: %v", err)
@@ -328,6 +335,13 @@ func (h *Handler) RefreshTokensHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("CreateRefreshToken error: %v", err)
 		RespondWithError(w, http.StatusUnauthorized, "")
+		return
+	}
+
+	user, err := h.UserRepo.GetUser(params.UserID)
+	if err != nil || user.AccountStatus == "deleted" {
+		log.Printf("Refresh attempt for deleted account ID %d", params.UserID)
+		RespondWithError(w, http.StatusUnauthorized, "Account deactivated")
 		return
 	}
 

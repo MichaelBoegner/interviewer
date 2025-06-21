@@ -52,3 +52,17 @@ func (repo *Repository) GetStoredRefreshToken(userID int) (string, error) {
 	}
 	return storedToken, nil
 }
+
+func (repo *Repository) DeleteRefreshToken(userID int) error {
+	_, err := repo.DB.Exec(`
+		DELETE FROM refresh_tokens
+		WHERE user_id = $1
+	`, userID)
+
+	if err != nil {
+		log.Printf("Failed to delete refresh tokens for user %d: %v", userID, err)
+		return err
+	}
+
+	return nil
+}

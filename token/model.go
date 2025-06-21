@@ -26,4 +26,5 @@ func (c *CustomClaims) GetAudience() (jwt.ClaimStrings, error) {
 type TokenRepo interface {
 	AddRefreshToken(token *RefreshToken) error
 	GetStoredRefreshToken(userID int) (string, error)
+	DeleteRefreshToken(userID int) error
 }
