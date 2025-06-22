@@ -987,6 +987,9 @@ func (h *Handler) BillingWebhookHandler(w http.ResponseWriter, r *http.Request) 
 	}
 
 	eventType := webhookPayload.Meta.EventName
+
+	log.Printf("Received webhook: eventType=%q, webhookID=%s, subscriptionID=%s", eventType, webhookID, subscriptionID)
+
 	switch eventType {
 	case "order_created":
 		var orderAttrs billing.OrderAttributes

@@ -73,6 +73,8 @@ var allowedEmails = map[string]bool{
 	"cmikeb+test7@gmail.com":   true,
 	"cmikeb+test8@gmail.com":   true,
 	"cmikeb+test9@gmail.com":   true,
+	"cmikeb+test10@gmail.com":  true,
+	"cmikeb+test11@gmail.com":  true,
 	"sandburn@gmail.com":       true,
 	"germain.brion@gmail.com":  true,
 	"jaminotte@gmail.com":      true,
