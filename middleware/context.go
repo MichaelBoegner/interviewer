@@ -46,7 +46,7 @@ func EnableCors(next http.Handler) http.Handler {
 			w.Header().Set("Access-Control-Allow-Origin", "https://interviewer.dev")
 		} else {
 			log.Println("NOT using production")
-			w.Header().Set("Access-Control-Allow-Origin", "http://localhost:5173")
+			w.Header().Set("Access-Control-Allow-Origin", "https://85bd-2001-fb1-11b-6dad-98f1-6856-a26e-3bc9.ngrok-free.app")
 		}
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "Authorization, Content-Type")

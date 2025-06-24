@@ -176,3 +176,29 @@ func verifyResetToken(tokenString string) (string, error) {
 		return "", errors.New("Invalid token")
 	}
 }
+
+func GetOrCreateByEmail(repo UserRepo, email, username string) (*User, error) {
+	user, err := repo.GetUserByEmail(email)
+	if err == nil {
+		return user, nil
+	}
+
+	newUser := &User{
+		Email:             email,
+		Username:          username,
+		Password:          []byte("github_login"),
+		AccountStatus:     "active",
+		IndividualCredits: 1,
+		CreatedAt:         time.Now().UTC(),
+		UpdatedAt:         time.Now().UTC(),
+	}
+
+	id, err := repo.CreateUser(newUser)
+	if err != nil {
+		log.Printf("CreateUser failed: %v", err)
+		return nil, err
+	}
+
+	newUser.ID = id
+	return newUser, nil
+}

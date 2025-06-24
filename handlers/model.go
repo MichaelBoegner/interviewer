@@ -62,31 +62,6 @@ type Handler struct {
 	DB               *sql.DB
 }
 
-var allowedEmails = map[string]bool{
-	"cmikeb@gmail.com":         true,
-	"cmikeb+test1@gmail.com":   true,
-	"cmikeb+test2@gmail.com":   true,
-	"cmikeb+test3@gmail.com":   true,
-	"cmikeb+test4@gmail.com":   true,
-	"cmikeb+test5@gmail.com":   true,
-	"cmikeb+test6@gmail.com":   true,
-	"cmikeb+test7@gmail.com":   true,
-	"cmikeb+test8@gmail.com":   true,
-	"cmikeb+test9@gmail.com":   true,
-	"cmikeb+test10@gmail.com":  true,
-	"cmikeb+test11@gmail.com":  true,
-	"sandburn@gmail.com":       true,
-	"germain.brion@gmail.com":  true,
-	"jaminotte@gmail.com":      true,
-	"tarynmarin@gmail.com":     true,
-	"adammallory83@gmail.com":  true,
-	"mo_nattan@hotmail.com":    true,
-	"rbldevries@gmail.com":     true,
-	"memanseur@gmail.com":      true,
-	"unstrung@gmail.com":       true,
-	"daniel.bagwell@gmail.com": true,
-}
-
 func NewHandler(
 	interviewRepo interview.InterviewRepo,
 	userRepo user.UserRepo,

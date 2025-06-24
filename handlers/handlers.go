@@ -4,11 +4,14 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/michaelboegner/interviewer/billing"
 	"github.com/michaelboegner/interviewer/chatgpt"
@@ -44,11 +47,6 @@ func (h *Handler) RequestVerificationHandler(w http.ResponseWriter, r *http.Requ
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		RespondWithError(w, http.StatusBadRequest, "Invalid request body")
-		return
-	}
-
-	if !allowedEmails[req.Email] {
-		RespondWithError(w, http.StatusBadRequest, "We are not yet currently live. Try again later!")
 		return
 	}
 
@@ -294,6 +292,134 @@ func (h *Handler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	RespondWithJSON(w, http.StatusOK, payload)
+}
+
+func (h *Handler) GithubLoginHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		RespondWithError(w, http.StatusMethodNotAllowed, "Method not allowed")
+		return
+	}
+
+	var body struct {
+		Code string `json:"code"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		RespondWithError(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	data := url.Values{
+		"client_id":     {os.Getenv("GITHUB_CLIENT_ID")},
+		"client_secret": {os.Getenv("GITHUB_CLIENT_SECRET")},
+		"code":          {body.Code},
+	}
+
+	req, err := http.NewRequest("POST", "https://github.com/login/oauth/access_token", strings.NewReader(data.Encode()))
+	if err != nil {
+		RespondWithError(w, http.StatusInternalServerError, "Failed to create request")
+		return
+	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Set("Accept", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		RespondWithError(w, http.StatusInternalServerError, "GitHub token exchange failed")
+		return
+	}
+	defer resp.Body.Close()
+
+	var tokenResp struct {
+		AccessToken string `json:"access_token"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&tokenResp); err != nil {
+		RespondWithError(w, http.StatusInternalServerError, "Token parse failed")
+		return
+	}
+
+	client = &http.Client{}
+	req, err = http.NewRequest("GET", "https://api.github.com/user", nil)
+	if err != nil {
+		log.Printf("http.NewRequest failed: %v", err)
+		RespondWithError(w, http.StatusInternalServerError, "Internal server error")
+		return
+	}
+	req.Header.Set("Authorization", "Bearer "+tokenResp.AccessToken)
+	githubResp, err := client.Do(req)
+	if err != nil {
+		log.Printf("GET api.github.com/user failed: %v", err)
+		RespondWithError(w, http.StatusInternalServerError, "Internal server error")
+		return
+	}
+	defer githubResp.Body.Close()
+
+	var githubUser struct {
+		Email string `json:"email"`
+		Login string `json:"login"`
+	}
+	json.NewDecoder(githubResp.Body).Decode(&githubUser)
+
+	//DEBUG
+	fmt.Printf("githubUser Email: %v\n", githubUser.Email)
+	fmt.Printf("githubUser Login: %v\n", githubUser.Login)
+
+	// If email is nil, get from /user/emails
+	if githubUser.Email == "" {
+		req, err := http.NewRequest("GET", "https://api.github.com/user/emails", nil)
+		if err != nil {
+			log.Printf("http.NewRequest failed: %v", err)
+			RespondWithError(w, http.StatusInternalServerError, "Internal server error")
+			return
+		}
+		req.Header.Set("Authorization", "Bearer "+tokenResp.AccessToken)
+		emailResp, err := client.Do(req)
+		if err != nil {
+			log.Printf("GET api.github.com/user/emails failed: %v", err)
+			RespondWithError(w, http.StatusInternalServerError, "Internal server error")
+			return
+		}
+		defer emailResp.Body.Close()
+
+		var emails []struct {
+			Email   string `json:"email"`
+			Primary bool   `json:"primary"`
+		}
+		json.NewDecoder(emailResp.Body).Decode(&emails)
+
+		for _, e := range emails {
+			if e.Primary {
+				githubUser.Email = e.Email
+				break
+			}
+		}
+	}
+
+	user, err := user.GetOrCreateByEmail(h.UserRepo, githubUser.Email, githubUser.Login)
+	if err != nil {
+		RespondWithError(w, http.StatusInternalServerError, "User creation failed")
+		return
+	}
+
+	jwt, err := token.CreateJWT(strconv.Itoa(user.ID), 0)
+	if err != nil {
+		log.Printf("token.CreateJWT failed: %v", err)
+		RespondWithError(w, http.StatusInternalServerError, "Internal server error")
+		return
+	}
+	refreshToken, err := token.CreateRefreshToken(h.TokenRepo, user.ID)
+	if err != nil {
+		log.Printf("token.CreateRefreshToken failed: %v", err)
+		RespondWithError(w, http.StatusInternalServerError, "Internal server error")
+		return
+	}
+
+	RespondWithJSON(w, http.StatusOK, map[string]any{
+		"userID":       user.ID,
+		"username":     user.Username,
+		"jwt":          jwt,
+		"refreshToken": refreshToken,
+	})
 }
 
 func (h *Handler) RefreshTokensHandler(w http.ResponseWriter, r *http.Request) {
