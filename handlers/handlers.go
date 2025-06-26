@@ -382,17 +382,24 @@ func (h *Handler) GithubLoginHandler(w http.ResponseWriter, r *http.Request) {
 		defer emailResp.Body.Close()
 
 		var emails []struct {
-			Email   string `json:"email"`
-			Primary bool   `json:"primary"`
+			Email    string `json:"email"`
+			Primary  bool   `json:"primary"`
+			Verified bool   `json:"verified"`
 		}
 		json.NewDecoder(emailResp.Body).Decode(&emails)
 
 		for _, e := range emails {
-			if e.Primary {
+			if e.Primary && e.Verified {
 				githubUser.Email = e.Email
 				break
 			}
 		}
+	}
+
+	if githubUser.Email == "" {
+		log.Printf("GitHub login failed: no verified email found for user %s", githubUser.Login)
+		RespondWithError(w, http.StatusUnauthorized, "We couldn’t retrieve a valid email address from GitHub. Please check your GitHub email settings and try again.")
+		return
 	}
 
 	user, err := user.GetOrCreateByEmail(h.UserRepo, githubUser.Email, githubUser.Login)
