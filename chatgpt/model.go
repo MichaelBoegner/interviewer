@@ -111,7 +111,7 @@ Finally, based on the qualifications and overall language in the job description
 Return only **valid JSON** in the following format:
 
 {
-  "domain": ["..."],
+  "domain": "...",
   "responsibilities": ["..."],
   "qualifications": ["..."],
   "tech_stack": ["..."]
