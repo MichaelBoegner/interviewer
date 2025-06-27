@@ -52,6 +52,7 @@ func NewServer() (*Server, error) {
 	mux.Handle("/api/auth/request-reset", http.HandlerFunc(handler.RequestResetHandler))
 	mux.Handle("/api/auth/reset-password", http.HandlerFunc(handler.ResetPasswordHandler))
 	mux.Handle("/api/webhooks/billing", http.HandlerFunc(handler.BillingWebhookHandler))
+	mux.Handle("/api/jd", http.HandlerFunc(handler.JDInputHandler))
 	mux.Handle("/health", http.HandlerFunc(handler.HealthCheckHandler))
 
 	mux.Handle("/api/users/",

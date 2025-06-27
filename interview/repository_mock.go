@@ -84,3 +84,11 @@ func (m *MockRepo) LinkConversation(interviewID, conversationID int) error {
 
 	return nil
 }
+
+func (m *MockRepo) UpdateCreatedInterview(interview *Interview) error {
+	if m.FailRepo {
+		return errors.New("Mocked DB failure")
+	}
+
+	return nil
+}

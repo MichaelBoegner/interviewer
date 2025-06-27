@@ -42,4 +42,5 @@ type InterviewRepo interface {
 	GetInterviewSummariesByUserID(userID int) ([]Summary, error)
 	UpdateScore(interviewID, pointsEarned int) error
 	UpdateStatus(interviewID, userID int, status string) error
+	UpdateCreatedInterview(interview *Interview) error
 }

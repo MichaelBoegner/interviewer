@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/michaelboegner/interviewer/chatgpt"
+	"github.com/michaelboegner/interviewer/jdsummary"
 )
 
 func GetChatGPTResponses(conversation *Conversation, openAI chatgpt.AIClient) (*chatgpt.ChatGPTResponse, string, error) {
@@ -41,9 +42,14 @@ func GetConversationHistory(conversation *Conversation) ([]map[string]string, er
 		arrayOfTopics = append(arrayOfTopics, predefinedTopics[topic].Name)
 	}
 
+	jdSummary, ok := jdsummary.JDCache.Get(conversation.InterviewID)
+	if !ok {
+		log.Printf("jdsummary.JDCache.Get() failed")
+		return nil, errors.New("Failed to get cached jdsummary")
+	}
 	systemPrompt := map[string]string{
 		"role":    "system",
-		"content": chatgpt.BuildPrompt(arrayOfTopics, currentTopic, conversation.CurrentQuestionNumber),
+		"content": chatgpt.BuildPrompt(arrayOfTopics, currentTopic, conversation.CurrentQuestionNumber, jdSummary),
 	}
 
 	chatGPTConversationArray = append(chatGPTConversationArray, systemPrompt)
@@ -136,7 +142,7 @@ func ClonePredefinedTopics() map[int]Topic {
 		topics[id] = Topic{
 			ID:        topic.ID,
 			Name:      topic.Name,
-			Questions: make(map[int]*Question), // fresh for each conversation
+			Questions: make(map[int]*Question),
 		}
 	}
 	return topics

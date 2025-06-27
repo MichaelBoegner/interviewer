@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS interviews (
     language VARCHAR(50) NOT NULL,
     prompt TEXT,         
     first_question TEXT, 
-    subtopic VARCHAR(255) NOT NULL,                       
+    subtopic VARCHAR(255),                       
     created_at TIMESTAMP NOT NULL,
     updated_at TIMESTAMP NOT NULL
 );

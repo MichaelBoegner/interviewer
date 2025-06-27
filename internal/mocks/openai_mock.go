@@ -183,7 +183,7 @@ func init() {
 
 type MockOpenAIClient struct{}
 
-func (m *MockOpenAIClient) GetChatGPTResponseInterview(prompt string) (*chatgpt.ChatGPTResponse, error) {
+func (m *MockOpenAIClient) GetChatGPTResponse(prompt string) (*chatgpt.ChatGPTResponse, error) {
 	return responseInterview, nil
 }
 

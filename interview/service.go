@@ -1,11 +1,13 @@
 package interview
 
 import (
+	"fmt"
 	"log"
 	"time"
 
 	"github.com/michaelboegner/interviewer/billing"
 	"github.com/michaelboegner/interviewer/chatgpt"
+	"github.com/michaelboegner/interviewer/jdsummary"
 	"github.com/michaelboegner/interviewer/user"
 )
 
@@ -17,7 +19,8 @@ func StartInterview(
 	user *user.User,
 	length,
 	numberQuestions int,
-	difficulty string) (*Interview, error) {
+	difficulty string,
+	jd string) (*Interview, error) {
 
 	err := deductAndLogCredit(user, userRepo, billingRepo)
 	if err != nil {
@@ -26,13 +29,6 @@ func StartInterview(
 	}
 
 	now := time.Now().UTC()
-	prompt := chatgpt.BuildPrompt([]string{}, "Introduction", 1)
-
-	chatGPTResponse, err := ai.GetChatGPTResponseInterview(prompt)
-	if err != nil {
-		log.Printf("getChatGPTResponse err: %v\n", err)
-		return nil, err
-	}
 
 	interview := &Interview{
 		UserId:          user.ID,
@@ -42,10 +38,6 @@ func StartInterview(
 		Status:          "active",
 		Score:           100,
 		Language:        "Python",
-		Prompt:          prompt,
-		ChatGPTResponse: chatGPTResponse,
-		FirstQuestion:   chatGPTResponse.NextQuestion,
-		Subtopic:        chatGPTResponse.Subtopic,
 		CreatedAt:       now,
 		UpdatedAt:       now,
 	}
@@ -56,6 +48,39 @@ func StartInterview(
 		return nil, err
 	}
 	interview.Id = id
+	jdSummary := ""
+
+	if jd != "" {
+		jdInput, err := ai.ExtractJDInput(jd)
+		if err != nil {
+			fmt.Printf("ai.ExtractJDInput() failed: %v", err)
+			return nil, err
+		}
+		jdSummary, err = ai.ExtractJDSummary(jdInput)
+		if err != nil {
+			fmt.Printf("ai.ExtractJDInput() failed: %v", err)
+			return nil, err
+		}
+		jdsummary.JDCache.Set(interview.Id, jdSummary)
+	}
+
+	prompt := chatgpt.BuildPrompt([]string{}, "Introduction", 1, jdSummary)
+
+	chatGPTResponse, err := ai.GetChatGPTResponse(prompt)
+	if err != nil {
+		log.Printf("getChatGPTResponse err: %v\n", err)
+		return nil, err
+	}
+
+	interview.Prompt = prompt
+	interview.FirstQuestion = chatGPTResponse.NextQuestion
+	interview.Subtopic = chatGPTResponse.Subtopic
+
+	err = interviewRepo.UpdateCreatedInterview(interview)
+	if err != nil {
+		log.Printf("interiviewRepo.UpdateCreatedInterview failed: %v", err)
+		return nil, err
+	}
 
 	return interview, nil
 }
