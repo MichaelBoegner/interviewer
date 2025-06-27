@@ -27,9 +27,13 @@ func (repo *Repository) CreateInterview(interview *Interview) (int, error) {
 	status, 
 	score, 
 	language, 
+	prompt, 
+	jd_summary,
+	first_question, 
+	subtopic,
 	created_at,
 	updated_at)
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
     RETURNING id
     `
 
@@ -42,6 +46,10 @@ func (repo *Repository) CreateInterview(interview *Interview) (int, error) {
 		interview.Status,
 		interview.Score,
 		interview.Language,
+		interview.Prompt,
+		interview.JDSummary,
+		interview.FirstQuestion,
+		interview.Subtopic,
 		time.Now().UTC(),
 		time.Now().UTC(),
 	).Scan(&id)
@@ -82,6 +90,7 @@ func (repo *Repository) GetInterview(interviewID int) (*Interview, error) {
 		score, 
 		language, 
 		prompt, 
+		jd_summary,
 		first_question, 
 		subtopic,
 		updated_at,
@@ -103,6 +112,7 @@ func (repo *Repository) GetInterview(interviewID int) (*Interview, error) {
 		&interview.Score,
 		&interview.Language,
 		&interview.Prompt,
+		&interview.JDSummary,
 		&interview.FirstQuestion,
 		&interview.Subtopic,
 		&interview.UpdatedAt,
@@ -152,48 +162,12 @@ func (repo *Repository) UpdateScore(interviewID, pointsEarned int) error {
 			updated_at = $2
 		WHERE id = $3
 	`
-	_, err := repo.DB.Exec(query,
-		pointsEarned,
-		time.Now().UTC(),
-		interviewID)
+	_, err := repo.DB.Exec(query, pointsEarned, time.Now().UTC(), interviewID)
 	return err
 }
 
 func (repo *Repository) UpdateStatus(interviewID, userID int, status string) error {
-	query := `UPDATE interviews 
-				SET 
-					status = $1, 
-					updated_at = $2 
-				WHERE 
-					id = $3 
-					AND user_id = $4`
-	_, err := repo.DB.Exec(query,
-		status,
-		time.Now().UTC(),
-		interviewID,
-		userID)
+	query := `UPDATE interviews SET status = $1, updated_at = $2 WHERE id = $3 AND user_id = $4`
+	_, err := repo.DB.Exec(query, status, time.Now().UTC(), interviewID, userID)
 	return err
-}
-
-func (repo *Repository) UpdateCreatedInterview(interview *Interview) error {
-
-	query := `UPDATE interviews 
-				SET 
-					prompt = $1, 
-					first_question = $2, 
-					subtopic = $3,
-					updated_at = $4 
-				WHERE id = $5`
-	_, err := repo.DB.Exec(query,
-		interview.Prompt,
-		interview.FirstQuestion,
-		interview.Subtopic,
-		time.Now().UTC(),
-		interview.Id)
-	if err != nil {
-		log.Printf("UpdateCreatedInterview failed: %v", err)
-		return err
-	}
-
-	return nil
 }

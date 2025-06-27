@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS interviews (
     status VARCHAR(50) NOT NULL,           
     language VARCHAR(50) NOT NULL,
     prompt TEXT,         
+    jd_summary TEXT,
     first_question TEXT, 
     subtopic VARCHAR(255),                       
     created_at TIMESTAMP NOT NULL,

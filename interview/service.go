@@ -7,7 +7,6 @@ import (
 
 	"github.com/michaelboegner/interviewer/billing"
 	"github.com/michaelboegner/interviewer/chatgpt"
-	"github.com/michaelboegner/interviewer/jdsummary"
 	"github.com/michaelboegner/interviewer/user"
 )
 
@@ -29,25 +28,6 @@ func StartInterview(
 	}
 
 	now := time.Now().UTC()
-
-	interview := &Interview{
-		UserId:          user.ID,
-		Length:          length,
-		NumberQuestions: numberQuestions,
-		Difficulty:      difficulty,
-		Status:          "active",
-		Score:           100,
-		Language:        "Python",
-		CreatedAt:       now,
-		UpdatedAt:       now,
-	}
-
-	id, err := interviewRepo.CreateInterview(interview)
-	if err != nil {
-		log.Printf("CreateInterview err: %v", err)
-		return nil, err
-	}
-	interview.Id = id
 	jdSummary := ""
 
 	if jd != "" {
@@ -61,7 +41,6 @@ func StartInterview(
 			fmt.Printf("ai.ExtractJDInput() failed: %v", err)
 			return nil, err
 		}
-		jdsummary.JDCache.Set(interview.Id, jdSummary)
 	}
 
 	prompt := chatgpt.BuildPrompt([]string{}, "Introduction", 1, jdSummary)
@@ -72,15 +51,28 @@ func StartInterview(
 		return nil, err
 	}
 
-	interview.Prompt = prompt
-	interview.FirstQuestion = chatGPTResponse.NextQuestion
-	interview.Subtopic = chatGPTResponse.Subtopic
+	interview := &Interview{
+		UserId:          user.ID,
+		Length:          length,
+		NumberQuestions: numberQuestions,
+		Difficulty:      difficulty,
+		Status:          "active",
+		Score:           100,
+		Language:        "Python",
+		Prompt:          prompt,
+		JDSummary:       jdSummary,
+		FirstQuestion:   chatGPTResponse.NextQuestion,
+		Subtopic:        chatGPTResponse.Subtopic,
+		CreatedAt:       now,
+		UpdatedAt:       now,
+	}
 
-	err = interviewRepo.UpdateCreatedInterview(interview)
+	id, err := interviewRepo.CreateInterview(interview)
 	if err != nil {
-		log.Printf("interiviewRepo.UpdateCreatedInterview failed: %v", err)
+		log.Printf("CreateInterview err: %v", err)
 		return nil, err
 	}
+	interview.Id = id
 
 	return interview, nil
 }

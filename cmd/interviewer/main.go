@@ -6,13 +6,10 @@ import (
 
 	"github.com/joho/godotenv"
 	"github.com/michaelboegner/interviewer/internal/server"
-	"github.com/michaelboegner/interviewer/jdsummary"
 )
 
 func main() {
 	log.SetFlags(log.LstdFlags | log.Llongfile)
-
-	jdsummary.Init()
 
 	if os.Getenv("ENV") != "production" {
 		if err := godotenv.Load(".env.dev"); err != nil {

@@ -67,7 +67,7 @@ func CreateConversation(
 		return nil, err
 	}
 
-	chatGPTResponse, chatGPTResponseString, err := GetChatGPTResponses(conversation, openAI)
+	chatGPTResponse, chatGPTResponseString, err := GetChatGPTResponses(conversation, openAI, interviewRepo)
 	if err != nil {
 		log.Printf("getChatGPTResponses failed: %v", err)
 		return nil, err
@@ -131,7 +131,7 @@ func AppendConversation(
 	}
 	conversation.Topics[topicID].Questions[questionNumber].Messages = append(conversation.Topics[topicID].Questions[questionNumber].Messages, messageUser)
 
-	chatGPTResponse, chatGPTResponseString, err := GetChatGPTResponses(conversation, openAI)
+	chatGPTResponse, chatGPTResponseString, err := GetChatGPTResponses(conversation, openAI, interviewRepo)
 	if err != nil {
 		log.Printf("getChatGPTResponses failed: %v", err)
 		return nil, err
