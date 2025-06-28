@@ -503,6 +503,7 @@ func (h *Handler) InterviewsHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("Decoding params failed: %v", err)
 		RespondWithError(w, http.StatusInternalServerError, "Internal Server Error")
+		return
 	}
 
 	userReturned, err := user.GetUser(h.UserRepo, userID)

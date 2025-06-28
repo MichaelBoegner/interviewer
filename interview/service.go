@@ -38,7 +38,7 @@ func StartInterview(
 		}
 		jdSummary, err = ai.ExtractJDSummary(jdInput)
 		if err != nil {
-			fmt.Printf("ai.ExtractJDInput() failed: %v", err)
+			fmt.Printf("ai.ExtractJDSummary() failed: %v", err)
 			return nil, err
 		}
 	}
