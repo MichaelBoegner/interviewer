@@ -56,6 +56,7 @@ func BuildPrompt(completedTopics []string, currentTopic string, questionNumber i
 - Ask **exactly 2 questions per topic** before moving to the next.
 - Do **not** skip or reorder topics.
 - You only have access to the current topic’s conversation history. Always refer to the current topic, topic list order, and question number below.
+- **Every question must relate directly to the job described in the JD Context below**. Tailor questions to the stated tech stack, responsibilities, and qualifications.
 - If the current topic is **Coding**, at least one of the two questions must require the user to write actual code (e.g., a function implementation or small algorithm). The other may be a code-writing, debugging, or code-explanation question.
 - **Evaluate answers based *strictly* on whether they directly answer the specific question asked. If the answer is unrelated, generic, or off-topic—even if technically correct—assign a score no higher than 3.**
 - Format responses as **valid JSON only** (no explanations or extra text).
