@@ -1,6 +1,7 @@
 package interview
 
 import (
+	"fmt"
 	"log"
 	"time"
 
@@ -17,7 +18,8 @@ func StartInterview(
 	user *user.User,
 	length,
 	numberQuestions int,
-	difficulty string) (*Interview, error) {
+	difficulty string,
+	jd string) (*Interview, error) {
 
 	err := deductAndLogCredit(user, userRepo, billingRepo)
 	if err != nil {
@@ -26,9 +28,24 @@ func StartInterview(
 	}
 
 	now := time.Now().UTC()
-	prompt := chatgpt.BuildPrompt([]string{}, "Introduction", 1)
+	jdSummary := ""
 
-	chatGPTResponse, err := ai.GetChatGPTResponseInterview(prompt)
+	if jd != "" {
+		jdInput, err := ai.ExtractJDInput(jd)
+		if err != nil {
+			fmt.Printf("ai.ExtractJDInput() failed: %v", err)
+			return nil, err
+		}
+		jdSummary, err = ai.ExtractJDSummary(jdInput)
+		if err != nil {
+			fmt.Printf("ai.ExtractJDSummary() failed: %v", err)
+			return nil, err
+		}
+	}
+
+	prompt := chatgpt.BuildPrompt([]string{}, "Introduction", 1, jdSummary)
+
+	chatGPTResponse, err := ai.GetChatGPTResponse(prompt)
 	if err != nil {
 		log.Printf("getChatGPTResponse err: %v\n", err)
 		return nil, err
@@ -43,7 +60,7 @@ func StartInterview(
 		Score:           100,
 		Language:        "Python",
 		Prompt:          prompt,
-		ChatGPTResponse: chatGPTResponse,
+		JDSummary:       jdSummary,
 		FirstQuestion:   chatGPTResponse.NextQuestion,
 		Subtopic:        chatGPTResponse.Subtopic,
 		CreatedAt:       now,

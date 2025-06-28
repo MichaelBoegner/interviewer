@@ -8,10 +8,11 @@ import (
 	"time"
 
 	"github.com/michaelboegner/interviewer/chatgpt"
+	"github.com/michaelboegner/interviewer/interview"
 )
 
-func GetChatGPTResponses(conversation *Conversation, openAI chatgpt.AIClient) (*chatgpt.ChatGPTResponse, string, error) {
-	conversationHistory, err := GetConversationHistory(conversation)
+func GetChatGPTResponses(conversation *Conversation, openAI chatgpt.AIClient, interviewRepo interview.InterviewRepo) (*chatgpt.ChatGPTResponse, string, error) {
+	conversationHistory, err := GetConversationHistory(conversation, interviewRepo)
 	if err != nil {
 		log.Printf("GetConversationHistory failed: %v", err)
 		return nil, "", err
@@ -30,7 +31,7 @@ func GetChatGPTResponses(conversation *Conversation, openAI chatgpt.AIClient) (*
 	return chatGPTResponse, chatGPTResponseString, nil
 }
 
-func GetConversationHistory(conversation *Conversation) ([]map[string]string, error) {
+func GetConversationHistory(conversation *Conversation, interviewRepo interview.InterviewRepo) ([]map[string]string, error) {
 	var arrayOfTopics []string
 	var currentTopic string
 	chatGPTConversationArray := make([]map[string]string, 0)
@@ -41,9 +42,15 @@ func GetConversationHistory(conversation *Conversation) ([]map[string]string, er
 		arrayOfTopics = append(arrayOfTopics, predefinedTopics[topic].Name)
 	}
 
+	interview, err := interviewRepo.GetInterview(conversation.InterviewID)
+	if err != nil {
+		log.Printf("jdsummary.JDCache.Get() did not return anything")
+		return nil, err
+	}
+
 	systemPrompt := map[string]string{
 		"role":    "system",
-		"content": chatgpt.BuildPrompt(arrayOfTopics, currentTopic, conversation.CurrentQuestionNumber),
+		"content": chatgpt.BuildPrompt(arrayOfTopics, currentTopic, conversation.CurrentQuestionNumber, interview.JDSummary),
 	}
 
 	chatGPTConversationArray = append(chatGPTConversationArray, systemPrompt)
@@ -136,7 +143,7 @@ func ClonePredefinedTopics() map[int]Topic {
 		topics[id] = Topic{
 			ID:        topic.ID,
 			Name:      topic.Name,
-			Questions: make(map[int]*Question), // fresh for each conversation
+			Questions: make(map[int]*Question),
 		}
 	}
 	return topics

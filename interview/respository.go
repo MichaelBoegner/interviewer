@@ -28,11 +28,12 @@ func (repo *Repository) CreateInterview(interview *Interview) (int, error) {
 	score, 
 	language, 
 	prompt, 
+	jd_summary,
 	first_question, 
 	subtopic,
 	created_at,
 	updated_at)
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
     RETURNING id
     `
 
@@ -46,6 +47,7 @@ func (repo *Repository) CreateInterview(interview *Interview) (int, error) {
 		interview.Score,
 		interview.Language,
 		interview.Prompt,
+		interview.JDSummary,
 		interview.FirstQuestion,
 		interview.Subtopic,
 		time.Now().UTC(),
@@ -88,6 +90,7 @@ func (repo *Repository) GetInterview(interviewID int) (*Interview, error) {
 		score, 
 		language, 
 		prompt, 
+		jd_summary,
 		first_question, 
 		subtopic,
 		updated_at,
@@ -109,6 +112,7 @@ func (repo *Repository) GetInterview(interviewID int) (*Interview, error) {
 		&interview.Score,
 		&interview.Language,
 		&interview.Prompt,
+		&interview.JDSummary,
 		&interview.FirstQuestion,
 		&interview.Subtopic,
 		&interview.UpdatedAt,
@@ -163,7 +167,7 @@ func (repo *Repository) UpdateScore(interviewID, pointsEarned int) error {
 }
 
 func (repo *Repository) UpdateStatus(interviewID, userID int, status string) error {
-	query := `UPDATE interviews SET status = $1, updated_at = NOW() WHERE id = $2 AND user_id = $3`
-	_, err := repo.DB.Exec(query, status, interviewID, userID)
+	query := `UPDATE interviews SET status = $1, updated_at = $2 WHERE id = $3 AND user_id = $4`
+	_, err := repo.DB.Exec(query, status, time.Now().UTC(), interviewID, userID)
 	return err
 }

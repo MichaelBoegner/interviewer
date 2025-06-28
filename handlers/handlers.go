@@ -505,6 +505,14 @@ func (h *Handler) InterviewsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	params := &middleware.AcceptedVals{}
+	err := json.NewDecoder(r.Body).Decode(params)
+	if err != nil {
+		log.Printf("Decoding params failed: %v", err)
+		RespondWithError(w, http.StatusInternalServerError, "Internal Server Error")
+		return
+	}
+
 	userReturned, err := user.GetUser(h.UserRepo, userID)
 	if err != nil {
 		log.Printf("GetUser error: %v", err)
@@ -520,7 +528,8 @@ func (h *Handler) InterviewsHandler(w http.ResponseWriter, r *http.Request) {
 		userReturned,
 		30,
 		3,
-		"easy")
+		"easy",
+		params.JD)
 	if err != nil {
 		var openaiErr *chatgpt.OpenAIError
 		if errors.As(err, &openaiErr) {
@@ -1316,4 +1325,48 @@ func (h *Handler) DashboardHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	RespondWithJSON(w, http.StatusOK, dashboardData)
+}
+
+func (h *Handler) JDInputHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		RespondWithError(w, http.StatusMethodNotAllowed, "Method not allowed")
+		return
+	}
+
+	var input struct {
+		JobDescription string `json:"job_description"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil || input.JobDescription == "" {
+		RespondWithError(w, http.StatusBadRequest, "Invalid job description")
+		return
+	}
+
+	jdInput, err := h.OpenAI.ExtractJDInput(input.JobDescription)
+	if err != nil {
+		var openaiErr *chatgpt.OpenAIError
+		if errors.As(err, &openaiErr) {
+			log.Printf("OpenAI error: %v", openaiErr)
+			RespondWithError(w, openaiErr.StatusCode, openaiErr.Message)
+			return
+		}
+		log.Printf("chatgpt.ExtractJDInput failed: %v", err)
+		RespondWithError(w, http.StatusInternalServerError, "Failed to process job description")
+		return
+	}
+
+	jdSummary, err := h.OpenAI.ExtractJDSummary(jdInput)
+	if err != nil {
+		var openaiErr *chatgpt.OpenAIError
+		if errors.As(err, &openaiErr) {
+			log.Printf("OpenAI error: %v", openaiErr)
+			RespondWithError(w, openaiErr.StatusCode, openaiErr.Message)
+			return
+		}
+		log.Printf("chatgpt.ExtractJDSummary failed: %v", err)
+		RespondWithError(w, http.StatusInternalServerError, "Failed to process job description")
+		return
+
+	}
+
+	RespondWithJSON(w, http.StatusOK, jdSummary)
 }
