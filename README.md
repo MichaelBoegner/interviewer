@@ -318,23 +318,6 @@ The app is tested with both **unit tests** (mocked repositories) and **integrati
 
 Tests are run consistently during development and are integrated into the CI pipeline to ensure correctness, stability, and maintainability.
 
-## 🛣️ Development Roadmap
-
-### Upcoming Additional Improvements
-- Google auth
-- Timer
-- Deduplicating questions accross interviews
-- Strengths/weaknesses summary
-- Line graph (progress tracker)
-- Interview readiness meter
-- Enhancing error handling and recovery mechanisms
-- Structured logging for better observability
-- Implement a single active session policy
-- Supporting multiple conversation tracks within an interview
-- Adding detailed analytics for interview performance
-- Optimizing database queries
-- Interview preferences (language, difficulty, duration, etc . . .)
-
 ## 🌐 Frontend
 
 https://github.com/MichaelBoegner/interviewer-ui
