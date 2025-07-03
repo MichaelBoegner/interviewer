@@ -17,7 +17,7 @@
 - [Tech Stack](#-tech-stack)
 - [API Documentation](#-api-documentation)
 - [Database Schema](#-database-schema)
-- [Billing & Subscription System](#-billing-&-subscription-system)
+- [Billing System](#-billing-system)
 - [Deployment](#-deployment)
 - [Local Development](#-local-development)
 - [Security Implementation](#-security-implementation)
@@ -189,7 +189,7 @@ To apply them:
 
 The schema includes tables for `users`, `interviews`, `conversations`, `questions`, `messages`, `refresh_tokens`, `processed_webhooks`, and `credit_transactions`. See individual migration files for full definitions.
 
-## 💳 Billing & Subscription System
+## 💳 Billing System
 
 The Interviewer platform supports both one-time purchases and recurring subscriptions using Lemon Squeezy. Credits are granted based on the user's payment plan and control access to AI-powered mock interviews.
 
