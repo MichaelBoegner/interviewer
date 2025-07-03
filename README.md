@@ -17,7 +17,7 @@
 - [Tech Stack](#-tech-stack)
 - [API Documentation](#-api-documentation)
 - [Database Schema](#-database-schema)
-- [Billing & Subscription System](#billing-&-subscription-system)
+- [Billing & Subscription System](#-billing-&-subscription-system)
 - [Deployment](#-deployment)
 - [Local Development](#-local-development)
 - [Security Implementation](#-security-implementation)
