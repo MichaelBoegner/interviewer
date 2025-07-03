@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -360,11 +359,6 @@ func (h *Handler) GithubLoginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	json.NewDecoder(githubResp.Body).Decode(&githubUser)
 
-	//DEBUG
-	fmt.Printf("githubUser Email: %v\n", githubUser.Email)
-	fmt.Printf("githubUser Login: %v\n", githubUser.Login)
-
-	// If email is nil, get from /user/emails
 	if githubUser.Email == "" {
 		req, err := http.NewRequest("GET", "https://api.github.com/user/emails", nil)
 		if err != nil {

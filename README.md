@@ -16,6 +16,7 @@
 - [Recorded Demo](#-recorded-demo)
 - [System Architecture](#-system-architecture)
 - [Key Features](#-key-features)
+- [Billing & Subscription System](#billing-&-subscription-system)
 - [Tech Stack](#-tech-stack)
 - [API Documentation](#-api-documentation)
 - [Database Schema](#-database-schema)
@@ -32,19 +33,12 @@
 
 Interviewer App is a robust backend service, coupled with a light demo frontend, that powers an interactive Backend Engineer interviewing experience. It leverages ChatGPT's conversational AI capabilities to create personalized, adaptive interview sessions tailored to each user's preferences.
 
-*For a deep dive into the challenges, design decisions, and lessons learned, check out my retrospective:*  
-**[Interviewer App: Lessons from Building an AI-Powered Mock Interview Platform](https://medium.com/@michaelboegner/my-experience-developing-the-mock-interview-app-interviewer-7dfc42f82ee4)**  
-
 The application was built with a focus on:
 
 - **Clean Architecture**: Following repository-service pattern with clear separation of concerns
 - **Scalability**: Designed for horizontal scaling with stateless API design
 - **Security**: Implementing industry-standard JWT authentication with refresh token rotation
 - **Maintainability**: Modular code structure with reusable components
-
-> ⚠️ **Note:** The backend code for this project is private due to proprietary licensing and upcoming go-to-market efforts. I built the entire backend myself in Go, including structured interview logic, OpenAI GPT-4 integration, secure JWT-based auth, and PostgreSQL-backed persistence.
->
-> This README remains public to demonstrate the full system design, development process, and architecture. The [frontend repository](https://github.com/michaelboegner/interviewer-ui) reflects the user experience side of the platform.
 
 ## 🧠 Learning Log
 
@@ -54,21 +48,13 @@ I maintain a [daily learning log](./learninglog/) as part of this project to doc
 
 📂 [Browse the learning log →](./learninglog/)
 
-## 🎥 Recorded Demo
-- The frontend is located here: [https://github.com/michaelboegner/interviewer-ui](https://github.com/michaelboegner/interviewer-ui). 
-- However, due to the costs involved with calls to OpenAI, I have opted to provide a recorded demo in lieue of open access.
-- While there’s plenty of room to expand the frontend — such as adding topic listings, dashboards, and user account features — this project is primarily focused on backend engineering. My goal was to design and implement a clean, well-structured backend system with real-world patterns like service layering, token authentication, and integration with external APIs.
-- Live demonstrations are available upon request. 
-- [Watch the video](https://www.loom.com/share/df1cd256e2254650b0691af254747fb9?sid=0407a578-961e-4580-8425-f3066b6d183c)
-[![Watch the video](assets/loom-preview.png)](https://www.loom.com/share/df1cd256e2254650b0691af254747fb9?sid=0407a578-961e-4580-8425-f3066b6d183c)
-
 ## 🏗 System Architecture
 
 ```
 ┌─────────────────┐      ┌──────────────────────────────────────┐      ┌───────────────┐
 │                 │      │                                      │      │               │
-│   Client App    │◄────►│   Go Backend API (This Repository)   │◄────►│   PostgreSQL  │
-│   (React.js)    │      │                                      │      │   Database    │
+│     React       │◄────►│          Go Backend API              │◄────►│   PostgreSQL  │
+│   Client App    │      │                                      │      │   Database    │
 │                 │      │                                      │      │               │
 └─────────────────┘      └───────────────┬──────────────────────┘      └───────────────┘
                                          │
@@ -76,7 +62,7 @@ I maintain a [daily learning log](./learninglog/) as part of this project to doc
                                          ▼
                            ┌─────────────────────────┐
                            │                         │
-                           │   OpenAI API (ChatGPT)  │
+                           │       OpenAI API        │
                            │                         │
                            └─────────────────────────┘
 ```
@@ -90,23 +76,55 @@ The backend is structured using a layered architecture:
 
 ## 🎯 Key Features
 
-- **User Management**: Secure user registration, authentication, and profile management
+- **User Management**: Secure user registration, authentication, and password recovery
 - **JWT-based Authentication**: Access tokens with configurable expiration and refresh token rotation
 - **Structured Mock Interviews**: Dynamic interview generation
 - **Conversational AI Integration**: Seamless integration with OpenAI's GPT model
 - **Persistent Data Storage**: Complete interview history stored for future review
+- **Billing & Subscription System**: Credit-based access via Lemon Squeezy integration, supporting both one-time and recurring plans
 - **RESTful API Design**: Consistent and predictable API endpoints
 - **Middleware Pipeline**: Extensible middleware for request processing
 - **Environment-based Configuration**: Flexible configuration for different deployment environments
+- **Integration and Unit Testing**: Broad coverage utilizing Go's stdlib testing
+- **Email Service**: Emails sent on key user actions using Resend.
+- **Wired to Deploy to AWS**: ALB/ECS/Fargate configured and deployable for easy service switch from Fly.io in future
+
+## 💳 Billing & Subscription System
+
+The Interviewer platform supports both one-time purchases and recurring subscriptions using Lemon Squeezy. Credits are granted based on the user's payment plan and control access to AI-powered mock interviews.
+
+### Credit Model
+- **Individual Plan**: Buy one credit at a time. These credits never expire and persist across account changes.
+- **Subscription Plans**:
+  - **Pro**: 10 monthly credits
+  - **Premium**: 20 monthly credits
+  - Subscription credits pause when a user cancels, and reactivate upon resumption.
+  - Unused credits roll over, but require an active subscription to be used.
+
+### Webhook Integration
+- Real-time Lemon Squeezy events power the billing system:
+  - `subscription_created` → Assign plan tier + grant credits
+  - `subscription_payment_success` → Monthly credit refresh
+  - `subscription_cancelled` / `expired` → Pause credit usage
+  - `subscription_resumed` → Reinstate usage of rolled-over credits
+  - `order_created` → Grant one-time credit
+  - `subscription_plan_changed` → Upgrading or downgrading a plan
+
+### Guardrails
+- All webhook events are idempotent via tracked `webhook_id`
+- Credits are separated by type: `individual` vs `subscription`
+- System enforces credit availability before allowing interview creation
 
 ## 🛠️ Tech Stack
 
 | Component             | Technology                                       |
 |-----------------------|--------------------------------------------------|
-| **Backend Language**  | Go (Golang) 1.20+                               |
+| **Backend Language**  | Go (Golang) 1.20+                                |
 | **Database**          | PostgreSQL 15+                                   |
 | **Authentication**    | JWT-based authentication (access & refresh tokens) |
 | **AI Integration**    | OpenAI GPT API (4.0)                             |
+| **Billing**           | Lemon Squeezy API                                |
+| **Mailing**           | Resend API                                       |
 | **Testing**           | Go table-driven tests (unit + integration)       |
 | **Containerization**  | Docker                                           |
 | **Deployment**        | Fly.io                                           |
@@ -159,56 +177,55 @@ The backend is structured using a layered architecture:
 ```
 
 ### API Endpoints
-
 #### User Management
-- `POST /api/users` - Register a new user
-- `GET /api/users/{id}` - Get user profile
+- `POST /api/users` – Register a new user
+- `GET /api/users/{id}` – Get user profile
+- `DELETE /api/users/delete/{id}` – Delete user account
+- `POST /api/auth/check-email` – Check if an email exists
+- `POST /api/auth/request-verification` – Send verification email
+- `POST /api/auth/request-reset` – Request password reset email
+- `POST /api/auth/reset-password` – Reset password
 
 #### Authentication
-- `POST /api/auth/login` - User login
-- `POST /api/auth/token` - Refresh access token
+- `POST /api/auth/login` – User login (email/password)
+- `POST /api/auth/github` – GitHub OAuth login
+- `POST /api/auth/token` – Refresh access token
 
 #### Interviews
-- `POST /api/interviews` - Create a new interview
+- `POST /api/interviews` – Create a new interview
+- `GET /api/interviews/{id}` – Fetch a specific interview
+- `PATCH /api/interviews/{id}` – Update interview status (e.g., pause/resume)
 
 #### Conversations
-- `POST /api/conversations/create` - Create a new conversation
-- `POST /api/conversations/append` - Append an existing conversation
+- `POST /api/conversations/create/{interview_id}` – Create a new conversation for interview
+- `POST /api/conversations/append/{interview_id}` – Append a response to an ongoing conversation
+- `GET /api/conversations/{interview_id}` – Get full conversation history for an interview
+
+#### Job Description
+- `POST /api/jd` – Process job description input for interview tailoring
+
+#### Billing & Payments
+- `POST /api/payment/checkout` – Start a new subscription checkout session
+- `POST /api/payment/cancel` – Cancel subscription
+- `POST /api/payment/resume` – Resume canceled subscription
+- `POST /api/payment/change-plan` – Change subscription tier
+- `POST /api/webhooks/billing` – Lemon Squeezy billing webhook handler
+
+#### Dashboard
+- `GET /api/user/dashboard` – Retrieve user dashboard data
+
+#### Health Check
+- `GET /health` – Service health check
 
 ## 🗄 Database Schema
 
-```
-┌─────────────────┐       ┌──────────────────┐       ┌──────────────────┐
-│     users       │       │    interviews    │       │  conversations   │
-├─────────────────┤       ├──────────────────┤       ├──────────────────┤
-│ id              │       │ id               │       │ id               │
-│ username        │       │ user_id          │◄──────┤ interview_id     │
-│ email           │       │ length           │       │ current_topic    │
-│ password        │       │ number_questions │       │ current_subtopic │
-│ created_at      │       │ difficulty       │       │ current_question_│
-│ updated_at      │       │ status           │       │ created_at       │
-└────────┬────────┘       │ score            │       │ updated_at       │
-         │                │ language         │       └────────┬─────────┘
-         │                │ prompt           │                │
-         │                │ first_question   │                │
-         │                │ subtopic         │                │
-         │                │ created_at       │                │
-         │                │ updated_at       │                │
-         │                └──────────────────┘                │
-         │                                                    │
-         │                                                    │
-┌────────▼────────┐       ┌──────────────────┐       ┌────────▼─────────┐
-│ refresh_tokens  │       │    questions     │       │     messages     │
-├─────────────────┤       ├──────────────────┤       ├──────────────────┤
-│ id              │       │ id               │       │ id               │
-│ user_id         │       │ conversation_id  │◄──────┤ conversation_id  │
-│ refresh_token   │       │ topic_id         │       │ topic_id         │
-│ expires_at      │       │ question_number  │       │ question_number  │
-│ created_at      │       │ prompt           │       │ author           │
-│ updated_at      │       │ created_at       │       │ content          │
-└─────────────────┘       └──────────────────┘       │ created_at       │
-                                                     └──────────────────┘
-```
+All schema definitions are managed via SQL migration files located in `/database/migrations/`.
+
+To apply them:
+
+`make migrate-up  # or specify your migration tool/command`
+
+The schema includes tables for `users`, `interviews`, `conversations`, `questions`, `messages`, `refresh_tokens`, `processed_webhooks`, and `credit_transactions`. See individual migration files for full definitions.
 
 ## 📦 Deployment
 
@@ -318,18 +335,19 @@ Tests are run consistently during development and are integrated into the CI pip
 
 ## 🛣️ Development Roadmap
 
-### Current Focus
-- Implementation of CI/CD pipeline
-
-### Upcoming Improvements
+### Upcoming Additional Improvements
+- Google auth
+- Timer
+- Deduplicating questions accross interviews
+- Strengths/weaknesses summary
+- Line graph (progress tracker)
+- Interview readiness meter
 - Enhancing error handling and recovery mechanisms
 - Structured logging for better observability
-- Input validation
 - Implement a single active session policy
 - Supporting multiple conversation tracks within an interview
 - Adding detailed analytics for interview performance
 - Optimizing database queries
-- Refining API documentation
 - Interview preferences (language, difficulty, duration, etc . . .)
 
 ## 🌐 Frontend
@@ -340,9 +358,6 @@ The frontend is built in React and communicates with the protected backend API. 
 - Interview start and in-progress flow
 - GPT-4 feedback and response display
 - Post-interview summary (upcoming)
-
-You can explore the UI code and structure here:  
-🔗 [Frontend GitHub Repository](https://github.com/michaelboegner/interviewer-ui)
 
 The frontend is currently deployed on Vercel and connects to a deployed Fly.io backend
 
@@ -358,6 +373,4 @@ without explicit permission from the author.
 ---
 
 **Created by Michael Boegner** - [GitHub Profile](https://github.com/michaelboegner)
-
-
 
