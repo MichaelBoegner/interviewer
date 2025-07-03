@@ -12,8 +12,6 @@
 ## 📋 Contents
 
 - [Overview](#-overview)
-- [Learning Log](#-learning-log)
-- [Recorded Demo](#-recorded-demo)
 - [System Architecture](#-system-architecture)
 - [Key Features](#-key-features)
 - [Billing & Subscription System](#billing-&-subscription-system)
@@ -21,9 +19,9 @@
 - [API Documentation](#-api-documentation)
 - [Database Schema](#-database-schema)
 - [Deployment](#-deployment)
+- [Learning Log](#-learning-log)
 - [Local Development](#-local-development)
 - [Security Implementation](#-security-implementation)
-- [Performance Considerations](#-performance-considerations)
 - [Testing Strategy](#-testing-strategy)
 - [Development Roadmap](#-development-roadmap)
 - [Frontend](#-frontend)
@@ -319,10 +317,6 @@ docker run -p 8080:8080 --env-file .env interviewer
 - **Prepared Statements**: All database queries use prepared statements to prevent SQL injection
 - **CORS Configuration**: Configured to restrict origins in production environments
 - **Environment Variables**: Sensitive configuration stored in environment variables
-
-## ⚡ Performance Considerations
-
-- **Stateless Design**: The API is designed to be stateless, allowing for horizontal scaling
 
 ## ✅ Testing Strategy
 
