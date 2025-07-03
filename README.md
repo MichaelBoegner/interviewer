@@ -22,7 +22,6 @@
 - [Local Development](#-local-development)
 - [Security Implementation](#-security-implementation)
 - [Testing Strategy](#-testing-strategy)
-- [Development Roadmap](#-development-roadmap)
 - [Frontend](#-frontend)
 - [License](#-license) 
 
