@@ -337,14 +337,7 @@ Tests are run consistently during development and are integrated into the CI pip
 
 ## 🌐 Frontend
 
-The frontend is built in React and communicates with the protected backend API. It handles:
-
-- Authentication (login, signup, token refresh)
-- Interview start and in-progress flow
-- GPT-4 feedback and response display
-- Post-interview summary (upcoming)
-
-The frontend is currently deployed on Vercel and connects to a deployed Fly.io backend
+https://github.com/MichaelBoegner/interviewer-ui
 
 
 ## 📜 License
