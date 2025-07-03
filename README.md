@@ -24,7 +24,7 @@
 - [Testing Strategy](#-testing-strategy)
 - [Development Roadmap](#-development-roadmap)
 - [Frontend](#-frontend)
-- [License](#-license)
+- [License](#-license) 
 
 ## 🚀 Overview
 
