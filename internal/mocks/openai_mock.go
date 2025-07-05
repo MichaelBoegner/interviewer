@@ -1,8 +1,14 @@
 package mocks
 
 import (
+	"bytes"
+	"context"
 	"encoding/json"
+	"errors"
+	"fmt"
+	"io"
 	"log"
+	"net/http"
 	"strings"
 	"time"
 
@@ -181,7 +187,9 @@ func init() {
 
 }
 
-type MockOpenAIClient struct{}
+type MockOpenAIClient struct {
+	APIKey string
+}
 
 func (m *MockOpenAIClient) GetChatGPTResponse(prompt string) (*chatgpt.ChatGPTResponse, error) {
 	return responseInterview, nil
@@ -195,6 +203,124 @@ func (m *MockOpenAIClient) GetChatGPTResponseConversation(conversationHistory []
 	}
 
 	return responseConversationIsFinished, nil
+}
+
+func (m *MockOpenAIClient) GetChatGPT35Response(prompt string) (*chatgpt.ChatGPTResponse, error) {
+	ctx := context.Background()
+
+	var messagesArray []map[string]string
+	messagesArray = append(messagesArray, map[string]string{
+		"role":    "system",
+		"content": prompt,
+	})
+
+	requestBody, err := json.Marshal(map[string]interface{}{
+		"model":       "gpt-3.5-turbo-0125",
+		"messages":    messagesArray,
+		"max_tokens":  1000,
+		"temperature": 0,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequestWithContext(ctx, "POST", "https://api.openai.com/v1/chat/completions", bytes.NewBuffer(requestBody))
+	if err != nil {
+		log.Printf("NewRequestWithContext failed: %v", err)
+		return nil, err
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", m.APIKey))
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		var errResp struct {
+			Error struct {
+				Message string `json:"message"`
+			} `json:"error"`
+		}
+		json.NewDecoder(resp.Body).Decode(&errResp)
+		return nil, &chatgpt.OpenAIError{StatusCode: resp.StatusCode, Message: errResp.Error.Message}
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	var result map[string]interface{}
+	if err := json.Unmarshal(body, &result); err != nil {
+		log.Printf("Unmarshal result err: %v", err)
+		return nil, err
+	}
+
+	choices := result["choices"].([]interface{})
+	if len(choices) == 0 {
+		err := errors.New("no question generated")
+		return nil, err
+	}
+
+	chatGPTResponseRaw := choices[0].(map[string]interface{})["message"].(map[string]interface{})["content"].(string)
+
+	var chatGPTResponse chatgpt.ChatGPTResponse
+	if err := json.Unmarshal([]byte(chatGPTResponseRaw), &chatGPTResponse); err != nil {
+		log.Printf("Unmarshal chatGPTResponse err: %v", err)
+		return nil, err
+	}
+
+	return &chatGPTResponse, nil
+}
+
+func (m *MockOpenAIClient) ExtractJDInput(jd string) (*chatgpt.JDParsedOutput, error) {
+	systemPrompt := chatgpt.BuildJDPromptInput(jd)
+	response, err := m.GetChatGPT35Response(systemPrompt)
+	if err != nil {
+		return nil, err
+	}
+
+	return &chatgpt.JDParsedOutput{
+		Responsibilities: response.Responsibilities,
+		Qualifications:   response.Qualifications,
+		TechStack:        response.TechStack,
+		Level:            response.Level,
+	}, nil
+}
+
+func (m *MockOpenAIClient) ExtractJDSummary(jdInput *chatgpt.JDParsedOutput) (string, error) {
+	jdJSON, err := json.MarshalIndent(jdInput, "", "  ")
+	if err != nil {
+		return "", fmt.Errorf("failed to marshal JDParsedOutput: %w", err)
+	}
+
+	systemPrompt := chatgpt.BuildJDPromptSummary(string(jdJSON))
+	response, err := m.GetChatGPT35Response(systemPrompt)
+	if err != nil {
+		return "", err
+	}
+
+	jdSummary := fmt.Sprintf(`### JD Context
+
+- Level: %s
+- Domain: %s
+- Tech Stack: %s
+- Responsibilities: %s
+- Qualifications: %s
+`,
+		response.Level,
+		response.Domain,
+		strings.Join(response.TechStack, ", "),
+		strings.Join(response.Responsibilities, "; "),
+		strings.Join(response.Qualifications, "; "),
+	)
+
+	return jdSummary, nil
 }
 
 func MarshalAndString(chatGPTResponse *chatgpt.ChatGPTResponse) (string, error) {

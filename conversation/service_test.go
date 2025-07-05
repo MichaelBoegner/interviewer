@@ -19,6 +19,7 @@ func TestCreateConversation(t *testing.T) {
 		name           string
 		interviewID    int
 		conversationID int
+		conversation   *conversation.Conversation
 		prompt         string
 		firstQuestion  string
 		subtopic       string
@@ -31,11 +32,17 @@ func TestCreateConversation(t *testing.T) {
 			name:           "CreateConversation_Success",
 			interviewID:    1,
 			conversationID: 1,
-			prompt:         "Prompt goes here",
-			firstQuestion:  "What is a goroutine?",
-			subtopic:       "Concurrency",
-			message:        "It's a lightweight thread",
-			expectError:    false,
+			conversation: &conversation.Conversation{
+				InterviewID:           1,
+				CurrentTopic:          1,
+				CurrentSubtopic:       "Subtopic2",
+				CurrentQuestionNumber: 2,
+			},
+			prompt:        "Prompt goes here",
+			firstQuestion: "What is a goroutine?",
+			subtopic:      "Concurrency",
+			message:       "It's a lightweight thread",
+			expectError:   false,
 			expected: &conversation.Conversation{
 				InterviewID:           1,
 				CurrentTopic:          1,
@@ -47,12 +54,18 @@ func TestCreateConversation(t *testing.T) {
 			name:           "CreateConversation_RepoError",
 			interviewID:    1,
 			conversationID: 1,
-			prompt:         "Prompt",
-			firstQuestion:  "Question",
-			subtopic:       "Subtopic",
-			message:        "Answer",
-			failRepo:       true,
-			expectError:    true,
+			conversation: &conversation.Conversation{
+				InterviewID:           1,
+				CurrentTopic:          1,
+				CurrentSubtopic:       "Subtopic2",
+				CurrentQuestionNumber: 2,
+			},
+			prompt:        "Prompt",
+			firstQuestion: "Question",
+			subtopic:      "Subtopic",
+			message:       "Answer",
+			failRepo:      true,
+			expectError:   true,
 		},
 	}
 
@@ -70,7 +83,16 @@ func TestCreateConversation(t *testing.T) {
 
 			ai := &mocks.MockOpenAIClient{}
 
-			convo, err := conversation.CreateConversation(repo, interviewRepo, ai, tc.interviewID, tc.conversationID, tc.prompt, tc.firstQuestion, tc.subtopic, tc.message)
+			convo, err := conversation.CreateConversation(
+				repo,
+				interviewRepo,
+				ai,
+				tc.conversation,
+				tc.interviewID,
+				tc.prompt,
+				tc.firstQuestion,
+				tc.subtopic,
+				tc.message)
 
 			if tc.expectError && err == nil {
 				t.Fatalf("expected error but got nil")
@@ -94,34 +116,44 @@ func TestCreateConversation(t *testing.T) {
 
 func TestAppendConversation(t *testing.T) {
 	tests := []struct {
-		name           string
-		message        string
-		interviewID    int
-		conversationID int
-		userID         int
-		prompt         string
-		failRepo       bool
-		expectError    bool
+		name         string
+		message      string
+		interviewID  int
+		conversation *conversation.Conversation
+		userID       int
+		prompt       string
+		failRepo     bool
+		expectError  bool
 	}{
 		{
-			name:           "AppendConversation_Success",
-			message:        "Answer1",
-			interviewID:    1,
-			conversationID: 1,
-			userID:         1,
-			prompt:         "Prompt",
-			failRepo:       false,
-			expectError:    false,
+			name:        "AppendConversation_Success",
+			message:     "Answer1",
+			interviewID: 1,
+			conversation: &conversation.Conversation{
+				InterviewID:           1,
+				CurrentTopic:          1,
+				CurrentSubtopic:       "Subtopic2",
+				CurrentQuestionNumber: 2,
+			},
+			userID:      1,
+			prompt:      "Prompt",
+			failRepo:    false,
+			expectError: false,
 		},
 		{
-			name:           "AppendConversation_RepoError",
-			message:        "Answer1",
-			interviewID:    1,
-			conversationID: 1,
-			userID:         1,
-			prompt:         "Prompt",
-			failRepo:       true,
-			expectError:    true,
+			name:        "AppendConversation_RepoError",
+			message:     "Answer1",
+			interviewID: 1,
+			conversation: &conversation.Conversation{
+				InterviewID:           1,
+				CurrentTopic:          1,
+				CurrentSubtopic:       "Subtopic2",
+				CurrentQuestionNumber: 2,
+			},
+			userID:      1,
+			prompt:      "Prompt",
+			failRepo:    true,
+			expectError: true,
 		},
 	}
 
@@ -138,7 +170,17 @@ func TestAppendConversation(t *testing.T) {
 			}
 			ai := &mocks.MockOpenAIClient{}
 
-			convo, err := conversation.CreateConversation(repo, interviewRepo, ai, tc.interviewID, tc.conversationID, "Prompt", "Question1", "Subtopic1", "Answer1")
+			convo, err := conversation.CreateConversation(
+				repo,
+				interviewRepo,
+				ai,
+				tc.conversation,
+				tc.interviewID,
+				"Prompt",
+				"Question1",
+				"Subtopic1",
+				"Answer1")
+
 			if err != nil {
 				if tc.failRepo {
 					return

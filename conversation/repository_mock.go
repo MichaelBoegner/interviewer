@@ -68,12 +68,12 @@ func (m *MockRepo) GetConversation(interviewID int) (*Conversation, error) {
 	return conversationResponse, nil
 }
 
-func (m *MockRepo) CreateConversation(interviewId int, conversation *Conversation) error {
+func (m *MockRepo) CreateConversation(interviewId int, conversation *Conversation) (int, error) {
 	if m.FailRepo {
-		return errors.New("Mocked DB failure")
+		return 0, errors.New("Mocked DB failure")
 	}
 
-	return nil
+	return 0, nil
 }
 
 func (m *MockRepo) CreateQuestion(conversation *Conversation, prompt string) (int, error) {
