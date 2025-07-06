@@ -30,7 +30,6 @@ func (h *Handler) HealthCheckHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("healthy"))
-	return
 }
 
 func (h *Handler) RequestVerificationHandler(w http.ResponseWriter, r *http.Request) {
@@ -179,7 +178,6 @@ func (h *Handler) GetUsersHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	RespondWithJSON(w, http.StatusOK, payload)
-	return
 }
 
 func (h *Handler) DeleteUserHandler(w http.ResponseWriter, r *http.Request) {
