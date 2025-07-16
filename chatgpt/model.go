@@ -20,6 +20,7 @@ type ChatGPTResponse struct {
 	Qualifications   []string `json:"qualifications"`
 	TechStack        []string `json:"tech_stack"`
 	Level            string   `json:"level"`
+	UserRespSummary  []string `json:"user_response_summary"`
 }
 
 type OpenAIClient struct {
@@ -157,7 +158,7 @@ Here is the input data:
 %s`, jdSummary)
 }
 
-func BuildUserResponseSummaryPrompt(response string, question string) string {
+func BuildResponseSummary(question, response string) string {
 	return fmt.Sprintf(`Extract the **key technical points** from the following backend interview answer.
 
 Break the response into a list of concise, self-contained statements. Each item should:
@@ -186,4 +187,5 @@ type AIClient interface {
 	GetChatGPT35Response(prompt string) (*ChatGPTResponse, error)
 	ExtractJDInput(jd string) (*JDParsedOutput, error)
 	ExtractJDSummary(jdInput *JDParsedOutput) (string, error)
+	ExtractResponseSummary(userResponse, answer string) (*ChatGPTResponse, error)
 }
