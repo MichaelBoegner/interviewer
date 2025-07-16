@@ -157,6 +157,29 @@ Here is the input data:
 %s`, jdSummary)
 }
 
+func BuildUserResponseSummaryPrompt(response string, question string) string {
+	return fmt.Sprintf(`Extract the **key technical points** from the following backend interview answer.
+
+Break the response into a list of concise, self-contained statements. Each item should:
+- Represent a distinct technical idea, method, or decision
+- Be understandable without the original question
+- Focus only on what the user **actually said**, not what they should have said
+- Exclude filler, vague claims, or generalities
+
+Output only valid JSON in this format:
+[
+  "First technical point...",
+  "Second technical point...",
+  ...
+]
+
+Interview question:
+"%s"
+
+User’s answer:
+"%s"`, question, response)
+}
+
 type AIClient interface {
 	GetChatGPTResponse(prompt string) (*ChatGPTResponse, error)
 	GetChatGPTResponseConversation(conversationHistory []map[string]string) (*ChatGPTResponse, error)

@@ -269,3 +269,28 @@ func (c *OpenAIClient) ExtractJDSummary(jdInput *JDParsedOutput) (string, error)
 
 	return jdSummary, nil
 }
+
+func (c *OpenAIClient) SummarizeUserAnswer(userAnswer, question string) ([]string, error) {
+	prompt := BuildUserResponseSummaryPrompt(userAnswer, question)
+
+	req := openai.ChatCompletionRequest{
+		Model: openai.GPT3Dot5Turbo,
+		Messages: []openai.ChatCompletionMessage{
+			{Role: "system", Content: "You are a precise backend technical summarizer."},
+			{Role: "user", Content: prompt},
+		},
+	}
+
+	resp, err := c.client.CreateChatCompletion(context.Background(), req)
+	if err != nil {
+		return nil, &OpenAIError{Message: err.Error()}
+	}
+
+	var points []string
+	err = json.Unmarshal([]byte(resp.Choices[0].Message.Content), &points)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse summary JSON: %w", err)
+	}
+
+	return points, nil
+}
