@@ -11,9 +11,7 @@ import (
 	"github.com/michaelboegner/interviewer/interview"
 )
 
-func GetChatGPTResponses(conversation *Conversation, openAI chatgpt.AIClient, interviewRepo interview.InterviewRepo, question, message string) (*chatgpt.ChatGPTResponse, string, error) {
-	userResponseSummary, err := openAI.ExtractResponseSummary(question, message)
-
+func GetChatGPTResponses(conversation *Conversation, openAI chatgpt.AIClient, interviewRepo interview.InterviewRepo) (*chatgpt.ChatGPTResponse, string, error) {
 	conversationHistory, err := GetConversationHistory(conversation, interviewRepo)
 	if err != nil {
 		log.Printf("GetConversationHistory failed: %v", err)
