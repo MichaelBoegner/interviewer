@@ -1,10 +1,13 @@
 package conversation
 
 import (
+	"context"
 	"errors"
 	"log"
+	"time"
 
 	"github.com/michaelboegner/interviewer/chatgpt"
+	"github.com/michaelboegner/interviewer/embedding"
 	"github.com/michaelboegner/interviewer/interview"
 )
 
@@ -30,9 +33,11 @@ func CreateEmptyConversation(repo ConversationRepo, interviewID int, subTopic st
 }
 
 func CreateConversation(
+	ctx context.Context,
 	repo ConversationRepo,
 	interviewRepo interview.InterviewRepo,
 	openAI chatgpt.AIClient,
+	embeddingService embedding.Service,
 	conversation *Conversation,
 	interviewID int,
 	prompt,
@@ -67,7 +72,19 @@ func CreateConversation(
 		return nil, err
 	}
 
-	chatGPTResponse, chatGPTResponseString, err := GetChatGPTResponses(conversation, openAI, interviewRepo)
+	embedInput := embedding.EmbedInput{
+		InterviewID:    interviewID,
+		ConversationID: conversationID,
+		TopicID:        topicID,
+		QuestionNumber: questionNumber,
+		Question:       firstQuestion,
+		UserResponse:   message,
+		CreatedAt:      time.Now().UTC(),
+	}
+
+	conversationContext, err := embeddingService.ProcessAndRetrieve(ctx, embedInput, 5)
+
+	chatGPTResponse, chatGPTResponseString, err := GetChatGPTResponses(conversation, openAI, interviewRepo, conversationContext)
 	if err != nil {
 		log.Printf("getChatGPTResponses failed: %v", err)
 		return nil, err

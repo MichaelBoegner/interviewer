@@ -697,9 +697,11 @@ func (h *Handler) CreateConversationsHandler(w http.ResponseWriter, r *http.Requ
 	}
 
 	conversationCreated, err := conversation.CreateConversation(
+		r.Context(),
 		h.ConversationRepo,
 		h.InterviewRepo,
 		h.OpenAI,
+		*h.Embedding,
 		conversationReturned,
 		interviewID,
 		interviewReturned.Prompt,

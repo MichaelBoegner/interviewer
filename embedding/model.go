@@ -10,7 +10,6 @@ import (
 type EmbedInput struct {
 	InterviewID    int
 	ConversationID int
-	MessageID      int
 	TopicID        int
 	QuestionNumber int
 	Question       string
