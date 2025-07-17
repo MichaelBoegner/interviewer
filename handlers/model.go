@@ -6,6 +6,7 @@ import (
 	"github.com/michaelboegner/interviewer/billing"
 	"github.com/michaelboegner/interviewer/chatgpt"
 	"github.com/michaelboegner/interviewer/conversation"
+	"github.com/michaelboegner/interviewer/embedding"
 	"github.com/michaelboegner/interviewer/interview"
 	"github.com/michaelboegner/interviewer/mailer"
 	"github.com/michaelboegner/interviewer/token"
@@ -59,6 +60,7 @@ type Handler struct {
 	Billing          *billing.Billing
 	Mailer           *mailer.Mailer
 	OpenAI           chatgpt.AIClient
+	Embedding        *embedding.Service
 	DB               *sql.DB
 }
 
@@ -71,6 +73,7 @@ func NewHandler(
 	billing *billing.Billing,
 	mailer *mailer.Mailer,
 	openAI chatgpt.AIClient,
+	embeddingService *embedding.Service,
 	db *sql.DB) *Handler {
 	return &Handler{
 		InterviewRepo:    interviewRepo,
@@ -81,6 +84,7 @@ func NewHandler(
 		Billing:          billing,
 		Mailer:           mailer,
 		OpenAI:           openAI,
+		Embedding:        embeddingService,
 		DB:               db,
 	}
 }

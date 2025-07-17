@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
+	"os"
 	"time"
 )
 
@@ -13,11 +15,16 @@ type HTTPEmbedder struct {
 	Timeout  time.Duration
 }
 
-func NewHTTPEmbedder(endpoint string) *HTTPEmbedder {
+func NewHTTPEmbedder() (*HTTPEmbedder, error) {
+	endpoint := os.Getenv("EMBEDDING_URL")
+	if endpoint == "" {
+		return nil, errors.New("env not set for EMBEDDING_URL")
+	}
+
 	return &HTTPEmbedder{
 		Endpoint: endpoint,
 		Timeout:  3 * time.Second,
-	}
+	}, nil
 }
 
 func (e *HTTPEmbedder) EmbedText(ctx context.Context, input string) ([]float32, error) {

@@ -12,7 +12,7 @@ type PGRepository struct {
 	DB *sql.DB
 }
 
-func NewPGRepository(db *sql.DB) *PGRepository {
+func NewRepository(db *sql.DB) *PGRepository {
 	return &PGRepository{DB: db}
 }
 
