@@ -27,7 +27,7 @@ func (r *PGRepository) StoreEmbedding(ctx context.Context, e Embedding) error {
 			summary,
 			embedding,
 			created_at
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+		) VALUES ($1, $2, $3, $4, $5, $6, $7::vector, $8)
 		ON CONFLICT (interview_id, conversation_id, topic_id, question_number, message_id) DO NOTHING;
 	`
 
@@ -38,7 +38,7 @@ func (r *PGRepository) StoreEmbedding(ctx context.Context, e Embedding) error {
 		e.TopicID,
 		e.QuestionNumber,
 		e.Summary,
-		pq.Array(e.Vector),
+		e.Vector,
 		e.CreatedAt,
 	)
 	return err

@@ -8,7 +8,7 @@ CREATE TABLE conversation_embeddings (
   question_number  INT NOT NULL,
   message_id       INT NOT NULL,
   summary          TEXT NOT NULL,
-  embedding        VECTOR(1536) NOT NULL,
+  embedding        VECTOR(384) NOT NULL,
   created_at       TIMESTAMP DEFAULT now(),
   UNIQUE (interview_id, conversation_id, topic_id, question_number, message_id)
 );

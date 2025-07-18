@@ -26,7 +26,7 @@ type Embedding struct {
 	TopicID        int
 	QuestionNumber int
 	Summary        string
-	Vector         []float32
+	Vector         string
 	CreatedAt      time.Time
 }
 

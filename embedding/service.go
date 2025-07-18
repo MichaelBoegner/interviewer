@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 )
 
 func (s *Service) ProcessAndRetrieve(ctx context.Context, input EmbedInput, limit int) ([]string, error) {
@@ -25,6 +26,7 @@ func (s *Service) ProcessAndRetrieve(ctx context.Context, input EmbedInput, limi
 			log.Printf("s.Embedder.EmbedText failed: %v", err)
 			return nil, err
 		}
+		vectorString := formatVector(vector)
 
 		// DEBUG
 		fmt.Printf("vector: %v\n", vector)
@@ -36,7 +38,7 @@ func (s *Service) ProcessAndRetrieve(ctx context.Context, input EmbedInput, limi
 			TopicID:        input.TopicID,
 			QuestionNumber: input.QuestionNumber,
 			Summary:        point,
-			Vector:         vector,
+			Vector:         vectorString,
 			CreatedAt:      input.CreatedAt,
 		})
 		if err != nil {
@@ -72,4 +74,12 @@ func (s *Service) ProcessAndRetrieve(ctx context.Context, input EmbedInput, limi
 	fmt.Printf("relevant: %v\n", relevant)
 
 	return relevant, nil
+}
+
+func formatVector(vec []float32) string {
+	strs := make([]string, len(vec))
+	for i, v := range vec {
+		strs[i] = fmt.Sprintf("%f", v)
+	}
+	return "[" + strings.Join(strs, ", ") + "]"
 }

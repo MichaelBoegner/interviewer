@@ -23,7 +23,7 @@ func NewHTTPEmbedder() (*HTTPEmbedder, error) {
 
 	return &HTTPEmbedder{
 		Endpoint: endpoint,
-		Timeout:  3 * time.Second,
+		Timeout:  10 * time.Second,
 	}, nil
 }
 
