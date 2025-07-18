@@ -66,7 +66,7 @@ func CreateConversation(
 	topic.Questions[questionNumber] = NewQuestion(conversationID, topicID, questionNumber, firstQuestion, messages)
 	conversation.Topics[topicID] = topic
 
-	err = repo.CreateMessages(conversation, messages)
+	messageID, err := repo.CreateMessages(conversation, messages)
 	if err != nil {
 		log.Printf("repo.CreateMessages failed: %v", err)
 		return nil, err
@@ -77,12 +77,16 @@ func CreateConversation(
 		ConversationID: conversationID,
 		TopicID:        topicID,
 		QuestionNumber: questionNumber,
+		MessageID:      messageID,
 		Question:       firstQuestion,
 		UserResponse:   message,
 		CreatedAt:      time.Now().UTC(),
 	}
 
 	conversationContext, err := embeddingService.ProcessAndRetrieve(ctx, embedInput, 5)
+	if err != nil {
+		log.Printf("embeddingService.ProcessAndRetrieve failed: %v", err)
+	}
 
 	chatGPTResponse, chatGPTResponseString, err := GetChatGPTResponses(conversation, openAI, interviewRepo, conversationContext)
 	if err != nil {
@@ -125,9 +129,11 @@ func CreateConversation(
 }
 
 func AppendConversation(
+	ctx context.Context,
 	repo ConversationRepo,
 	interviewRepo interview.InterviewRepo,
 	openAI chatgpt.AIClient,
+	embeddingService embedding.Service,
 	interviewID,
 	userID int,
 	conversation *Conversation,
@@ -142,13 +148,28 @@ func AppendConversation(
 	}
 
 	messageUser := NewMessage(conversationID, topicID, questionNumber, User, message)
-	_, err := repo.AddMessage(conversationID, topicID, questionNumber, messageUser)
+	messageID, err := repo.AddMessage(conversationID, topicID, questionNumber, messageUser)
 	if err != nil {
 		return nil, err
 	}
 	conversation.Topics[topicID].Questions[questionNumber].Messages = append(conversation.Topics[topicID].Questions[questionNumber].Messages, messageUser)
 
-	chatGPTResponse, chatGPTResponseString, err := GetChatGPTResponses(conversation, openAI, interviewRepo)
+	embedInput := embedding.EmbedInput{
+		InterviewID:    interviewID,
+		ConversationID: conversationID,
+		TopicID:        topicID,
+		QuestionNumber: questionNumber,
+		MessageID:      messageID,
+		Question:       conversation.Topics[topicID].Questions[questionNumber].Prompt,
+		UserResponse:   message,
+		CreatedAt:      time.Now().UTC(),
+	}
+
+	conversationContext, err := embeddingService.ProcessAndRetrieve(ctx, embedInput, 5)
+	if err != nil {
+		log.Printf("embeddingService.ProcessAndRetrieve failed: %v", err)
+	}
+	chatGPTResponse, chatGPTResponseString, err := GetChatGPTResponses(conversation, openAI, interviewRepo, conversationContext)
 	if err != nil {
 		log.Printf("getChatGPTResponses failed: %v", err)
 		return nil, err

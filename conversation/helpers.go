@@ -3,16 +3,18 @@ package conversation
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/michaelboegner/interviewer/chatgpt"
 	"github.com/michaelboegner/interviewer/interview"
 )
 
-func GetChatGPTResponses(conversation *Conversation, openAI chatgpt.AIClient, interviewRepo interview.InterviewRepo) (*chatgpt.ChatGPTResponse, string, error) {
-	conversationHistory, err := GetConversationHistory(conversation, interviewRepo)
+func GetChatGPTResponses(conversation *Conversation, openAI chatgpt.AIClient, interviewRepo interview.InterviewRepo, conversationContext []string) (*chatgpt.ChatGPTResponse, string, error) {
+	conversationHistory, err := GetConversationHistory(conversation, interviewRepo, conversationContext)
 	if err != nil {
 		log.Printf("GetConversationHistory failed: %v", err)
 		return nil, "", err
@@ -32,7 +34,7 @@ func GetChatGPTResponses(conversation *Conversation, openAI chatgpt.AIClient, in
 	return chatGPTResponse, chatGPTResponseString, nil
 }
 
-func GetConversationHistory(conversation *Conversation, interviewRepo interview.InterviewRepo) ([]map[string]string, error) {
+func GetConversationHistory(conversation *Conversation, interviewRepo interview.InterviewRepo, conversationContext []string) ([]map[string]string, error) {
 	var arrayOfTopics []string
 	var currentTopic string
 	chatGPTConversationArray := make([]map[string]string, 0)
@@ -66,6 +68,7 @@ func GetConversationHistory(conversation *Conversation, interviewRepo interview.
 		questionNumbersSorted = append(questionNumbersSorted, questionNumber)
 	}
 	sort.Ints(questionNumbersSorted)
+	lastQuestionNumber := questionNumbersSorted[len(questionNumbersSorted)-1]
 	for _, questionNumber := range questionNumbersSorted {
 		question := topic.Questions[questionNumber]
 		for i, message := range question.Messages {
@@ -79,12 +82,32 @@ func GetConversationHistory(conversation *Conversation, interviewRepo interview.
 			if message.Author == "interviewer" {
 				role = "assistant"
 			}
+
+			content := message.Content
+			isFinalInjectionTarget := questionNumber == lastQuestionNumber &&
+				message.Author == "user"
+				// DEBUG
+			fmt.Printf("isFinalInjectionTarget: %v\n", isFinalInjectionTarget)
+			fmt.Printf("conversationContext: %v\n", conversationContext)
+			if isFinalInjectionTarget && len(conversationContext) > 0 {
+				formattedContext := strings.Join(conversationContext, "\n")
+				content = fmt.Sprintf("Relevant prior context:\n%s\n\n--- BEGIN USER'S ACTUAL RESPONSE ---\n%s", formattedContext, content)
+			}
+
 			chatGPTConversationArray = append(chatGPTConversationArray, map[string]string{
 				"role":    role,
-				"content": message.Content,
+				"content": content,
 			})
 		}
 	}
+
+	fmt.Println("------ DEBUG: Formatted Conversation History ------")
+	for i, msg := range chatGPTConversationArray {
+		fmt.Printf("\n--- Message %d ---\n", i+1)
+		fmt.Printf("Role   : %s\n", msg["role"])
+		fmt.Printf("Content:\n%s\n", msg["content"])
+	}
+	fmt.Println("------ END DEBUG ------")
 
 	return chatGPTConversationArray, nil
 }

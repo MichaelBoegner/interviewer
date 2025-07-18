@@ -168,11 +168,12 @@ Break the response into a list of concise, self-contained statements. Each item 
 - Exclude filler, vague claims, or generalities
 
 Output only valid JSON in this format:
-[
+{
+"user_response_summary":[
   "First technical point...",
   "Second technical point...",
   ...
-]
+]}
 
 Interview question:
 "%s"
