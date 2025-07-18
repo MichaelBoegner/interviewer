@@ -324,7 +324,7 @@ https://github.com/MichaelBoegner/interviewer-ui
 
 ## 📜 License
 
-Copyright (c) 2024 Michael Boegner
+Copyright (c) 2024 Michael Boegner 
 
 This source code is proprietary. 
 All rights reserved. No part of this code may be reproduced, distributed, or used 
