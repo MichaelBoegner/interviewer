@@ -9,8 +9,7 @@ CREATE TABLE conversation_embeddings (
   message_id       INT NOT NULL,
   summary          TEXT NOT NULL,
   embedding        VECTOR(384) NOT NULL,
-  created_at       TIMESTAMP DEFAULT now(),
-  UNIQUE (interview_id, conversation_id, topic_id, question_number, message_id)
+  created_at       TIMESTAMP DEFAULT now()
 );
 
 CREATE INDEX conversation_embeddings_embedding_idx

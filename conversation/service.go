@@ -83,7 +83,7 @@ func CreateConversation(
 		CreatedAt:      time.Now().UTC(),
 	}
 
-	conversationContext, err := embeddingService.ProcessAndRetrieve(ctx, embedInput, 5)
+	conversationContext, err := embeddingService.ProcessAndRetrieve(ctx, embedInput)
 	if err != nil {
 		log.Printf("embeddingService.ProcessAndRetrieve failed: %v", err)
 	}
@@ -165,7 +165,7 @@ func AppendConversation(
 		CreatedAt:      time.Now().UTC(),
 	}
 
-	conversationContext, err := embeddingService.ProcessAndRetrieve(ctx, embedInput, 5)
+	conversationContext, err := embeddingService.ProcessAndRetrieve(ctx, embedInput)
 	if err != nil {
 		log.Printf("embeddingService.ProcessAndRetrieve failed: %v", err)
 	}

@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/michaelboegner/interviewer/chatgpt"
+	"github.com/pgvector/pgvector-go"
 )
 
 type EmbedInput struct {
@@ -26,7 +27,7 @@ type Embedding struct {
 	TopicID        int
 	QuestionNumber int
 	Summary        string
-	Vector         string
+	Vector         pgvector.Vector
 	CreatedAt      time.Time
 }
 
@@ -38,7 +39,7 @@ type Service struct {
 
 type Repository interface {
 	StoreEmbedding(ctx context.Context, e Embedding) error
-	GetSimilarEmbeddings(ctx context.Context, interviewID, topicID, questionNumber, excludeMessageID int, queryVec []float32, limit int) ([]string, error)
+	GetSimilarEmbeddings(ctx context.Context, interviewID, topicID, questionNumber, excludeMessageID int, queryVec pgvector.Vector, limit int) ([]string, error)
 }
 
 type Embedder interface {

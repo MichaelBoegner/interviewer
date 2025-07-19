@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 
-	"github.com/lib/pq"
+	"github.com/pgvector/pgvector-go"
 )
 
 type PGRepository struct {
@@ -27,8 +27,7 @@ func (r *PGRepository) StoreEmbedding(ctx context.Context, e Embedding) error {
 			summary,
 			embedding,
 			created_at
-		) VALUES ($1, $2, $3, $4, $5, $6, $7::vector, $8)
-		ON CONFLICT (interview_id, conversation_id, topic_id, question_number, message_id) DO NOTHING;
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 	`
 
 	_, err := r.DB.ExecContext(ctx, query,
@@ -41,32 +40,31 @@ func (r *PGRepository) StoreEmbedding(ctx context.Context, e Embedding) error {
 		e.Vector,
 		e.CreatedAt,
 	)
+
+	// DEBUG
+	fmt.Printf("EMBEDDING STORED\n\n")
 	return err
 }
 
 func (r *PGRepository) GetSimilarEmbeddings(
 	ctx context.Context,
 	interviewID, topicID, questionNumber, excludeMessageID int,
-	queryVec []float32,
+	queryVec pgvector.Vector,
 	limit int,
 ) ([]string, error) {
 	query := `
 		SELECT summary
 		FROM conversation_embeddings
 		WHERE interview_id = $1
-		  AND topic_id = $2
-		  AND question_number = $3
-		  AND message_id != $4
-		ORDER BY embedding <-> $5
-		LIMIT $6;
+		  AND message_id != $2
+		ORDER BY embedding <-> $3
+		LIMIT $4;
 	`
 
 	rows, err := r.DB.QueryContext(ctx, query,
 		interviewID,
-		topicID,
-		questionNumber,
 		excludeMessageID,
-		pq.Array(queryVec),
+		queryVec,
 		limit,
 	)
 	if err != nil {
