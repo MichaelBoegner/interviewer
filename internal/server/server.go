@@ -9,6 +9,7 @@ import (
 	"github.com/michaelboegner/interviewer/chatgpt"
 	"github.com/michaelboegner/interviewer/conversation"
 	"github.com/michaelboegner/interviewer/database"
+	"github.com/michaelboegner/interviewer/embedding"
 	"github.com/michaelboegner/interviewer/handlers"
 	"github.com/michaelboegner/interviewer/interview"
 	"github.com/michaelboegner/interviewer/mailer"
@@ -34,15 +35,32 @@ func NewServer() (*Server, error) {
 	tokenRepo := token.NewRepository(db)
 	conversationRepo := conversation.NewRepository(db)
 	billingRepo := billing.NewRepository(db)
+	embeddingRepo := embedding.NewRepository(db)
 	openAI := chatgpt.NewOpenAI()
 	mailer := mailer.NewMailer()
+	embedder, err := embedding.NewHTTPEmbedder()
+	if err != nil {
+		log.Printf("embedding.NewHTTPEmbedder failed: %v", err)
+		return nil, err
+	}
+	embedding := embedding.NewService(embeddingRepo, embedder, openAI)
 	billing, err := billing.NewBilling()
 	if err != nil {
 		log.Printf("billing.NewBilling failed: %v", err)
 		return nil, err
 	}
 
-	handler := handlers.NewHandler(interviewRepo, userRepo, tokenRepo, conversationRepo, billingRepo, billing, mailer, openAI, db)
+	handler := handlers.NewHandler(
+		interviewRepo,
+		userRepo,
+		tokenRepo,
+		conversationRepo,
+		billingRepo,
+		billing,
+		mailer,
+		openAI,
+		embedding,
+		db)
 
 	mux.Handle("/api/users", http.HandlerFunc(handler.CreateUsersHandler))
 	mux.Handle("/api/auth/login", http.HandlerFunc(handler.LoginHandler))
