@@ -166,6 +166,7 @@ Break the response into a list of concise, self-contained statements. Each item 
 - Be understandable without the original question
 - Focus only on what the user **actually said**, not what they should have said
 - Exclude filler, vague claims, or generalities
+- Be written in the past tense
 
 Output only valid JSON in this format:
 {
