@@ -91,7 +91,7 @@ func GetConversationHistory(conversation *Conversation, interviewRepo interview.
 			fmt.Printf("conversationContext: %v\n", conversationContext)
 			if isFinalInjectionTarget && len(conversationContext) > 0 {
 				formattedContext := strings.Join(conversationContext, "\n")
-				content = fmt.Sprintf("Relevant prior context:\n%s\n\n--- BEGIN USER'S ACTUAL RESPONSE ---\n%s", formattedContext, content)
+				content = fmt.Sprintf("Relevant prior user context:\n%s\n\n--- BEGIN USER'S ACTUAL RESPONSE ---\n%s", formattedContext, content)
 			}
 
 			chatGPTConversationArray = append(chatGPTConversationArray, map[string]string{

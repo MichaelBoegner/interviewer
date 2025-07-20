@@ -9,8 +9,7 @@ import (
 )
 
 func (s *Service) ProcessAndRetrieve(ctx context.Context, input EmbedInput) ([]string, error) {
-	// DEBUG
-	fmt.Printf("ProcessAndRetrive firing\n")
+	fmt.Printf("ProcessAndRetrieve firing\n")
 
 	summaryResp, err := s.Summarizer.ExtractResponseSummary(input.Question, input.UserResponse)
 	if err != nil {
@@ -18,10 +17,12 @@ func (s *Service) ProcessAndRetrieve(ctx context.Context, input EmbedInput) ([]s
 		return nil, err
 	}
 
-	// DEBUG
 	fmt.Printf("SummaryResp: %v\n", summaryResp)
+
 	allRelevant := []string{}
+	seen := map[string]struct{}{}
 	limit := 1
+
 	for _, point := range summaryResp.UserRespSummary {
 		rawVec, err := s.Embedder.EmbedText(ctx, point)
 		if err != nil {
@@ -30,7 +31,6 @@ func (s *Service) ProcessAndRetrieve(ctx context.Context, input EmbedInput) ([]s
 		}
 		vector := pgvector.NewVector(rawVec)
 
-		// DEBUG
 		fmt.Printf("vector: %v\n", vector)
 
 		err = s.Repo.StoreEmbedding(ctx, Embedding{
@@ -61,13 +61,15 @@ func (s *Service) ProcessAndRetrieve(ctx context.Context, input EmbedInput) ([]s
 			log.Printf("s.Repo.GetSimilarEmbeddings failed: %v", err)
 			return nil, err
 		}
-		for _, point := range relevantEmbeddings {
-			allRelevant = append(allRelevant, point)
+
+		for _, r := range relevantEmbeddings {
+			if _, exists := seen[r]; !exists {
+				seen[r] = struct{}{}
+				allRelevant = append(allRelevant, r)
+			}
 		}
 
-		// DEBUG
 		fmt.Printf("relevant: %v\n", allRelevant)
-
 	}
 
 	return allRelevant, nil
