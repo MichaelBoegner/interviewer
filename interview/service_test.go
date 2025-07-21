@@ -28,6 +28,7 @@ func TestStartInterview(t *testing.T) {
 		failRepo     bool
 		expected     *interview.Interview
 		expectError  bool
+		jdSummary    string
 	}{
 		{
 			name: "StartInterview_Success",
@@ -35,6 +36,7 @@ func TestStartInterview(t *testing.T) {
 				ID:                    1,
 				SubscriptionTier:      "free",
 				SubscriptionStartDate: &now,
+				IndividualCredits:     1,
 			},
 			length:       30,
 			numQuestions: 3,
@@ -45,13 +47,14 @@ func TestStartInterview(t *testing.T) {
 				Length:          30,
 				NumberQuestions: 3,
 				Difficulty:      "easy",
-				Status:          "Running",
+				Status:          "active",
 				Score:           100,
 				Language:        "Python",
 				FirstQuestion:   "Question1",
 				Subtopic:        "None",
 			},
 			expectError: false,
+			jdSummary:   "",
 		},
 		{
 			name: "StartInterview_RepoError",
@@ -59,6 +62,7 @@ func TestStartInterview(t *testing.T) {
 				ID:                    1,
 				SubscriptionTier:      "free",
 				SubscriptionStartDate: &now,
+				IndividualCredits:     1,
 			},
 			length:       30,
 			numQuestions: 3,
@@ -66,6 +70,7 @@ func TestStartInterview(t *testing.T) {
 			aiClient:     &mocks.MockOpenAIClient{},
 			failRepo:     true,
 			expectError:  true,
+			jdSummary:    "",
 		},
 	}
 
@@ -92,6 +97,7 @@ func TestStartInterview(t *testing.T) {
 				tc.length,
 				tc.numQuestions,
 				tc.difficulty,
+				tc.jdSummary,
 			)
 
 			if tc.expectError && err == nil {
@@ -106,7 +112,7 @@ func TestStartInterview(t *testing.T) {
 				got := interviewStarted
 
 				if diff := cmp.Diff(expected, got,
-					cmpopts.IgnoreFields(interview.Interview{}, "Id", "CreatedAt", "UpdatedAt", "Prompt", "ChatGPTResponse"),
+					cmpopts.IgnoreFields(interview.Interview{}, "Id", "CreatedAt", "UpdatedAt", "Prompt"),
 				); diff != "" {
 					t.Errorf("Interview mismatch (-want +got):\n%s", diff)
 				}
