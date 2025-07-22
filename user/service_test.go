@@ -56,7 +56,10 @@ func TestCreateUser(t *testing.T) {
 			if tc.failRepo {
 				repo.failRepo = true
 			}
-			jwt, _ := VerificationToken(tc.email, tc.username, tc.password)
+			jwt, err := VerificationToken(tc.email, tc.username, tc.password)
+			if err != nil {
+				t.Fatalf("VerificationToken failed: %v", err)
+			}
 			user, err := CreateUser(repo, jwt)
 
 			if tc.expectError && err == nil {
