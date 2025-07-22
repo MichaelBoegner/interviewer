@@ -28,9 +28,10 @@ func TestCreateUser(t *testing.T) {
 			email:    "test@test.com",
 			password: "test",
 			user: &User{
-				ID:       1,
-				Username: "test",
-				Email:    "test@test.com",
+				ID:                1,
+				Username:          "test",
+				Email:             "test@test.com",
+				IndividualCredits: 1,
 			},
 			expectError: false,
 		},
@@ -55,8 +56,8 @@ func TestCreateUser(t *testing.T) {
 			if tc.failRepo {
 				repo.failRepo = true
 			}
-
-			user, err := CreateUser(repo, tc.username, tc.email, tc.password)
+			jwt, _ := VerificationToken(tc.email, tc.username, tc.password)
+			user, err := CreateUser(repo, jwt)
 
 			if tc.expectError && err == nil {
 				t.Fatalf("expected error but got nil")
@@ -84,10 +85,9 @@ func TestCreateUser(t *testing.T) {
 }
 
 func TestLoginUser(t *testing.T) {
-
 	tests := []struct {
 		name        string
-		username    string
+		email       string
 		password    string
 		jwtoken     string
 		userID      int
@@ -96,14 +96,14 @@ func TestLoginUser(t *testing.T) {
 	}{
 		{
 			name:        "LoginUser_Success",
-			username:    "test",
+			email:       "test@gmail.com",
 			password:    "test",
 			userID:      1,
 			expectError: false,
 		},
 		{
 			name:        "LoginUser_RepoError",
-			username:    "test",
+			email:       "test@gmail.com",
 			password:    "test",
 			failRepo:    true,
 			expectError: true,
@@ -121,7 +121,7 @@ func TestLoginUser(t *testing.T) {
 				repo.failRepo = true
 			}
 
-			jwtoken, userID, err := LoginUser(repo, tc.username, tc.password)
+			jwtoken, username, userID, err := LoginUser(repo, tc.email, tc.password)
 
 			if tc.expectError && err == nil {
 				t.Fatalf("expected error but got nil")
@@ -140,6 +140,9 @@ func TestLoginUser(t *testing.T) {
 				if jwtoken == "" {
 					t.Errorf("Expected jwtoken but got empty string")
 				}
+				if username == "" {
+					t.Errorf("Expected username but got empty string")
+				}
 			}
 		})
 	}
@@ -157,9 +160,10 @@ func TestGetUser(t *testing.T) {
 			name:   "GetUser_Success",
 			userID: 1,
 			user: &User{
-				ID:       1,
-				Username: "test",
-				Email:    "test@test.com",
+				ID:            1,
+				Username:      "test",
+				Email:         "test@test.com",
+				AccountStatus: "active",
 			},
 			expectError: false,
 		},
@@ -217,9 +221,10 @@ func TestUpdateSubscription(t *testing.T) {
 			name:   "UpdateSubscription_Success",
 			userID: 1,
 			user: &User{
-				ID:       1,
-				Username: "test",
-				Email:    "test@test.com",
+				ID:            1,
+				Username:      "test",
+				Email:         "test@test.com",
+				AccountStatus: "active",
 			},
 			expectError: false,
 		},

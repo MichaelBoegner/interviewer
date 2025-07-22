@@ -51,10 +51,11 @@ func (m *MockRepo) GetUser(userID int) (*User, error) {
 	}
 
 	mockUser := &User{
-		ID:       1,
-		Username: "test",
-		Password: PasswordHashed,
-		Email:    "test@test.com",
+		ID:            1,
+		Username:      "test",
+		Password:      PasswordHashed,
+		Email:         "test@test.com",
+		AccountStatus: "active",
 	}
 
 	return mockUser, nil
