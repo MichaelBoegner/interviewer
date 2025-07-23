@@ -2,7 +2,6 @@ package conversation
 
 import (
 	"errors"
-	"fmt"
 	"log"
 
 	"github.com/michaelboegner/interviewer/chatgpt"
@@ -52,8 +51,6 @@ func CreateConversation(
 	}
 
 	topic := conversation.Topics[topicID]
-	// DEBUG
-	fmt.Printf("conversation.Topics[topicID]: %v\n\n\n", conversation.Topics[topicID])
 	topic.ConversationID = conversationID
 	messages := []Message{
 		NewMessage(conversationID, topicID, questionNumber, System, prompt),
