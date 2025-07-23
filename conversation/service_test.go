@@ -34,6 +34,7 @@ func TestCreateConversation(t *testing.T) {
 			conversationID: 1,
 			conversation: &conversation.Conversation{
 				InterviewID:           1,
+				Topics:                conversation.ClonePredefinedTopics(),
 				CurrentTopic:          1,
 				CurrentSubtopic:       "Subtopic2",
 				CurrentQuestionNumber: 2,

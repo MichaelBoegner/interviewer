@@ -137,10 +137,10 @@ func CheckConversationState(chatGPTResponse *chatgpt.ChatGPTResponse, conversati
 	}
 }
 
-func ClonePredefinedTopics() map[int]Topic {
-	topics := make(map[int]Topic)
+func ClonePredefinedTopics() map[int]*Topic {
+	topics := make(map[int]*Topic)
 	for id, topic := range PredefinedTopics {
-		topics[id] = Topic{
+		topics[id] = &Topic{
 			ID:        topic.ID,
 			Name:      topic.Name,
 			Questions: make(map[int]*Question),
