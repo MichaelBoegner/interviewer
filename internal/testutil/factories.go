@@ -23,13 +23,13 @@ func NewConversationBuilder() *ConversationBuilder {
 			CurrentQuestionNumber: 2,
 			CreatedAt:             now,
 			UpdatedAt:             now,
-			Topics:                make(map[int]conversation.Topic),
+			Topics:                conversation.ClonePredefinedTopics(),
 		},
 	}
 }
 
 func (b *ConversationBuilder) WithTopic(name string, id int) *ConversationBuilder {
-	b.Convo.Topics[id] = conversation.Topic{
+	b.Convo.Topics[id] = &conversation.Topic{
 		ID:   id,
 		Name: name,
 	}

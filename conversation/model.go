@@ -19,7 +19,7 @@ const (
 	TopicBackend      = 6
 )
 
-var PredefinedTopics = map[int]Topic{
+var PredefinedTopics = map[int]*Topic{
 	TopicIntroduction: {ID: TopicIntroduction, Name: "Introduction"},
 	TopicCoding:       {ID: TopicCoding, Name: "Coding"},
 	TopicSystemDesign: {ID: TopicSystemDesign, Name: "System Design"},
@@ -29,14 +29,14 @@ var PredefinedTopics = map[int]Topic{
 }
 
 type Conversation struct {
-	ID                    int           `json:"id"`
-	InterviewID           int           `json:"interview_id"`
-	CurrentTopic          int           `json:"current_topic"`
-	CurrentSubtopic       string        `json:"current_subtopic"`
-	CurrentQuestionNumber int           `json:"current_question_number"`
-	CreatedAt             time.Time     `json:"created_at"`
-	UpdatedAt             time.Time     `json:"updated_at"`
-	Topics                map[int]Topic `json:"topics"`
+	ID                    int            `json:"id"`
+	InterviewID           int            `json:"interview_id"`
+	CurrentTopic          int            `json:"current_topic"`
+	CurrentSubtopic       string         `json:"current_subtopic"`
+	CurrentQuestionNumber int            `json:"current_question_number"`
+	CreatedAt             time.Time      `json:"created_at"`
+	UpdatedAt             time.Time      `json:"updated_at"`
+	Topics                map[int]*Topic `json:"topics"`
 }
 
 type Topic struct {
