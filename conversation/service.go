@@ -2,6 +2,7 @@ package conversation
 
 import (
 	"errors"
+	"fmt"
 	"log"
 
 	"github.com/michaelboegner/interviewer/chatgpt"
@@ -50,7 +51,9 @@ func CreateConversation(
 		return nil, err
 	}
 
-	topic := conversation.Topics[conversation.CurrentTopic]
+	topic := conversation.Topics[topicID]
+	// DEBUG
+	fmt.Printf("conversation.Topics[topicID]: %v\n\n\n", conversation.Topics[topicID])
 	topic.ConversationID = conversationID
 	messages := []Message{
 		NewMessage(conversationID, topicID, questionNumber, System, prompt),
@@ -59,7 +62,6 @@ func CreateConversation(
 	}
 	topic.Questions = make(map[int]*Question)
 	topic.Questions[questionNumber] = NewQuestion(conversationID, topicID, questionNumber, firstQuestion, messages)
-	conversation.Topics[topicID] = topic
 
 	err = repo.CreateMessages(conversation, messages)
 	if err != nil {
@@ -198,7 +200,6 @@ func AppendConversation(
 		question := NewQuestion(conversationID, nextTopicID, resetQuestionNumber, chatGPTResponse.NextQuestion, messages)
 		topic.Questions = make(map[int]*Question)
 		topic.Questions[resetQuestionNumber] = question
-		conversation.Topics[nextTopicID] = topic
 
 		_, err = repo.AddQuestion(question)
 		if err != nil {
@@ -273,7 +274,6 @@ func GetConversation(repo ConversationRepo, interviewID int) (*Conversation, err
 
 		question.Messages = append(question.Messages, messagesReturned...)
 		topic.Questions[question.QuestionNumber] = question
-		conversation.Topics[topicID] = topic
 	}
 
 	return conversation, nil

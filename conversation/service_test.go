@@ -19,7 +19,7 @@ func TestCreateConversation(t *testing.T) {
 		name           string
 		interviewID    int
 		conversationID int
-		conversation   *conversation.Conversation
+		convo          *conversation.Conversation
 		prompt         string
 		firstQuestion  string
 		subtopic       string
@@ -32,7 +32,8 @@ func TestCreateConversation(t *testing.T) {
 			name:           "CreateConversation_Success",
 			interviewID:    1,
 			conversationID: 1,
-			conversation: &conversation.Conversation{
+			convo: &conversation.Conversation{
+				ID:                    1,
 				InterviewID:           1,
 				Topics:                conversation.ClonePredefinedTopics(),
 				CurrentTopic:          1,
@@ -45,19 +46,23 @@ func TestCreateConversation(t *testing.T) {
 			message:       "It's a lightweight thread",
 			expectError:   false,
 			expected: &conversation.Conversation{
+				ID:                    1,
 				InterviewID:           1,
 				CurrentTopic:          1,
+				Topics:                conversation.ClonePredefinedTopics(),
 				CurrentSubtopic:       "Subtopic2",
-				CurrentQuestionNumber: 2,
+				CurrentQuestionNumber: 3,
 			},
 		},
 		{
 			name:           "CreateConversation_RepoError",
 			interviewID:    1,
 			conversationID: 1,
-			conversation: &conversation.Conversation{
+			convo: &conversation.Conversation{
+				ID:                    1,
 				InterviewID:           1,
 				CurrentTopic:          1,
+				Topics:                conversation.ClonePredefinedTopics(),
 				CurrentSubtopic:       "Subtopic2",
 				CurrentQuestionNumber: 2,
 			},
@@ -88,7 +93,7 @@ func TestCreateConversation(t *testing.T) {
 				repo,
 				interviewRepo,
 				ai,
-				tc.conversation,
+				tc.convo,
 				tc.interviewID,
 				tc.prompt,
 				tc.firstQuestion,
@@ -117,21 +122,23 @@ func TestCreateConversation(t *testing.T) {
 
 func TestAppendConversation(t *testing.T) {
 	tests := []struct {
-		name         string
-		message      string
-		interviewID  int
-		conversation *conversation.Conversation
-		userID       int
-		prompt       string
-		failRepo     bool
-		expectError  bool
+		name        string
+		message     string
+		interviewID int
+		convo       *conversation.Conversation
+		userID      int
+		prompt      string
+		failRepo    bool
+		expectError bool
 	}{
 		{
 			name:        "AppendConversation_Success",
 			message:     "Answer1",
 			interviewID: 1,
-			conversation: &conversation.Conversation{
+			convo: &conversation.Conversation{
+				ID:                    1,
 				InterviewID:           1,
+				Topics:                conversation.ClonePredefinedTopics(),
 				CurrentTopic:          1,
 				CurrentSubtopic:       "Subtopic2",
 				CurrentQuestionNumber: 2,
@@ -145,8 +152,10 @@ func TestAppendConversation(t *testing.T) {
 			name:        "AppendConversation_RepoError",
 			message:     "Answer1",
 			interviewID: 1,
-			conversation: &conversation.Conversation{
+			convo: &conversation.Conversation{
+				ID:                    1,
 				InterviewID:           1,
+				Topics:                conversation.ClonePredefinedTopics(),
 				CurrentTopic:          1,
 				CurrentSubtopic:       "Subtopic2",
 				CurrentQuestionNumber: 2,
@@ -175,7 +184,7 @@ func TestAppendConversation(t *testing.T) {
 				repo,
 				interviewRepo,
 				ai,
-				tc.conversation,
+				tc.convo,
 				tc.interviewID,
 				"Prompt",
 				"Question1",
