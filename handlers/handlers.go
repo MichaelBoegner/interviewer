@@ -125,6 +125,9 @@ func (h *Handler) CreateUsersHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// DEBUG
+	// fmt.Printf("userCreated: %v", userCreated)
+
 	err = h.Mailer.SendWelcome(userCreated.Email)
 	if err != nil {
 		log.Printf("h.Mailer.SendWelcome failed: %v", err)

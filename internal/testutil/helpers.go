@@ -58,9 +58,6 @@ func CreateTestUserAndJWT() (string, int) {
 	returnVals := &handlers.ReturnVals{}
 	json.Unmarshal(resp, returnVals)
 
-	// DEBUG
-	fmt.Printf("returnVals: %v", returnVals)
-
 	jwt = returnVals.JWToken
 
 	//test userID extract
@@ -68,9 +65,6 @@ func CreateTestUserAndJWT() (string, int) {
 	if err != nil {
 		log.Printf("CreateTestUserandJWT userID extraction failed: %v", err)
 	}
-
-	// DEBUG
-	fmt.Printf("token: %v\nuserID: %v\n\n", jwt, userID)
 
 	return jwt, userID
 }
