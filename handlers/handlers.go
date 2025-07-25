@@ -126,10 +126,6 @@ func (h *Handler) CreateUsersHandler(w http.ResponseWriter, r *http.Request) {
 	userCreated, err := user.CreateUser(h.UserRepo, req.Token)
 	if err != nil {
 		log.Printf("CreateUser error: %v", err)
-		if errors.Is(err, user.ErrDuplicateEmail) || errors.Is(err, user.ErrDuplicateUsername) || errors.Is(err, user.ErrDuplicateUser) {
-			RespondWithError(w, http.StatusConflict, "Username, email, or password are missing")
-			return
-		}
 		RespondWithError(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
@@ -436,7 +432,12 @@ func (h *Handler) RefreshTokensHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	providedToken := r.Context().Value(middleware.ContextKeyTokenKey).(string)
+	authHeader := r.Header.Get("Authorization")
+	if authHeader == "" || !strings.HasPrefix(authHeader, "Bearer ") {
+		RespondWithError(w, http.StatusUnauthorized, "Missing or invalid Authorization header")
+		return
+	}
+	providedToken := strings.TrimPrefix(authHeader, "Bearer ")
 	params := &middleware.AcceptedVals{}
 
 	err := json.NewDecoder(r.Body).Decode(params)

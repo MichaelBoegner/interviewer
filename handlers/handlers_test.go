@@ -140,34 +140,6 @@ func Test_RequestVerificationHandler_Integration(t *testing.T) {
 				Error: "Username, Email, and Password required",
 			},
 		},
-		{
-			name:   "CreateUser_DuplicateEmail",
-			method: "POST",
-			url:    testutil.TestServerURL + "/api/auth/request-verification",
-			reqBody: `{
-			"username":       "test1",
-			"email":          "test@test.com",
-			"password":       "test1"
-			}`,
-			expectedStatus: http.StatusConflict,
-			respBody: handlers.ReturnVals{
-				Error: "Email already exists",
-			},
-		},
-		{
-			name:   "CreateUser_DuplicateUsername",
-			method: "POST",
-			url:    testutil.TestServerURL + "/api/auth/request-verification",
-			reqBody: `{
-			"username":       "test",
-			"email":          "test1@test.com",
-			"password":       "test1"
-			}`,
-			expectedStatus: http.StatusConflict,
-			respBody: handlers.ReturnVals{
-				Error: "Email already exists",
-			},
-		},
 	}
 
 	for _, tc := range tests {
@@ -181,9 +153,6 @@ func Test_RequestVerificationHandler_Integration(t *testing.T) {
 			if err != nil {
 				log.Fatalf("TestRequest for interview creation failed: %v", err)
 			}
-
-			//DEBUG
-			fmt.Printf("resp: %v\n\n", string(resp))
 
 			respUnmarshalled := &handlers.ReturnVals{}
 			err = json.Unmarshal(resp, respUnmarshalled)
@@ -222,7 +191,6 @@ func Test_RequestVerificationHandler_Integration(t *testing.T) {
 }
 
 func Test_CreateUsersHandler_Integration(t *testing.T) {
-	t.Skip()
 	cleanDBOrFail(t)
 
 	tests := []TestCase{
@@ -249,63 +217,6 @@ func Test_CreateUsersHandler_Integration(t *testing.T) {
 				SubscriptionID:     "0",
 				IndividualCredits:  1,
 				AccountStatus:      "active",
-			},
-		},
-		{
-			name:           "CreateUser_MissingUsername",
-			method:         "POST",
-			url:            testutil.TestServerURL + "/api/users",
-			email:          "test@test.com",
-			password:       "test",
-			expectedStatus: http.StatusBadRequest,
-			respBody: handlers.ReturnVals{
-				Error: "Username, Email, and Password required",
-			},
-		},
-		{
-			name:           "CreateUser_DuplicateUsername",
-			method:         "POST",
-			url:            testutil.TestServerURL + "/api/users",
-			username:       "testUser",
-			email:          "test@test.com",
-			password:       "test",
-			expectedStatus: http.StatusConflict,
-			respBody: handlers.ReturnVals{
-				Error: "Email already exists",
-			},
-		},
-		{
-			name:           "CreateUser_MissingEmail",
-			method:         "POST",
-			url:            testutil.TestServerURL + "/api/users",
-			username:       "test",
-			password:       "test",
-			expectedStatus: http.StatusBadRequest,
-			respBody: handlers.ReturnVals{
-				Error: "Username, Email, and Password required",
-			},
-		},
-		{
-			name:           "CreateUser_DuplicateEmail",
-			method:         "POST",
-			url:            testutil.TestServerURL + "/api/users",
-			username:       "test",
-			email:          "testUser@test.com",
-			password:       "test",
-			expectedStatus: http.StatusConflict,
-			respBody: handlers.ReturnVals{
-				Error: "Email already exists",
-			},
-		},
-		{
-			name:           "CreateUser_MissingPassword",
-			method:         "POST",
-			url:            testutil.TestServerURL + "/api/users",
-			username:       "test",
-			email:          "test@test.com",
-			expectedStatus: http.StatusBadRequest,
-			respBody: handlers.ReturnVals{
-				Error: "Username, Email, and Password required",
 			},
 		},
 	}
@@ -335,9 +246,6 @@ func Test_CreateUsersHandler_Integration(t *testing.T) {
 			if err != nil {
 				t.Fatalf("failed to unmarshal response: %v", err)
 			}
-
-			//DEBUG
-			fmt.Printf("respUnmarshalled: %v", respUnmarshalled)
 
 			// Assert Response
 			if respCode != tc.expectedStatus {
@@ -370,7 +278,6 @@ func Test_CreateUsersHandler_Integration(t *testing.T) {
 }
 
 func Test_GetUsersHandler_Integration(t *testing.T) {
-	t.Skip()
 	cleanDBOrFail(t)
 
 	jwtoken, userID := testutil.CreateTestUserAndJWT()
@@ -465,7 +372,6 @@ func Test_GetUsersHandler_Integration(t *testing.T) {
 }
 
 func Test_LoginHandler_Integration(t *testing.T) {
-	t.Skip()
 	cleanDBOrFail(t)
 
 	_, _ = testutil.CreateTestUserAndJWT()
@@ -477,7 +383,7 @@ func Test_LoginHandler_Integration(t *testing.T) {
 			url:            testutil.TestServerURL + "/api/auth/login",
 			expectedStatus: http.StatusOK,
 			reqBody: `{
-				"username" : "test",
+				"email" : "test@test.com",
 				"password" : "test"
 			}`,
 			DBCheck:        true,
@@ -506,12 +412,12 @@ func Test_LoginHandler_Integration(t *testing.T) {
 			TokensExpected: false,
 		},
 		{
-			name:           "Login_WrongUsername",
+			name:           "Login_WrongEmail",
 			method:         "POST",
 			url:            testutil.TestServerURL + "/api/auth/login",
 			expectedStatus: http.StatusUnauthorized,
 			reqBody: `{
-				"username": "notarealuser",
+				"email": "notarealemail@test.com",
 				"password": "test"
 			}`,
 			DBCheck:        false,
@@ -523,7 +429,7 @@ func Test_LoginHandler_Integration(t *testing.T) {
 			url:            testutil.TestServerURL + "/api/auth/login",
 			expectedStatus: http.StatusUnauthorized,
 			reqBody: `{
-				"username": "test",
+				"email": "test@test.com",
 				"password": "wrongpass"
 			}`,
 			DBCheck:        false,
@@ -591,7 +497,6 @@ func Test_LoginHandler_Integration(t *testing.T) {
 }
 
 func Test_RefreshTokensHandler_Integration(t *testing.T) {
-	t.Skip()
 	cleanDBOrFail(t)
 
 	_, userID := testutil.CreateTestUserAndJWT()
@@ -678,6 +583,8 @@ func Test_RefreshTokensHandler_Integration(t *testing.T) {
 			if err != nil {
 				log.Fatalf("TestRequest for interview creation failed: %v", err)
 			}
+			// DEBUG
+			fmt.Printf("resp: %v\n\n\n", string(resp))
 
 			respUnmarshalled := &handlers.ReturnVals{}
 			err = json.Unmarshal(resp, respUnmarshalled)

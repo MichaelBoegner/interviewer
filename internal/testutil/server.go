@@ -55,6 +55,7 @@ func InitTestServer() (*handlers.Handler, error) {
 	TestMux.Handle("/api/auth/check-email", http.HandlerFunc(handler.CheckEmailHandler))
 	TestMux.Handle("/api/auth/request-reset", http.HandlerFunc(handler.RequestResetHandler))
 	TestMux.Handle("/api/auth/reset-password", http.HandlerFunc(handler.ResetPasswordHandler))
+	TestMux.Handle("/api/auth/token", http.HandlerFunc(handler.RefreshTokensHandler))
 	TestMux.Handle("/api/webhooks/billing", http.HandlerFunc(handler.BillingWebhookHandler))
 	TestMux.Handle("/api/jd", http.HandlerFunc(handler.JDInputHandler))
 	TestMux.Handle("/health", http.HandlerFunc(handler.HealthCheckHandler))
@@ -114,13 +115,6 @@ func InitTestServer() (*handlers.Handler, error) {
 		middleware.GetContext(
 			middleware.ValidateUserActive(userRepo)(
 				http.HandlerFunc(handler.GetConversationHandler),
-			),
-		),
-	)
-	TestMux.Handle("/api/auth/token",
-		middleware.GetContext(
-			middleware.ValidateUserActive(userRepo)(
-				http.HandlerFunc(handler.RefreshTokensHandler),
 			),
 		),
 	)
