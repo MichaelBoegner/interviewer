@@ -98,7 +98,7 @@ func init() {
 			TopicID:        1,
 			QuestionNumber: 1,
 			Author:         "system",
-			Content:        TestPrompt,
+			Content:        BuildTestPrompt([]string{}, "Introduction", 1, ""),
 			CreatedAt:      now,
 		},
 		{

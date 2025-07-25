@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -113,8 +112,6 @@ func ValidateUserActive(userRepo *user.Repository) func(http.Handler) http.Handl
 			user, err := userRepo.GetUser(userID)
 			if err != nil || user.AccountStatus == "deleted" {
 				log.Printf("Blocked access for deleted user ID %d", userID)
-				// DEBUG
-				fmt.Printf("MIDDLEWARE FAULT. userID extracted: %v\n\n\n", userID)
 				respondWithError(w, http.StatusUnauthorized, "Account deactivated")
 				return
 			}

@@ -583,8 +583,6 @@ func Test_RefreshTokensHandler_Integration(t *testing.T) {
 			if err != nil {
 				log.Fatalf("TestRequest for interview creation failed: %v", err)
 			}
-			// DEBUG
-			fmt.Printf("resp: %v\n\n\n", string(resp))
 
 			respUnmarshalled := &handlers.ReturnVals{}
 			err = json.Unmarshal(resp, respUnmarshalled)
@@ -634,7 +632,6 @@ func Test_RefreshTokensHandler_Integration(t *testing.T) {
 }
 
 func Test_InterviewsHandler_Integration(t *testing.T) {
-	t.Skip()
 	cleanDBOrFail(t)
 
 	jwtoken, userID := testutil.CreateTestUserAndJWT()
@@ -650,22 +647,26 @@ func Test_InterviewsHandler_Integration(t *testing.T) {
 			headerValue:    "Bearer " + jwtoken,
 			expectedStatus: http.StatusCreated,
 			respBody: handlers.ReturnVals{
-				InterviewID:   1,
-				FirstQuestion: "Question1",
+				InterviewID:    1,
+				ConversationID: 1,
+				FirstQuestion:  "Question1",
 			},
 			DBCheck: true,
 			Interview: &interview.Interview{
 				Id:              1,
+				ConversationID:  1,
 				UserId:          1,
 				Length:          30,
 				NumberQuestions: 3,
 				Difficulty:      "easy",
-				Status:          "Running",
+				Status:          "active",
 				Score:           100,
 				Language:        "Python",
-				Prompt:          mocks.TestPrompt,
+				Prompt:          mocks.BuildTestPrompt([]string{}, "Introduction", 1, ""),
 				FirstQuestion:   "Question1",
 				Subtopic:        "None",
+				CreatedAt:       time.Now().UTC(),
+				UpdatedAt:       time.Now().UTC(),
 			},
 		},
 		{
@@ -749,15 +750,15 @@ func Test_InterviewsHandler_Integration(t *testing.T) {
 
 			// Assert Database
 			if tc.DBCheck {
-				interview, err := interview.GetInterview(Handler.InterviewRepo, respUnmarshalled.InterviewID)
+				interviewReturned, err := interview.GetInterview(Handler.InterviewRepo, respUnmarshalled.InterviewID)
 				if err != nil {
 					t.Fatalf("Assert Database: GetInterview failed: %v", err)
 				}
 
 				expectedDB := tc.Interview
-				gotDB := interview
+				gotDB := interviewReturned
 
-				if diff := cmp.Diff(expectedDB, gotDB); diff != "" {
+				if diff := cmp.Diff(expectedDB, gotDB, cmpopts.IgnoreFields(interview.Interview{}, "CreatedAt", "UpdatedAt")); diff != "" {
 					t.Errorf("Mismatch (-expected +got):\n%s", diff)
 				}
 			}
