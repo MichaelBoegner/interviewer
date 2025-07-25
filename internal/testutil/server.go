@@ -11,7 +11,6 @@ import (
 	"github.com/michaelboegner/interviewer/handlers"
 	"github.com/michaelboegner/interviewer/internal/mocks"
 	"github.com/michaelboegner/interviewer/interview"
-	"github.com/michaelboegner/interviewer/mailer"
 	"github.com/michaelboegner/interviewer/middleware"
 	"github.com/michaelboegner/interviewer/token"
 	"github.com/michaelboegner/interviewer/user"
@@ -39,7 +38,7 @@ func InitTestServer() (*handlers.Handler, error) {
 	conversationRepo := conversation.NewRepository(db)
 	billingRepo := billing.NewRepository(db)
 	openAI := &mocks.MockOpenAIClient{}
-	mailer := mailer.NewMailer()
+	mailer := mocks.NewMockMailer()
 	billing, err := billing.NewBilling()
 	if err != nil {
 		log.Printf("billing.NewBilling failed: %v", err)
