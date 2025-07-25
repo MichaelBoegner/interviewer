@@ -48,6 +48,11 @@ func (h *Handler) RequestVerificationHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
+	if req.Email == "" || req.Username == "" || req.Password == "" {
+		RespondWithError(w, http.StatusBadRequest, "Username, Email, and Password required")
+		return
+	}
+
 	verificationJWT, err := user.VerificationToken(req.Email, req.Username, req.Password)
 	if err != nil {
 		log.Printf("GenerateEmailVerificationToken failed: %v", err)
@@ -122,7 +127,7 @@ func (h *Handler) CreateUsersHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("CreateUser error: %v", err)
 		if errors.Is(err, user.ErrDuplicateEmail) || errors.Is(err, user.ErrDuplicateUsername) || errors.Is(err, user.ErrDuplicateUser) {
-			RespondWithError(w, http.StatusConflict, "Email already exists")
+			RespondWithError(w, http.StatusConflict, "Username, email, or password are missing")
 			return
 		}
 		RespondWithError(w, http.StatusInternalServerError, "Internal server error")

@@ -115,26 +115,25 @@ func Test_RequestVerificationHandler_Integration(t *testing.T) {
 			},
 		},
 		{
-			name:   "CreateUser_DuplicateUsername",
-			method: "POST",
-			url:    testutil.TestServerURL + "/api/auth/request-verification",
-			reqBody: `{
-			"username":       "test",
-			"email":          "test1@test.com",
-			"password":       "test1"
-			}`,
-			expectedStatus: http.StatusConflict,
-			respBody: handlers.ReturnVals{
-				Error: "Email already exists",
-			},
-		},
-		{
 			name:   "CreateUser_MissingEmail",
 			method: "POST",
 			url:    testutil.TestServerURL + "/api/auth/request-verification",
 			reqBody: `{
 			"username":       "test1",
 			"password":       "test1"
+			}`,
+			expectedStatus: http.StatusBadRequest,
+			respBody: handlers.ReturnVals{
+				Error: "Username, Email, and Password required",
+			},
+		},
+		{
+			name:   "CreateUser_MissingPassword",
+			method: "POST",
+			url:    testutil.TestServerURL + "/api/auth/request-verification",
+			reqBody: `{
+			"username":       "test1",
+			"email":          "test1@test.com"
 			}`,
 			expectedStatus: http.StatusBadRequest,
 			respBody: handlers.ReturnVals{
@@ -156,16 +155,17 @@ func Test_RequestVerificationHandler_Integration(t *testing.T) {
 			},
 		},
 		{
-			name:   "CreateUser_MissingPassword",
+			name:   "CreateUser_DuplicateUsername",
 			method: "POST",
 			url:    testutil.TestServerURL + "/api/auth/request-verification",
 			reqBody: `{
-			"username":       "test1",
+			"username":       "test",
 			"email":          "test1@test.com",
+			"password":       "test1"
 			}`,
-			expectedStatus: http.StatusBadRequest,
+			expectedStatus: http.StatusConflict,
 			respBody: handlers.ReturnVals{
-				Error: "Username, Email, and Password required",
+				Error: "Email already exists",
 			},
 		},
 	}
