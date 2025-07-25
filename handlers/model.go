@@ -48,6 +48,7 @@ type ReturnVals struct {
 	User           *user.User                 `json:"user,omitempty"`
 	Status         string                     `json:"status,omitempty"`
 	Score          int                        `json:"score,omitempty"`
+	Message        string                     `json:"message,omitempty"`
 }
 
 type Handler struct {

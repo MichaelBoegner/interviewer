@@ -62,7 +62,11 @@ func (h *Handler) RequestVerificationHandler(w http.ResponseWriter, r *http.Requ
 		}
 	}()
 
-	RespondWithJSON(w, http.StatusOK, map[string]string{"message": "Verification email sent"})
+	payload := &ReturnVals{
+		Message: "Verification email sent",
+	}
+
+	RespondWithJSON(w, http.StatusOK, payload)
 }
 
 func (h *Handler) CheckEmailHandler(w http.ResponseWriter, r *http.Request) {
@@ -124,9 +128,6 @@ func (h *Handler) CreateUsersHandler(w http.ResponseWriter, r *http.Request) {
 		RespondWithError(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
-
-	// DEBUG
-	// fmt.Printf("userCreated: %v", userCreated)
 
 	err = h.Mailer.SendWelcome(userCreated.Email)
 	if err != nil {

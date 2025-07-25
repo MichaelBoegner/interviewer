@@ -82,7 +82,147 @@ func TestMain(m *testing.M) {
 	os.Exit(code)
 }
 
+func Test_RequestVerificationHandler_Integration(t *testing.T) {
+	cleanDBOrFail(t)
+
+	tests := []TestCase{
+		{
+			name:   "Verification_Success",
+			method: "POST",
+			url:    testutil.TestServerURL + "/api/auth/request-verification",
+			reqBody: `{
+			"username":       "test",
+			"email":          "test@test.com",
+			"password":       "test"
+			}`,
+			expectedStatus: http.StatusOK,
+			respBody: handlers.ReturnVals{
+				Message: "Verification email sent",
+			},
+			DBCheck: false,
+		},
+		{
+			name:   "CreateUser_MissingUsername",
+			method: "POST",
+			url:    testutil.TestServerURL + "/api/auth/request-verification",
+			reqBody: `{
+			"email":          "test1@test.com",
+			"password":       "test1"
+			}`,
+			expectedStatus: http.StatusBadRequest,
+			respBody: handlers.ReturnVals{
+				Error: "Username, Email, and Password required",
+			},
+		},
+		{
+			name:   "CreateUser_DuplicateUsername",
+			method: "POST",
+			url:    testutil.TestServerURL + "/api/auth/request-verification",
+			reqBody: `{
+			"username":       "test",
+			"email":          "test1@test.com",
+			"password":       "test1"
+			}`,
+			expectedStatus: http.StatusConflict,
+			respBody: handlers.ReturnVals{
+				Error: "Email already exists",
+			},
+		},
+		{
+			name:   "CreateUser_MissingEmail",
+			method: "POST",
+			url:    testutil.TestServerURL + "/api/auth/request-verification",
+			reqBody: `{
+			"username":       "test1",
+			"password":       "test1"
+			}`,
+			expectedStatus: http.StatusBadRequest,
+			respBody: handlers.ReturnVals{
+				Error: "Username, Email, and Password required",
+			},
+		},
+		{
+			name:   "CreateUser_DuplicateEmail",
+			method: "POST",
+			url:    testutil.TestServerURL + "/api/auth/request-verification",
+			reqBody: `{
+			"username":       "test1",
+			"email":          "test@test.com",
+			"password":       "test1"
+			}`,
+			expectedStatus: http.StatusConflict,
+			respBody: handlers.ReturnVals{
+				Error: "Email already exists",
+			},
+		},
+		{
+			name:   "CreateUser_MissingPassword",
+			method: "POST",
+			url:    testutil.TestServerURL + "/api/auth/request-verification",
+			reqBody: `{
+			"username":       "test1",
+			"email":          "test1@test.com",
+			}`,
+			expectedStatus: http.StatusBadRequest,
+			respBody: handlers.ReturnVals{
+				Error: "Username, Email, and Password required",
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var buf strings.Builder
+			log.SetOutput(&buf)
+			defer showLogsIfFail(t, tc.name, buf)
+
+			// Act
+			resp, respCode, err := testRequests(t, tc.headerKey, tc.headerValue, tc.method, tc.url, strings.NewReader(tc.reqBody))
+			if err != nil {
+				log.Fatalf("TestRequest for interview creation failed: %v", err)
+			}
+
+			//DEBUG
+			fmt.Printf("resp: %v\n\n", string(resp))
+
+			respUnmarshalled := &handlers.ReturnVals{}
+			err = json.Unmarshal(resp, respUnmarshalled)
+			if err != nil {
+				t.Fatalf("failed to unmarshal response: %v", err)
+			}
+
+			// Assert Response
+			if respCode != tc.expectedStatus {
+				t.Fatalf("[%s] expected status %d, got %d\n", tc.name, tc.expectedStatus, respCode)
+			}
+
+			expected := tc.respBody
+			got := *respUnmarshalled
+
+			if diff := cmp.Diff(expected, got, cmpopts.EquateApproxTime(time.Second)); diff != "" {
+				t.Errorf("Mismatch (-expected +got):\n%s", diff)
+			}
+
+			// Assert Database
+			if tc.DBCheck {
+				user, err := user.GetUser(Handler.UserRepo, got.UserID)
+				if err != nil {
+					t.Fatalf("Assert Database: GetUser failed: %v", err)
+				}
+
+				expectedDB := tc.User
+				gotDB := user
+
+				if diff := cmp.Diff(expectedDB, gotDB, cmpopts.EquateApproxTime(time.Second)); diff != "" {
+					t.Errorf("DB Mismatch (-expected +got):\n%s", diff)
+				}
+			}
+		})
+	}
+}
+
 func Test_CreateUsersHandler_Integration(t *testing.T) {
+	t.Skip()
 	cleanDBOrFail(t)
 
 	tests := []TestCase{

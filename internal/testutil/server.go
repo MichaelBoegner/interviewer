@@ -50,16 +50,115 @@ func InitTestServer() (*handlers.Handler, error) {
 	TestMux = http.NewServeMux()
 	TestMux.Handle("/api/users", http.HandlerFunc(handler.CreateUsersHandler))
 	TestMux.Handle("/api/auth/login", http.HandlerFunc(handler.LoginHandler))
+	TestMux.Handle("/api/auth/github", http.HandlerFunc(handler.GithubLoginHandler))
+	TestMux.Handle("/api/auth/request-verification", http.HandlerFunc(handler.RequestVerificationHandler))
+	TestMux.Handle("/api/auth/check-email", http.HandlerFunc(handler.CheckEmailHandler))
 	TestMux.Handle("/api/auth/request-reset", http.HandlerFunc(handler.RequestResetHandler))
 	TestMux.Handle("/api/auth/reset-password", http.HandlerFunc(handler.ResetPasswordHandler))
-
-	TestMux.Handle("/api/users/", middleware.GetContext(http.HandlerFunc(handler.GetUsersHandler)))
-	TestMux.Handle("/api/interviews", middleware.GetContext(http.HandlerFunc(handler.InterviewsHandler)))
-	TestMux.Handle("/api/conversations/create/", middleware.GetContext(http.HandlerFunc(handler.CreateConversationsHandler)))
-	TestMux.Handle("/api/conversations/append/", middleware.GetContext(http.HandlerFunc(handler.AppendConversationsHandler)))
-	TestMux.Handle("/api/auth/token", middleware.GetContext(http.HandlerFunc(handler.RefreshTokensHandler)))
-	TestMux.Handle("/api/payment/checkout", middleware.GetContext(http.HandlerFunc(handler.CreateCheckoutSessionHandler)))
+	TestMux.Handle("/api/webhooks/billing", http.HandlerFunc(handler.BillingWebhookHandler))
+	TestMux.Handle("/api/jd", http.HandlerFunc(handler.JDInputHandler))
 	TestMux.Handle("/health", http.HandlerFunc(handler.HealthCheckHandler))
+
+	TestMux.Handle("/api/users/",
+		middleware.GetContext(
+			middleware.ValidateUserActive(userRepo)(
+				http.HandlerFunc(handler.GetUsersHandler),
+			),
+		),
+	)
+	TestMux.Handle("/api/users/delete/",
+		middleware.GetContext(
+			middleware.ValidateUserActive(userRepo)(
+				http.HandlerFunc(handler.DeleteUserHandler),
+			),
+		),
+	)
+	TestMux.Handle("/api/interviews",
+		middleware.GetContext(
+			middleware.ValidateUserActive(userRepo)(
+				http.HandlerFunc(handler.InterviewsHandler),
+			),
+		),
+	)
+	TestMux.Handle("/api/interviews/",
+		middleware.GetContext(
+			middleware.ValidateUserActive(userRepo)(
+				http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					switch r.Method {
+					case http.MethodGet:
+						handler.GetInterviewHandler(w, r)
+					case http.MethodPatch:
+						handler.UpdateInterviewStatusHandler(w, r)
+					default:
+						handlers.RespondWithError(w, http.StatusMethodNotAllowed, "Method not allowed")
+					}
+				}),
+			),
+		),
+	)
+	TestMux.Handle("/api/conversations/create/",
+		middleware.GetContext(
+			middleware.ValidateUserActive(userRepo)(
+				http.HandlerFunc(handler.CreateConversationsHandler),
+			),
+		),
+	)
+	TestMux.Handle("/api/conversations/append/",
+		middleware.GetContext(
+			middleware.ValidateUserActive(userRepo)(
+				http.HandlerFunc(handler.AppendConversationsHandler),
+			),
+		),
+	)
+	TestMux.Handle("/api/conversations/",
+		middleware.GetContext(
+			middleware.ValidateUserActive(userRepo)(
+				http.HandlerFunc(handler.GetConversationHandler),
+			),
+		),
+	)
+	TestMux.Handle("/api/auth/token",
+		middleware.GetContext(
+			middleware.ValidateUserActive(userRepo)(
+				http.HandlerFunc(handler.RefreshTokensHandler),
+			),
+		),
+	)
+	TestMux.Handle("/api/payment/checkout",
+		middleware.GetContext(
+			middleware.ValidateUserActive(userRepo)(
+				http.HandlerFunc(handler.CreateCheckoutSessionHandler),
+			),
+		),
+	)
+	TestMux.Handle("/api/payment/cancel",
+		middleware.GetContext(
+			middleware.ValidateUserActive(userRepo)(
+				http.HandlerFunc(handler.CancelSubscriptionHandler),
+			),
+		),
+	)
+	TestMux.Handle("/api/payment/resume",
+		middleware.GetContext(
+			middleware.ValidateUserActive(userRepo)(
+				http.HandlerFunc(handler.ResumeSubscriptionHandler),
+			),
+		),
+	)
+	TestMux.Handle("/api/payment/change-plan",
+		middleware.GetContext(
+			middleware.ValidateUserActive(userRepo)(
+				http.HandlerFunc(handler.ChangePlanHandler),
+			),
+		),
+	)
+	TestMux.Handle("/api/user/dashboard",
+		middleware.GetContext(
+			middleware.ValidateUserActive(userRepo)(
+				http.HandlerFunc(handler.DashboardHandler),
+			),
+		),
+	)
 
 	log.Println("Starting in-memory test server...")
 
