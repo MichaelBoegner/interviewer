@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -777,6 +778,8 @@ func (h *Handler) AppendConversationsHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 	if interviewReturned.Status != "active" {
+		// DEBUG
+		fmt.Printf("interviewReturned.Status: %v\nid: %v\n\n", interviewReturned.Status, interviewID)
 		RespondWithError(w, http.StatusConflict, "Interview is not active")
 		return
 	}

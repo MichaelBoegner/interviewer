@@ -874,12 +874,13 @@ func Test_CreateConversationsHandler_Integration(t *testing.T) {
 }
 
 func Test_AppendConversationsHandler_Integration(t *testing.T) {
-	t.Skip()
 	cleanDBOrFail(t)
 
 	jwtoken, _ := testutil.CreateTestUserAndJWT()
 	interviewID := testutil.CreateTestInterview(jwtoken)
 	conversationID := testutil.CreateTestConversation(jwtoken, interviewID)
+	// DEBUG
+	fmt.Printf("interviewID: %v\n\n", interviewID)
 	urlTest := testutil.TestServerURL + fmt.Sprintf("/api/conversations/append/%d", interviewID)
 	reqBodyTest := fmt.Sprintf(`{
 				"conversation_id" : %d,
@@ -957,6 +958,9 @@ func Test_AppendConversationsHandler_Integration(t *testing.T) {
 			if err != nil {
 				log.Fatalf("TestRequest for interview creation failed: %v", err)
 			}
+
+			//DEBUG
+			fmt.Printf("%v resp: %v\n\n\n", tc.name, string(resp))
 
 			respUnmarshalled := &handlers.ReturnVals{}
 			err = json.Unmarshal(resp, respUnmarshalled)

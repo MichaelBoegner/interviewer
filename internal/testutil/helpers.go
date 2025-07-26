@@ -100,7 +100,7 @@ func CreateTestConversation(jwt string, interviewID int) int {
 	returnVals := &handlers.ReturnVals{}
 	json.Unmarshal(resp, returnVals)
 
-	return returnVals.Conversation.InterviewID
+	return returnVals.Conversation.ID
 }
 
 func CreateTestExpiredJWT(id, expires int) string {

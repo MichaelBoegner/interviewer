@@ -101,7 +101,7 @@ func (b *ConversationBuilder) NewAppendedConversationMock() func() handlers.Retu
 
 func (b *ConversationBuilder) NewIsFinishedConversationMock() func() handlers.ReturnVals {
 	return func() handlers.ReturnVals {
-		b.WithCurrents(0, 0, "Finished").
+		b.WithCurrents(2, 2, "Subtopic1").
 			WithMessage(2, 1, mocks.MessagesAppendedConversationT2Q1A1).
 			WithMessage(2, 1, mocks.MessagesAppendedConversationT2Q2)
 
