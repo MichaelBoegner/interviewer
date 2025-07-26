@@ -767,7 +767,6 @@ func Test_InterviewsHandler_Integration(t *testing.T) {
 }
 
 func Test_CreateConversationsHandler_Integration(t *testing.T) {
-	t.Skip()
 	cleanDBOrFail(t)
 
 	jwtoken, _ := testutil.CreateTestUserAndJWT()

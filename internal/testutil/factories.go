@@ -30,8 +30,9 @@ func NewConversationBuilder() *ConversationBuilder {
 
 func (b *ConversationBuilder) WithTopic(name string, id int) *ConversationBuilder {
 	b.Convo.Topics[id] = &conversation.Topic{
-		ID:   id,
-		Name: name,
+		ID:        id,
+		Name:      name,
+		Questions: map[int]*conversation.Question{},
 	}
 	return b
 }
