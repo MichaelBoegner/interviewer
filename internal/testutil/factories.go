@@ -30,8 +30,9 @@ func NewConversationBuilder() *ConversationBuilder {
 
 func (b *ConversationBuilder) WithTopic(name string, id int) *ConversationBuilder {
 	b.Convo.Topics[id] = &conversation.Topic{
-		ID:   id,
-		Name: name,
+		ID:        id,
+		Name:      name,
+		Questions: map[int]*conversation.Question{},
 	}
 	return b
 }
@@ -100,9 +101,10 @@ func (b *ConversationBuilder) NewAppendedConversationMock() func() handlers.Retu
 
 func (b *ConversationBuilder) NewIsFinishedConversationMock() func() handlers.ReturnVals {
 	return func() handlers.ReturnVals {
-		b.WithCurrents(0, 0, "Finished").
+		b.WithCurrents(2, 2, "Subtopic1").
 			WithMessage(2, 1, mocks.MessagesAppendedConversationT2Q1A1).
-			WithMessage(2, 1, mocks.MessagesAppendedConversationT2Q2)
+			WithQuestion(2, 2, "Question2").
+			WithMessage(2, 2, mocks.MessagesAppendedConversationT2Q2)
 
 		return handlers.ReturnVals{Conversation: b.Convo}
 	}

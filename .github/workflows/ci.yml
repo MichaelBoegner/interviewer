@@ -2,9 +2,9 @@ name: CI/CD for Interviewer App
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   build-test-deploy:
@@ -17,7 +17,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
-          go-version: '1.21'
+          go-version: "1.21"
 
       - name: Install dependencies
         run: go mod download
@@ -33,11 +33,15 @@ jobs:
           echo "DB_NAME=testdb" >> .env.test
           echo "DB_SSLMODE=disable" >> .env.test
           echo "FRONTEND_URL=http://localhost:5173/" >> .env.test
+              echo "LEMON_VARIANT_ID_INDIVIDUAL=123456" >> .env.test
+          echo "LEMON_VARIANT_ID_PRO=123456" >> .env.test
+          echo "LEMON_VARIANT_ID_PREMIUM=123456" >> .env.test
+          echo "LEMON_API_KEY=123456" >> .env.test
+          echo "LEMON_WEBHOOK_SECRET=123456" >> .env.test
+          echo "LEMON_STORE_ID=123456" >> .env.test
 
       - name: Lint
         run: go vet ./...
 
       - name: Run tests
         run: make test
-
- 

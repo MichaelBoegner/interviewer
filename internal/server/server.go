@@ -51,6 +51,7 @@ func NewServer() (*Server, error) {
 	mux.Handle("/api/auth/check-email", http.HandlerFunc(handler.CheckEmailHandler))
 	mux.Handle("/api/auth/request-reset", http.HandlerFunc(handler.RequestResetHandler))
 	mux.Handle("/api/auth/reset-password", http.HandlerFunc(handler.ResetPasswordHandler))
+	mux.Handle("/api/auth/token", http.HandlerFunc(handler.RefreshTokensHandler))
 	mux.Handle("/api/webhooks/billing", http.HandlerFunc(handler.BillingWebhookHandler))
 	mux.Handle("/api/jd", http.HandlerFunc(handler.JDInputHandler))
 	mux.Handle("/health", http.HandlerFunc(handler.HealthCheckHandler))
@@ -110,13 +111,6 @@ func NewServer() (*Server, error) {
 		middleware.GetContext(
 			middleware.ValidateUserActive(userRepo)(
 				http.HandlerFunc(handler.GetConversationHandler),
-			),
-		),
-	)
-	mux.Handle("/api/auth/token",
-		middleware.GetContext(
-			middleware.ValidateUserActive(userRepo)(
-				http.HandlerFunc(handler.RefreshTokensHandler),
 			),
 		),
 	)

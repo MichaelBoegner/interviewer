@@ -98,7 +98,7 @@ func init() {
 			TopicID:        1,
 			QuestionNumber: 1,
 			Author:         "system",
-			Content:        TestPrompt,
+			Content:        BuildTestPrompt([]string{}, "Introduction", 1, ""),
 			CreatedAt:      now,
 		},
 		{
@@ -166,8 +166,8 @@ func init() {
 	MessagesAppendedConversationT2Q2 = []conversation.Message{
 		{
 			ConversationID: 1,
-			TopicID:        0,
-			QuestionNumber: 1,
+			TopicID:        2,
+			QuestionNumber: 2,
 			Author:         "interviewer",
 			Content:        responseConversationMockIsFinished,
 			CreatedAt:      now,
@@ -198,7 +198,7 @@ func (m *MockOpenAIClient) GetChatGPTResponse(prompt string) (*chatgpt.ChatGPTRe
 func (m *MockOpenAIClient) GetChatGPTResponseConversation(conversationHistory []map[string]string) (*chatgpt.ChatGPTResponse, error) {
 	if len(conversationHistory) == 3 && !strings.Contains(conversationHistory[1]["content"], "Coding") {
 		return responseConversationCreated, nil
-	} else if len(conversationHistory) == 6 {
+	} else if len(conversationHistory) == 5 {
 		return responseConversationAppended, nil
 	}
 

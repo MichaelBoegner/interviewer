@@ -25,3 +25,10 @@ func NewMailer() *Mailer {
 		BaseURL: "https://api.resend.com",
 	}
 }
+
+type MailerClient interface {
+	SendPasswordReset(email, resetURL string) error
+	SendVerificationEmail(email, verifyURL string) error
+	SendWelcome(email string) error
+	SendDeletionConfirmation(email string) error
+}

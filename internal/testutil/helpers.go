@@ -15,6 +15,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/michaelboegner/interviewer/handlers"
 	"github.com/michaelboegner/interviewer/token"
+	"github.com/michaelboegner/interviewer/user"
 )
 
 func CreateTestUserAndJWT() (string, int) {
@@ -23,13 +24,20 @@ func CreateTestUserAndJWT() (string, int) {
 		userID int
 	)
 	//test user create
-	reqBodyUser := strings.NewReader(`{
-		"username":"test",
-		"email":"test@test.com",
-		"password":"test"
-	}`)
+	username := "test"
+	email := "test@test.com"
+	password := "test"
 
-	_, err := testRequests("", "", "POST", TestServerURL+"/api/users", reqBodyUser)
+	verificationJWT, err := user.VerificationToken(email, username, password)
+	if err != nil {
+		log.Printf("GenerateEmailVerificationToken failed: %v", err)
+	}
+
+	reqBodyUser := strings.NewReader(fmt.Sprintf(`{
+			"token": "%s"
+		}`, verificationJWT))
+
+	_, err = testRequests("", "", "POST", TestServerURL+"/api/users", reqBodyUser)
 	if err != nil {
 		log.Printf("CreateTestUserAndJWT user creation failed: %v", err)
 	}
@@ -37,7 +45,7 @@ func CreateTestUserAndJWT() (string, int) {
 	//test jwt retrieve
 	reqBodyLogin := strings.NewReader(`
 		{
-			"username": "test",
+			"email": "test@test.com",
 			"password": "test"
 		}
 	`)
@@ -92,7 +100,7 @@ func CreateTestConversation(jwt string, interviewID int) int {
 	returnVals := &handlers.ReturnVals{}
 	json.Unmarshal(resp, returnVals)
 
-	return returnVals.Conversation.InterviewID
+	return returnVals.Conversation.ID
 }
 
 func CreateTestExpiredJWT(id, expires int) string {

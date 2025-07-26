@@ -48,6 +48,11 @@ func (h *Handler) RequestVerificationHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
+	if req.Email == "" || req.Username == "" || req.Password == "" {
+		RespondWithError(w, http.StatusBadRequest, "Username, Email, and Password required")
+		return
+	}
+
 	verificationJWT, err := user.VerificationToken(req.Email, req.Username, req.Password)
 	if err != nil {
 		log.Printf("GenerateEmailVerificationToken failed: %v", err)
@@ -62,7 +67,11 @@ func (h *Handler) RequestVerificationHandler(w http.ResponseWriter, r *http.Requ
 		}
 	}()
 
-	RespondWithJSON(w, http.StatusOK, map[string]string{"message": "Verification email sent"})
+	payload := &ReturnVals{
+		Message: "Verification email sent",
+	}
+
+	RespondWithJSON(w, http.StatusOK, payload)
 }
 
 func (h *Handler) CheckEmailHandler(w http.ResponseWriter, r *http.Request) {
@@ -117,10 +126,6 @@ func (h *Handler) CreateUsersHandler(w http.ResponseWriter, r *http.Request) {
 	userCreated, err := user.CreateUser(h.UserRepo, req.Token)
 	if err != nil {
 		log.Printf("CreateUser error: %v", err)
-		if errors.Is(err, user.ErrDuplicateEmail) || errors.Is(err, user.ErrDuplicateUsername) || errors.Is(err, user.ErrDuplicateUser) {
-			RespondWithError(w, http.StatusConflict, "Email already exists")
-			return
-		}
 		RespondWithError(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
@@ -427,7 +432,12 @@ func (h *Handler) RefreshTokensHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	providedToken := r.Context().Value(middleware.ContextKeyTokenKey).(string)
+	authHeader := r.Header.Get("Authorization")
+	if authHeader == "" || !strings.HasPrefix(authHeader, "Bearer ") {
+		RespondWithError(w, http.StatusUnauthorized, "Missing or invalid Authorization header")
+		return
+	}
+	providedToken := strings.TrimPrefix(authHeader, "Bearer ")
 	params := &middleware.AcceptedVals{}
 
 	err := json.NewDecoder(r.Body).Decode(params)

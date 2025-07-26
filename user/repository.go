@@ -61,8 +61,6 @@ func (repo *Repository) CreateUser(user *User) (int, error) {
 			switch pgErr.Constraint {
 			case "users_email_key":
 				return 0, fmt.Errorf("%w: %s", ErrDuplicateEmail, pgErr.Message)
-			case "users_username_key":
-				return 0, fmt.Errorf("%w: %s", ErrDuplicateUsername, pgErr.Message)
 			default:
 				return 0, fmt.Errorf("%w: %s", ErrDuplicateUser, pgErr.Message)
 			}

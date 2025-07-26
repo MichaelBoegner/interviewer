@@ -48,6 +48,7 @@ type ReturnVals struct {
 	User           *user.User                 `json:"user,omitempty"`
 	Status         string                     `json:"status,omitempty"`
 	Score          int                        `json:"score,omitempty"`
+	Message        string                     `json:"message,omitempty"`
 }
 
 type Handler struct {
@@ -57,7 +58,7 @@ type Handler struct {
 	TokenRepo        token.TokenRepo
 	BillingRepo      billing.BillingRepo
 	Billing          *billing.Billing
-	Mailer           *mailer.Mailer
+	Mailer           mailer.MailerClient
 	OpenAI           chatgpt.AIClient
 	DB               *sql.DB
 }
@@ -69,7 +70,7 @@ func NewHandler(
 	conversationRepo conversation.ConversationRepo,
 	billingRepo billing.BillingRepo,
 	billing *billing.Billing,
-	mailer *mailer.Mailer,
+	mailer mailer.MailerClient,
 	openAI chatgpt.AIClient,
 	db *sql.DB) *Handler {
 	return &Handler{

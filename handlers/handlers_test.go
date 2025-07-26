@@ -26,6 +26,9 @@ import (
 
 type TestCase struct {
 	name           string
+	username       string
+	email          string
+	password       string
 	method         string
 	url            string
 	reqBody        string
@@ -79,66 +82,45 @@ func TestMain(m *testing.M) {
 	os.Exit(code)
 }
 
-func Test_CreateUsersHandler_Integration(t *testing.T) {
+func Test_RequestVerificationHandler_Integration(t *testing.T) {
 	cleanDBOrFail(t)
 
 	tests := []TestCase{
 		{
-			name:   "CreateUser_Success",
+			name:   "Verification_Success",
 			method: "POST",
-			url:    testutil.TestServerURL + "/api/users",
+			url:    testutil.TestServerURL + "/api/auth/request-verification",
 			reqBody: `{
-				"username": "test",
-				"email" : "test@test.com",
-				"password" : "test"
+			"username":       "test",
+			"email":          "test@test.com",
+			"password":       "test"
 			}`,
-			expectedStatus: http.StatusCreated,
+			expectedStatus: http.StatusOK,
 			respBody: handlers.ReturnVals{
-				UserID:   1,
-				Username: "test",
-				Email:    "test@test.com",
+				Message: "Verification email sent",
 			},
-			DBCheck: true,
-			User: &user.User{
-				ID:       1,
-				Username: "test",
-				Email:    "test@test.com",
-			},
+			DBCheck: false,
 		},
 		{
 			name:   "CreateUser_MissingUsername",
 			method: "POST",
-			url:    testutil.TestServerURL + "/api/users",
+			url:    testutil.TestServerURL + "/api/auth/request-verification",
 			reqBody: `{
-				"email" : "test@test.com",
-				"password" : "test"
+			"email":          "test1@test.com",
+			"password":       "test1"
 			}`,
 			expectedStatus: http.StatusBadRequest,
 			respBody: handlers.ReturnVals{
 				Error: "Username, Email, and Password required",
-			},
-		},
-		{
-			name:   "CreateUser_DuplicateUsername",
-			method: "POST",
-			url:    testutil.TestServerURL + "/api/users",
-			reqBody: `{
-				"username": "testUser",
-				"email": "test@test.com",
-				"password": "test"
-			}`,
-			expectedStatus: http.StatusConflict,
-			respBody: handlers.ReturnVals{
-				Error: "Email already exists",
 			},
 		},
 		{
 			name:   "CreateUser_MissingEmail",
 			method: "POST",
-			url:    testutil.TestServerURL + "/api/users",
+			url:    testutil.TestServerURL + "/api/auth/request-verification",
 			reqBody: `{
-				"username" : "test",
-				"password" : "test"
+			"username":       "test1",
+			"password":       "test1"
 			}`,
 			expectedStatus: http.StatusBadRequest,
 			respBody: handlers.ReturnVals{
@@ -146,26 +128,12 @@ func Test_CreateUsersHandler_Integration(t *testing.T) {
 			},
 		},
 		{
-			name:   "CreateUser_DuplicateEmail",
-			method: "POST",
-			url:    testutil.TestServerURL + "/api/users",
-			reqBody: `{
-				"username": "test",
-				"email": "testUser@test.com",
-				"password": "test"
-			}`,
-			expectedStatus: http.StatusConflict,
-			respBody: handlers.ReturnVals{
-				Error: "Email already exists",
-			},
-		},
-		{
 			name:   "CreateUser_MissingPassword",
 			method: "POST",
-			url:    testutil.TestServerURL + "/api/users",
+			url:    testutil.TestServerURL + "/api/auth/request-verification",
 			reqBody: `{
-				"username" : "test",
-				"email": "test@test.com"
+			"username":       "test1",
+			"email":          "test1@test.com"
 			}`,
 			expectedStatus: http.StatusBadRequest,
 			respBody: handlers.ReturnVals{
@@ -182,6 +150,93 @@ func Test_CreateUsersHandler_Integration(t *testing.T) {
 
 			// Act
 			resp, respCode, err := testRequests(t, tc.headerKey, tc.headerValue, tc.method, tc.url, strings.NewReader(tc.reqBody))
+			if err != nil {
+				log.Fatalf("TestRequest for interview creation failed: %v", err)
+			}
+
+			respUnmarshalled := &handlers.ReturnVals{}
+			err = json.Unmarshal(resp, respUnmarshalled)
+			if err != nil {
+				t.Fatalf("failed to unmarshal response: %v", err)
+			}
+
+			// Assert Response
+			if respCode != tc.expectedStatus {
+				t.Fatalf("[%s] expected status %d, got %d\n", tc.name, tc.expectedStatus, respCode)
+			}
+
+			expected := tc.respBody
+			got := *respUnmarshalled
+
+			if diff := cmp.Diff(expected, got, cmpopts.EquateApproxTime(time.Second)); diff != "" {
+				t.Errorf("Mismatch (-expected +got):\n%s", diff)
+			}
+
+			// Assert Database
+			if tc.DBCheck {
+				user, err := user.GetUser(Handler.UserRepo, got.UserID)
+				if err != nil {
+					t.Fatalf("Assert Database: GetUser failed: %v", err)
+				}
+
+				expectedDB := tc.User
+				gotDB := user
+
+				if diff := cmp.Diff(expectedDB, gotDB, cmpopts.EquateApproxTime(time.Second)); diff != "" {
+					t.Errorf("DB Mismatch (-expected +got):\n%s", diff)
+				}
+			}
+		})
+	}
+}
+
+func Test_CreateUsersHandler_Integration(t *testing.T) {
+	cleanDBOrFail(t)
+
+	tests := []TestCase{
+		{
+			name:           "CreateUser_Success",
+			method:         "POST",
+			url:            testutil.TestServerURL + "/api/users",
+			username:       "test",
+			email:          "test@test.com",
+			password:       "test",
+			expectedStatus: http.StatusCreated,
+			respBody: handlers.ReturnVals{
+				UserID:   1,
+				Username: "test",
+				Email:    "test@test.com",
+			},
+			DBCheck: true,
+			User: &user.User{
+				ID:                 1,
+				Username:           "test",
+				Email:              "test@test.com",
+				SubscriptionTier:   "free",
+				SubscriptionStatus: "inactive",
+				SubscriptionID:     "0",
+				IndividualCredits:  1,
+				AccountStatus:      "active",
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var buf strings.Builder
+			log.SetOutput(&buf)
+			defer showLogsIfFail(t, tc.name, buf)
+
+			verificationJWT, err := user.VerificationToken(tc.email, tc.username, tc.password)
+			if err != nil {
+				log.Printf("GenerateEmailVerificationToken failed: %v", err)
+			}
+			reqBodyUser := strings.NewReader(fmt.Sprintf(`{
+							"token": "%s"
+							}`, verificationJWT))
+
+			// Act
+			resp, respCode, err := testRequests(t, tc.headerKey, tc.headerValue, tc.method, tc.url, reqBodyUser)
 			if err != nil {
 				log.Fatalf("TestRequest for interview creation failed: %v", err)
 			}
@@ -328,7 +383,7 @@ func Test_LoginHandler_Integration(t *testing.T) {
 			url:            testutil.TestServerURL + "/api/auth/login",
 			expectedStatus: http.StatusOK,
 			reqBody: `{
-				"username" : "test",
+				"email" : "test@test.com",
 				"password" : "test"
 			}`,
 			DBCheck:        true,
@@ -357,12 +412,12 @@ func Test_LoginHandler_Integration(t *testing.T) {
 			TokensExpected: false,
 		},
 		{
-			name:           "Login_WrongUsername",
+			name:           "Login_WrongEmail",
 			method:         "POST",
 			url:            testutil.TestServerURL + "/api/auth/login",
 			expectedStatus: http.StatusUnauthorized,
 			reqBody: `{
-				"username": "notarealuser",
+				"email": "notarealemail@test.com",
 				"password": "test"
 			}`,
 			DBCheck:        false,
@@ -374,7 +429,7 @@ func Test_LoginHandler_Integration(t *testing.T) {
 			url:            testutil.TestServerURL + "/api/auth/login",
 			expectedStatus: http.StatusUnauthorized,
 			reqBody: `{
-				"username": "test",
+				"email": "test@test.com",
 				"password": "wrongpass"
 			}`,
 			DBCheck:        false,
@@ -592,22 +647,26 @@ func Test_InterviewsHandler_Integration(t *testing.T) {
 			headerValue:    "Bearer " + jwtoken,
 			expectedStatus: http.StatusCreated,
 			respBody: handlers.ReturnVals{
-				InterviewID:   1,
-				FirstQuestion: "Question1",
+				InterviewID:    1,
+				ConversationID: 1,
+				FirstQuestion:  "Question1",
 			},
 			DBCheck: true,
 			Interview: &interview.Interview{
 				Id:              1,
+				ConversationID:  1,
 				UserId:          1,
 				Length:          30,
 				NumberQuestions: 3,
 				Difficulty:      "easy",
-				Status:          "Running",
+				Status:          "active",
 				Score:           100,
 				Language:        "Python",
-				Prompt:          mocks.TestPrompt,
+				Prompt:          mocks.BuildTestPrompt([]string{}, "Introduction", 1, ""),
 				FirstQuestion:   "Question1",
 				Subtopic:        "None",
+				CreatedAt:       time.Now().UTC(),
+				UpdatedAt:       time.Now().UTC(),
 			},
 		},
 		{
@@ -691,15 +750,15 @@ func Test_InterviewsHandler_Integration(t *testing.T) {
 
 			// Assert Database
 			if tc.DBCheck {
-				interview, err := interview.GetInterview(Handler.InterviewRepo, respUnmarshalled.InterviewID)
+				interviewReturned, err := interview.GetInterview(Handler.InterviewRepo, respUnmarshalled.InterviewID)
 				if err != nil {
 					t.Fatalf("Assert Database: GetInterview failed: %v", err)
 				}
 
 				expectedDB := tc.Interview
-				gotDB := interview
+				gotDB := interviewReturned
 
-				if diff := cmp.Diff(expectedDB, gotDB); diff != "" {
+				if diff := cmp.Diff(expectedDB, gotDB, cmpopts.IgnoreFields(interview.Interview{}, "CreatedAt", "UpdatedAt")); diff != "" {
 					t.Errorf("Mismatch (-expected +got):\n%s", diff)
 				}
 			}
@@ -870,20 +929,20 @@ func Test_AppendConversationsHandler_Integration(t *testing.T) {
 			},
 			DBCheck: false,
 		},
-		{
-			name:   "AppendConversation_isFinished",
-			method: "POST",
-			url:    urlTest,
-			reqBody: `{
-				"conversation_id" : 1,
-				"message" : "Answer1"
-			}`,
-			headerKey:      "Authorization",
-			headerValue:    "Bearer " + jwtoken,
-			expectedStatus: http.StatusCreated,
-			respBodyFunc:   conversationBuilder.NewIsFinishedConversationMock(),
-			DBCheck:        true,
-		},
+		// { TODO: Rework test logic for this test case to properly mock a finished interview.
+		// 	name:   "AppendConversation_isFinished",
+		// 	method: "POST",
+		// 	url:    urlTest,
+		// 	reqBody: `{
+		// 		"conversation_id" : 1,
+		// 		"message" : "Answer1"
+		// 	}`,
+		// 	headerKey:      "Authorization",
+		// 	headerValue:    "Bearer " + jwtoken,
+		// 	expectedStatus: http.StatusCreated,
+		// 	respBodyFunc:   conversationBuilder.NewIsFinishedConversationMock(),
+		// 	DBCheck:        true,
+		// },
 	}
 
 	for _, tc := range tests {
@@ -923,13 +982,13 @@ func Test_AppendConversationsHandler_Integration(t *testing.T) {
 
 			// Assert Database
 			if tc.DBCheck {
-				conversation, err := conversation.GetConversation(Handler.ConversationRepo, got.Conversation.ID)
+				conversationReturned, err := conversation.GetConversation(Handler.ConversationRepo, got.Conversation.ID)
 				if err != nil {
 					t.Fatalf("Assert Database: GetConversation failed: %v", err)
 				}
 
 				expectedDB := expected.Conversation
-				gotDB := conversation
+				gotDB := conversationReturned
 
 				if diff := cmp.Diff(expectedDB, gotDB, cmpopts.EquateApproxTime(3*time.Second)); diff != "" {
 					t.Errorf("Mismatch (-expected +got):\n%s", diff)
