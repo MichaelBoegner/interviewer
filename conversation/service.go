@@ -2,7 +2,6 @@ package conversation
 
 import (
 	"errors"
-	"fmt"
 	"log"
 
 	"github.com/michaelboegner/interviewer/chatgpt"
@@ -148,9 +147,6 @@ func AppendConversation(
 		log.Printf("CheckConversationState err: %v", err)
 		return nil, err
 	}
-
-	// DEBUG
-	fmt.Printf("isFinished? %v\n\n\n", isFinished)
 
 	if isFinished {
 		conversation.CurrentTopic = 0

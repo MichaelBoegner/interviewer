@@ -166,8 +166,8 @@ func init() {
 	MessagesAppendedConversationT2Q2 = []conversation.Message{
 		{
 			ConversationID: 1,
-			TopicID:        0,
-			QuestionNumber: 1,
+			TopicID:        2,
+			QuestionNumber: 2,
 			Author:         "interviewer",
 			Content:        responseConversationMockIsFinished,
 			CreatedAt:      now,
@@ -196,16 +196,9 @@ func (m *MockOpenAIClient) GetChatGPTResponse(prompt string) (*chatgpt.ChatGPTRe
 }
 
 func (m *MockOpenAIClient) GetChatGPTResponseConversation(conversationHistory []map[string]string) (*chatgpt.ChatGPTResponse, error) {
-	// DEBUG
-	fmt.Printf("len(conversationHistory): %v\n\n", len(conversationHistory))
-
 	if len(conversationHistory) == 3 && !strings.Contains(conversationHistory[1]["content"], "Coding") {
-		// DEBUG
-		fmt.Printf("first if is firing\n\n")
 		return responseConversationCreated, nil
 	} else if len(conversationHistory) == 5 {
-		// DEBUG
-		fmt.Printf("second if is firing\n\n")
 		return responseConversationAppended, nil
 	}
 
