@@ -2,6 +2,7 @@ package conversation
 
 import (
 	"errors"
+	"fmt"
 	"log"
 
 	"github.com/michaelboegner/interviewer/chatgpt"
@@ -135,6 +136,8 @@ func AppendConversation(
 		log.Printf("getChatGPTResponses failed: %v", err)
 		return nil, err
 	}
+	// DEBUG
+	fmt.Printf("chatGPTResponse.Topic in service: %v\n\n", chatGPTResponse.Topic)
 
 	err = interviewRepo.UpdateScore(interviewID, chatGPTResponse.Score)
 	if err != nil {
@@ -149,6 +152,8 @@ func AppendConversation(
 	}
 
 	if isFinished {
+		// DEBUG
+		fmt.Printf("isFinished\n\n\n")
 		conversation.CurrentTopic = 0
 		conversation.CurrentSubtopic = "finished"
 		conversation.CurrentQuestionNumber = 0

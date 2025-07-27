@@ -3,6 +3,7 @@ package conversation
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"sort"
 	"time"
@@ -125,8 +126,16 @@ func ChatGPTResponseToString(chatGPTResponse *chatgpt.ChatGPTResponse) (string, 
 func CheckConversationState(chatGPTResponse *chatgpt.ChatGPTResponse, conversation *Conversation) (bool, bool, bool, error) {
 	topic := conversation.Topics[conversation.CurrentTopic]
 	questionCount := len(topic.Questions)
+	// DEBUG
+	fmt.Printf("questionCount: %v\n\n", questionCount)
+	// DEBUG
+	fmt.Printf("chatGPTResponse.Topic: %v\n\n", chatGPTResponse.Topic)
 
 	isFinished := chatGPTResponse.Topic == "General Backend Knowledge" && questionCount == 2
+
+	// DEBUG
+	fmt.Printf("isFinished: %v\n\n\n", isFinished)
+
 	switch {
 	case questionCount >= 2:
 		return true, false, isFinished, nil

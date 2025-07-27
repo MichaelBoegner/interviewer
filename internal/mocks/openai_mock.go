@@ -66,13 +66,13 @@ var (
 
 	responseConversationIsFinished = &chatgpt.ChatGPTResponse{
 		Topic:        "General Backend Knowledge",
-		Subtopic:     "Subtopic1",
-		Question:     "Question1",
+		Subtopic:     "Subtopic2",
+		Question:     "Question2",
 		Score:        10,
-		Feedback:     "Feedback1",
-		NextQuestion: "Question2",
-		NextTopic:    "General Backend Knowledge",
-		NextSubtopic: "Subtopic2",
+		Feedback:     "Feedback2",
+		NextQuestion: "none",
+		NextTopic:    "none",
+		NextSubtopic: "none",
 	}
 )
 
@@ -196,13 +196,26 @@ func (m *MockOpenAIClient) GetChatGPTResponse(prompt string) (*chatgpt.ChatGPTRe
 }
 
 func (m *MockOpenAIClient) GetChatGPTResponseConversation(conversationHistory []map[string]string) (*chatgpt.ChatGPTResponse, error) {
+	// DEBUG
+	fmt.Printf("len(conversationHistory): %v\n", len(conversationHistory))
+
 	if len(conversationHistory) == 3 && !strings.Contains(conversationHistory[1]["content"], "Coding") {
+		// DEBUG
+		fmt.Printf("responseConversationCreated\n\n")
 		return responseConversationCreated, nil
-	} else if len(conversationHistory) == 5 {
+	} else if len(conversationHistory) == 5 && !strings.Contains(conversationHistory[1]["content"], "Coding") {
+		// DEBUG
+		fmt.Printf("responseConversationAppended\n\n")
 		return responseConversationAppended, nil
+	} else if len(conversationHistory) == 4 && strings.Contains(conversationHistory[1]["content"], "Introduction") {
+		// DEBUG
+		fmt.Printf("responseConversationIsFinished: %v\n\n\n", responseConversationIsFinished)
+		return responseConversationIsFinished, nil
 	}
 
-	return responseConversationIsFinished, nil
+	// DEBUG
+	fmt.Printf("Failed to return mock GetChatGPTResponse\n\n")
+	return nil, errors.New("Failed to return mock GetChatGPTResponse")
 }
 
 func (m *MockOpenAIClient) GetChatGPT35Response(prompt string) (*chatgpt.ChatGPTResponse, error) {

@@ -929,20 +929,20 @@ func Test_AppendConversationsHandler_Integration(t *testing.T) {
 			},
 			DBCheck: false,
 		},
-		// { TODO: Rework test logic for this test case to properly mock a finished interview.
-		// 	name:   "AppendConversation_isFinished",
-		// 	method: "POST",
-		// 	url:    urlTest,
-		// 	reqBody: `{
-		// 		"conversation_id" : 1,
-		// 		"message" : "Answer1"
-		// 	}`,
-		// 	headerKey:      "Authorization",
-		// 	headerValue:    "Bearer " + jwtoken,
-		// 	expectedStatus: http.StatusCreated,
-		// 	respBodyFunc:   conversationBuilder.NewIsFinishedConversationMock(),
-		// 	DBCheck:        true,
-		// },
+		{
+			name:   "AppendConversation_isFinished",
+			method: "POST",
+			url:    urlTest,
+			reqBody: `{
+				"conversation_id" : 1,
+				"message" : "Answer1"
+			}`,
+			headerKey:      "Authorization",
+			headerValue:    "Bearer " + jwtoken,
+			expectedStatus: http.StatusCreated,
+			respBodyFunc:   conversationBuilder.NewIsFinishedConversationMock(),
+			DBCheck:        true,
+		},
 	}
 
 	for _, tc := range tests {
@@ -951,11 +951,20 @@ func Test_AppendConversationsHandler_Integration(t *testing.T) {
 			log.SetOutput(&buf)
 			defer showLogsIfFail(t, tc.name, buf)
 
+			// if tc.name == "AppendConversation_isFinished" {
+			// 	_, _, err := testRequests(t, tc.headerKey, tc.headerValue, tc.method, tc.url, strings.NewReader(tc.reqBody))
+			// 	if err != nil {
+			// 		log.Fatalf("TestRequest for interview creation failed: %v", err)
+			// 	}
+			// }
 			// Act
 			resp, respCode, err := testRequests(t, tc.headerKey, tc.headerValue, tc.method, tc.url, strings.NewReader(tc.reqBody))
 			if err != nil {
 				log.Fatalf("TestRequest for interview creation failed: %v", err)
 			}
+
+			// DEBUG
+			fmt.Printf("resp: %v\n\n\n", string(resp))
 
 			respUnmarshalled := &handlers.ReturnVals{}
 			err = json.Unmarshal(resp, respUnmarshalled)
