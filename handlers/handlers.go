@@ -259,6 +259,7 @@ func (h *Handler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("Decoding params failed: %v", err)
 		RespondWithError(w, http.StatusInternalServerError, "Internal Server Error")
+		return
 	}
 
 	if params.Email == "" || params.Password == "" {
@@ -444,6 +445,7 @@ func (h *Handler) RefreshTokensHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("Decoding params failed: %v", err)
 		RespondWithError(w, http.StatusInternalServerError, "Internal Server Error")
+		return
 	}
 
 	if params.UserID == 0 {
@@ -552,12 +554,14 @@ func (h *Handler) InterviewsHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("conversation.CreateEmptyConversation failed: %v", err)
 		RespondWithError(w, http.StatusInternalServerError, "Internal server error")
+		return
 	}
 
 	err = interview.LinkConversation(h.InterviewRepo, interviewStarted.Id, conversationID)
 	if err != nil {
 		log.Printf("interview.LinkConversation failed: %v", err)
 		RespondWithError(w, http.StatusInternalServerError, "Internal server error")
+		return
 	}
 
 	payload := ReturnVals{
@@ -674,6 +678,7 @@ func (h *Handler) CreateConversationsHandler(w http.ResponseWriter, r *http.Requ
 	if err != nil {
 		log.Printf("Decoding params failed: %v", err)
 		RespondWithError(w, http.StatusInternalServerError, "Internal Server Error")
+		return
 	}
 
 	interviewID, err := GetPathID(r, "/api/conversations/create/")
@@ -704,6 +709,7 @@ func (h *Handler) CreateConversationsHandler(w http.ResponseWriter, r *http.Requ
 	if err != nil {
 		log.Printf("conversation.GetConversation failed: %v", err)
 		RespondWithError(w, http.StatusBadRequest, "Invalid ID")
+		return
 	}
 
 	conversationCreated, err := conversation.CreateConversation(
@@ -751,11 +757,13 @@ func (h *Handler) AppendConversationsHandler(w http.ResponseWriter, r *http.Requ
 	if err != nil {
 		log.Printf("Decoding params failed: %v", err)
 		RespondWithError(w, http.StatusInternalServerError, "Internal Server Error")
+		return
 	}
 
 	if params.Message == "" {
 		log.Printf("messageUserResponse is nil")
 		RespondWithError(w, http.StatusBadRequest, "Missing message")
+		return
 	}
 
 	interviewID, err := GetPathID(r, "/api/conversations/append/")
