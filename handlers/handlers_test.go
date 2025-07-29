@@ -44,6 +44,7 @@ type TestCase struct {
 	User           *user.User
 	TokensExpected bool
 	DBCheck        bool
+	setup          func()
 }
 
 var (
@@ -880,30 +881,29 @@ func Test_AppendConversationsHandler_Integration(t *testing.T) {
 	interviewID := testutil.CreateTestInterview(jwtoken)
 	conversationID := testutil.CreateTestConversation(jwtoken, interviewID)
 	urlTest := testutil.TestServerURL + fmt.Sprintf("/api/conversations/append/%d", interviewID)
-	reqBodyTestSuccess := fmt.Sprintf(`{
-				"conversation_id" : %d,
-				"message" : "T1Q2Answer2"
-			}`, conversationID)
 
-	reqBodyTestFinished := fmt.Sprintf(`{
-				"conversation_id" : %d,
-				"message" : "T2Q2Answer2"
-			}`, conversationID)
+	mockOpenAI := &mocks.MockOpenAIClient{}
 
 	tests := []TestCase{
 		{
-			name:           "AppendConversation_Success",
-			method:         "POST",
-			url:            urlTest,
-			reqBody:        reqBodyTestSuccess,
+			name:   "AppendConversation_Success",
+			method: "POST",
+			url:    urlTest,
+			reqBody: fmt.Sprintf(`{
+				"conversation_id" : %d,
+				"message" : "T1Q2A2"
+			}`, conversationID),
 			headerKey:      "Authorization",
 			headerValue:    "Bearer " + jwtoken,
 			expectedStatus: http.StatusCreated,
 			respBodyFunc:   conversationBuilder.NewAppendedConversationMock(),
 			DBCheck:        true,
+			setup: func() {
+				mockOpenAI.Scenario = mocks.ScenarioAppended
+			},
 		},
 		{
-			name:   "AppendConversation_MissingIntervewID",
+			name:   "AppendConversation_MissingInterviewID",
 			method: "POST",
 			url:    testutil.TestServerURL + "/api/conversations/append/",
 			reqBody: `{
@@ -921,7 +921,7 @@ func Test_AppendConversationsHandler_Integration(t *testing.T) {
 		{
 			name:   "AppendConversation_IncorrectInterviewID",
 			method: "POST",
-			url:    testutil.TestServerURL + "/api/conversations/append/2",
+			url:    testutil.TestServerURL + "/api/conversations/append/9999",
 			reqBody: `{
 				"conversation_id" : 1,
 				"message" : "Answer2"
@@ -935,15 +935,21 @@ func Test_AppendConversationsHandler_Integration(t *testing.T) {
 			DBCheck: false,
 		},
 		{
-			name:           "AppendConversation_isFinished",
-			method:         "POST",
-			url:            urlTest,
-			reqBody:        reqBodyTestFinished,
+			name:   "AppendConversation_IsFinished",
+			method: "POST",
+			url:    urlTest,
+			reqBody: fmt.Sprintf(`{
+				"conversation_id" : %d,
+				"message" : "T2Q2A2"
+			}`, conversationID),
 			headerKey:      "Authorization",
 			headerValue:    "Bearer " + jwtoken,
 			expectedStatus: http.StatusCreated,
 			respBodyFunc:   conversationBuilder.NewIsFinishedConversationMock(),
 			DBCheck:        true,
+			setup: func() {
+				mockOpenAI.Scenario = mocks.ScenarioIsFinished
+			},
 		},
 	}
 
@@ -953,60 +959,54 @@ func Test_AppendConversationsHandler_Integration(t *testing.T) {
 			log.SetOutput(&buf)
 			defer showLogsIfFail(t, tc.name, buf)
 
-			if tc.name == "AppendConversation_isFinished" {
-				reqBodyTestT2Q1A1 := fmt.Sprintf(`{
-				"conversation_id" : %d,
-				"message" : "T2Q1Answer1"
-			}`, conversationID)
-				_, _, err := testRequests(t, tc.headerKey, tc.headerValue, tc.method, tc.url, strings.NewReader(reqBodyTestT2Q1A1))
+			if tc.setup != nil {
+				tc.setup()
+			}
+
+			if tc.name == "AppendConversation_IsFinished" {
+				reqBodyPre := fmt.Sprintf(`{
+					"conversation_id" : %d,
+					"message" : "T2Q1A1"
+				}`, conversationID)
+				_, _, err := testRequests(t, tc.headerKey, tc.headerValue, tc.method, tc.url, strings.NewReader(reqBodyPre))
 				if err != nil {
-					log.Fatalf("TestRequest for interview creation failed: %v", err)
+					t.Fatalf("Precondition request failed: %v", err)
 				}
 			}
+
 			// Act
 			resp, respCode, err := testRequests(t, tc.headerKey, tc.headerValue, tc.method, tc.url, strings.NewReader(tc.reqBody))
 			if err != nil {
-				log.Fatalf("TestRequest for interview creation failed: %v", err)
+				t.Fatalf("TestRequest failed: %v", err)
 			}
 
-			// DEBUG
-			fmt.Printf("resp: %v\n\n\n", string(resp))
-
 			respUnmarshalled := &handlers.ReturnVals{}
-			err = json.Unmarshal(resp, respUnmarshalled)
-			if err != nil {
+			if err := json.Unmarshal(resp, respUnmarshalled); err != nil {
 				t.Fatalf("failed to unmarshal response: %v", err)
 			}
 
-			// Assert Response
 			if respCode != tc.expectedStatus {
-				t.Fatalf("[%s] expected status %d, got %d\n", tc.name, tc.expectedStatus, respCode)
+				t.Fatalf("[%s] expected status %d, got %d", tc.name, tc.expectedStatus, respCode)
 			}
 
-			var expected handlers.ReturnVals
+			expected := tc.respBody
 			if tc.respBodyFunc != nil {
 				expected = tc.respBodyFunc()
-			} else {
-				expected = tc.respBody
 			}
-			got := *respUnmarshalled
 
-			if diff := cmp.Diff(expected, got, cmpopts.EquateApproxTime(3*time.Second)); diff != "" {
+			if diff := cmp.Diff(expected, *respUnmarshalled, cmpopts.EquateApproxTime(3*time.Second)); diff != "" {
 				t.Errorf("Mismatch (-expected +got):\n%s", diff)
 			}
 
-			// Assert Database
+			// DB validation
 			if tc.DBCheck {
-				conversationReturned, err := conversation.GetConversation(Handler.ConversationRepo, got.Conversation.ID)
+				gotDB, err := conversation.GetConversation(Handler.ConversationRepo, respUnmarshalled.Conversation.ID)
 				if err != nil {
-					t.Fatalf("Assert Database: GetConversation failed: %v", err)
+					t.Fatalf("DB check failed: %v", err)
 				}
 
-				expectedDB := expected.Conversation
-				gotDB := conversationReturned
-
-				if diff := cmp.Diff(expectedDB, gotDB, cmpopts.EquateApproxTime(3*time.Second)); diff != "" {
-					t.Errorf("Mismatch (-expected +got):\n%s", diff)
+				if diff := cmp.Diff(expected.Conversation, gotDB, cmpopts.EquateApproxTime(3*time.Second)); diff != "" {
+					t.Errorf("DB mismatch (-expected +got):\n%s", diff)
 				}
 			}
 		})
