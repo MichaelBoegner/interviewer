@@ -880,9 +880,14 @@ func Test_AppendConversationsHandler_Integration(t *testing.T) {
 	interviewID := testutil.CreateTestInterview(jwtoken)
 	conversationID := testutil.CreateTestConversation(jwtoken, interviewID)
 	urlTest := testutil.TestServerURL + fmt.Sprintf("/api/conversations/append/%d", interviewID)
-	reqBodyTest := fmt.Sprintf(`{
+	reqBodyTestSuccess := fmt.Sprintf(`{
 				"conversation_id" : %d,
-				"message" : "Answer2"
+				"message" : "T1Q2Answer2"
+			}`, conversationID)
+
+	reqBodyTestFinished := fmt.Sprintf(`{
+				"conversation_id" : %d,
+				"message" : "T2Q2Answer2"
 			}`, conversationID)
 
 	tests := []TestCase{
@@ -890,7 +895,7 @@ func Test_AppendConversationsHandler_Integration(t *testing.T) {
 			name:           "AppendConversation_Success",
 			method:         "POST",
 			url:            urlTest,
-			reqBody:        reqBodyTest,
+			reqBody:        reqBodyTestSuccess,
 			headerKey:      "Authorization",
 			headerValue:    "Bearer " + jwtoken,
 			expectedStatus: http.StatusCreated,
@@ -930,13 +935,10 @@ func Test_AppendConversationsHandler_Integration(t *testing.T) {
 			DBCheck: false,
 		},
 		{
-			name:   "AppendConversation_isFinished",
-			method: "POST",
-			url:    urlTest,
-			reqBody: `{
-				"conversation_id" : 1,
-				"message" : "Answer1"
-			}`,
+			name:           "AppendConversation_isFinished",
+			method:         "POST",
+			url:            urlTest,
+			reqBody:        reqBodyTestFinished,
 			headerKey:      "Authorization",
 			headerValue:    "Bearer " + jwtoken,
 			expectedStatus: http.StatusCreated,
@@ -951,12 +953,16 @@ func Test_AppendConversationsHandler_Integration(t *testing.T) {
 			log.SetOutput(&buf)
 			defer showLogsIfFail(t, tc.name, buf)
 
-			// if tc.name == "AppendConversation_isFinished" {
-			// 	_, _, err := testRequests(t, tc.headerKey, tc.headerValue, tc.method, tc.url, strings.NewReader(tc.reqBody))
-			// 	if err != nil {
-			// 		log.Fatalf("TestRequest for interview creation failed: %v", err)
-			// 	}
-			// }
+			if tc.name == "AppendConversation_isFinished" {
+				reqBodyTestT2Q1A1 := fmt.Sprintf(`{
+				"conversation_id" : %d,
+				"message" : "T2Q1Answer1"
+			}`, conversationID)
+				_, _, err := testRequests(t, tc.headerKey, tc.headerValue, tc.method, tc.url, strings.NewReader(reqBodyTestT2Q1A1))
+				if err != nil {
+					log.Fatalf("TestRequest for interview creation failed: %v", err)
+				}
+			}
 			// Act
 			resp, respCode, err := testRequests(t, tc.headerKey, tc.headerValue, tc.method, tc.url, strings.NewReader(tc.reqBody))
 			if err != nil {

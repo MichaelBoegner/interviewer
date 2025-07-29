@@ -87,7 +87,7 @@ func CreateTestInterview(jwt string) int {
 func CreateTestConversation(jwt string, interviewID int) int {
 	reqBodyConversation := strings.NewReader(`{
 				"conversation_id" : 1,
-				"message" : "Answer1"
+				"message" : "T1Q1Answer1"
 			}`)
 	reqURL := TestServerURL + fmt.Sprintf("/api/conversations/create/%d", interviewID)
 
