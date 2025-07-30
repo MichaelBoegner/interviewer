@@ -78,6 +78,18 @@ func (m *MockOpenAIClient) GetChatGPTResponseConversation(_ []map[string]string)
 	return resp, nil
 }
 
+func (m *MockOpenAIClient) GetChatGPT35Response(prompt string) (*chatgpt.ChatGPTResponse, error) {
+	return &chatgpt.ChatGPTResponse{}, nil
+}
+
+func (m *MockOpenAIClient) ExtractJDInput(jd string) (*chatgpt.JDParsedOutput, error) {
+	return &chatgpt.JDParsedOutput{}, nil
+}
+
+func (m *MockOpenAIClient) ExtractJDSummary(jdInput *chatgpt.JDParsedOutput) (string, error) {
+	return "", nil
+}
+
 func MarshalAndString(r *chatgpt.ChatGPTResponse) string {
 	b, err := json.Marshal(r)
 	if err != nil {
