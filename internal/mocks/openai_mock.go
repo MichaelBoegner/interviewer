@@ -72,6 +72,8 @@ func (m *MockOpenAIClient) GetChatGPTResponse(prompt string) (*chatgpt.ChatGPTRe
 
 func (m *MockOpenAIClient) GetChatGPTResponseConversation(_ []map[string]string) (*chatgpt.ChatGPTResponse, error) {
 	resp, ok := responseFixtures[m.Scenario]
+	// DEBUG
+	fmt.Printf("resp GetChatGPTResponseConversation: %v\n\n\n", resp)
 	if !ok {
 		return nil, fmt.Errorf("invalid scenario: %s", m.Scenario)
 	}
