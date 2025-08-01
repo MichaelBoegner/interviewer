@@ -38,7 +38,6 @@ func (b *ConversationBuilder) WithTopic(name string, id int) *ConversationBuilde
 }
 
 func (b *ConversationBuilder) WithQuestion(topicID, questionNumber int, prompt string) *ConversationBuilder {
-
 	messages := []conversation.Message{}
 	topic := b.Convo.Topics[topicID]
 	topic.ConversationID = b.Convo.ID
@@ -78,9 +77,9 @@ func (b *ConversationBuilder) NewCreatedConversationMock() func() handlers.Retur
 		b := NewConversationBuilder()
 		b.WithTopic("Introduction", 1).
 			WithQuestion(1, 1, "Question1").
-			WithMessage(1, 1, mocks.GetMockMessages("created_t1q1")).
+			WithMessage(1, 1, mocks.GetMockMessages("t1q1")).
 			WithQuestion(1, 2, "Question2").
-			WithMessage(1, 2, mocks.GetMockMessages("created_t1q2"))
+			WithMessage(1, 2, mocks.GetMockMessages("t1q2"))
 
 		return handlers.ReturnVals{Conversation: b.Convo}
 	}
@@ -92,12 +91,12 @@ func NewAppendedConversationMock() func() handlers.ReturnVals {
 		b.WithTopic("Introduction", 1).
 			WithCurrents(2, 1, "Subtopic1").
 			WithQuestion(1, 1, "Question1").
-			WithMessage(1, 1, mocks.GetMockMessages("created_t1q1")).
+			WithMessage(1, 1, mocks.GetMockMessages("t1q1")).
 			WithQuestion(1, 2, "Question2").
-			WithMessage(1, 2, mocks.GetMockMessages("created_t1q2")).
-			WithMessage(1, 2, mocks.GetMockMessages("created_t1q2a2")).
+			WithMessage(1, 2, mocks.GetMockMessages("t1q2")).
+			WithMessage(1, 2, mocks.GetMockMessages("t1q2a2")).
 			WithQuestion(2, 1, "Question1").
-			WithMessage(2, 1, mocks.GetMockMessages("created_t2q1"))
+			WithMessage(2, 1, mocks.GetMockMessages("t2q1"))
 
 		return handlers.ReturnVals{Conversation: b.Convo}
 	}
@@ -106,19 +105,19 @@ func NewAppendedConversationMock() func() handlers.ReturnVals {
 func NewIsFinishedConversationMock() func() handlers.ReturnVals {
 	return func() handlers.ReturnVals {
 		b := NewConversationBuilder()
-		b.WithTopic("Coding", 1).
-			WithCurrents(0, 0, "finished").
+		b.WithCurrents(0, 0, "finished").
 			WithQuestion(1, 1, "Question1").
-			WithMessage(1, 1, mocks.GetMockMessages("created_t1q1")).
+			WithMessage(1, 1, mocks.GetMockMessages("t1q1")).
 			WithQuestion(1, 2, "Question2").
-			WithMessage(1, 2, mocks.GetMockMessages("created_t1q2")).
-			WithMessage(1, 2, mocks.GetMockMessages("created_t1q2a2")).
+			WithMessage(1, 2, mocks.GetMockMessages("t1q2")).
+			WithMessage(1, 2, mocks.GetMockMessages("t1q2a2")).
 			WithQuestion(2, 1, "Question1").
-			WithMessage(2, 1, mocks.GetMockMessages("created_t2q1")).
-			WithMessage(2, 1, mocks.GetMockMessages("appended_t2q1a1")).
+			WithMessage(2, 1, mocks.GetMockMessages("t2q1")).
+			WithMessage(2, 1, mocks.GetMockMessages("t2q1a1")).
 			WithQuestion(2, 2, "Question2").
-			WithMessage(2, 2, mocks.GetMockMessages("created_t2q2")).
-			WithMessage(2, 2, mocks.GetMockMessages("created_t2q2a2"))
+			WithMessage(2, 2, mocks.GetMockMessages("t2q2")).
+			WithMessage(2, 2, mocks.GetMockMessages("t2q2a2")).
+			WithMessage(2, 2, mocks.GetMockMessages("t2q2a2Finished"))
 
 		return handlers.ReturnVals{Conversation: b.Convo}
 	}

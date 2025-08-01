@@ -102,35 +102,39 @@ func MarshalAndString(r *chatgpt.ChatGPTResponse) string {
 
 func GetMockMessages(key string) []conversation.Message {
 	switch key {
-	case "created_t1q1":
+	case "t1q1":
 		return []conversation.Message{
-			conversation.NewMessage(1, 1, 1, conversation.System, "system prompt"),
+			conversation.NewMessage(1, 1, 1, conversation.System, chatgpt.BuildPrompt([]string{}, "Introduction", 1, "")),
 			conversation.NewMessage(1, 1, 1, conversation.Interviewer, "Question1"),
 			conversation.NewMessage(1, 1, 1, conversation.User, "T1Q1A1"),
 		}
-	case "created_t1q2":
+	case "t1q2":
 		return []conversation.Message{
 			conversation.NewMessage(1, 1, 2, conversation.Interviewer, MarshalAndString(responseFixtures[ScenarioCreated])),
 		}
-	case "created_t1q2a2":
+	case "t1q2a2":
 		return []conversation.Message{
 			conversation.NewMessage(1, 1, 2, conversation.User, "T1Q2A2"),
 		}
-	case "appended_t2q1":
+	case "t2q1":
 		return []conversation.Message{
 			conversation.NewMessage(1, 2, 1, conversation.Interviewer, MarshalAndString(responseFixtures[ScenarioAppended])),
 		}
-	case "appended_t2q1a1":
+	case "t2q1a1":
 		return []conversation.Message{
 			conversation.NewMessage(1, 2, 1, conversation.User, "T2Q1A1"),
 		}
-	case "appended_t2q2":
+	case "t2q2":
 		return []conversation.Message{
 			conversation.NewMessage(1, 2, 2, conversation.Interviewer, MarshalAndString(responseFixtures[ScenarioIsFinished])),
 		}
-	case "appended_t2q2a2":
+	case "t2q2a2":
 		return []conversation.Message{
-			conversation.NewMessage(1, 2, 2, conversation.User, "T2Q1A2"),
+			conversation.NewMessage(1, 2, 2, conversation.User, "T2Q2A2"),
+		}
+	case "t2q2a2Finished":
+		return []conversation.Message{
+			conversation.NewMessage(1, 2, 2, conversation.Interviewer, MarshalAndString(responseFixtures[ScenarioIsFinished])),
 		}
 	default:
 		return nil
