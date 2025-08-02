@@ -154,6 +154,9 @@ func AppendConversation(
 	if isFinished {
 		// DEBUG
 		fmt.Printf("isFinished\n\n\n")
+		// DEBUG
+		fmt.Printf("chatGPTResponse.NextQuestion in isFinished: %v\n\n", chatGPTResponse.NextQuestion)
+
 		conversation.CurrentTopic = 0
 		conversation.CurrentSubtopic = "finished"
 		conversation.CurrentQuestionNumber = 0
@@ -170,7 +173,7 @@ func AppendConversation(
 			return nil, err
 		}
 
-		messageFinal := NewMessage(conversationID, conversation.CurrentTopic, questionNumber, Interviewer, chatGPTResponseString)
+		messageFinal := NewMessage(conversationID, topicID, questionNumber, Interviewer, chatGPTResponseString)
 		_, err = repo.AddMessage(conversationID, topicID, questionNumber, messageFinal)
 		if err != nil {
 			return nil, err
@@ -216,6 +219,8 @@ func AppendConversation(
 	}
 
 	if incrementQuestion {
+		// DEBUG
+		fmt.Printf("chatGPTResponse.NextQuestion in incrementQuestion: %v\n\n", chatGPTResponse.NextQuestion)
 		conversation.CurrentQuestionNumber++
 		questionNumber++
 		_, err := repo.UpdateConversationCurrents(conversationID, topicID, questionNumber, chatGPTResponse.NextSubtopic)

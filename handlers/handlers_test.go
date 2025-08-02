@@ -907,7 +907,7 @@ func Test_AppendConversationsHandler_Integration(t *testing.T) {
 			respBodyFunc:   testutil.NewAppendedConversationMock(),
 			DBCheck:        true,
 			setup: func() {
-				Handler.OpenAI.(*mocks.MockOpenAIClient).Scenario = mocks.ScenarioAppended
+				Handler.OpenAI.(*mocks.MockOpenAIClient).Scenario = mocks.ScenarioAppended1
 			},
 		},
 		{
@@ -967,19 +967,20 @@ func Test_AppendConversationsHandler_Integration(t *testing.T) {
 			log.SetOutput(&buf)
 			defer showLogsIfFail(t, tc.name, buf)
 
-			if tc.setup != nil {
-				tc.setup()
-			}
-
 			if tc.name == "AppendConversation_IsFinished" {
 				reqBodyPre := fmt.Sprintf(`{
 					"conversation_id" : %d,
 					"message" : "T2Q1A1"
 				}`, conversationID)
+				Handler.OpenAI.(*mocks.MockOpenAIClient).Scenario = mocks.ScenarioAppended2
 				_, _, err := testRequests(t, tc.headerKey, tc.headerValue, tc.method, tc.url, strings.NewReader(reqBodyPre))
 				if err != nil {
 					t.Fatalf("Precondition request failed: %v", err)
 				}
+			}
+
+			if tc.setup != nil {
+				tc.setup()
 			}
 
 			// Act

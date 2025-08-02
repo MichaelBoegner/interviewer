@@ -15,7 +15,8 @@ var now = time.Now().UTC()
 const (
 	ScenarioInterview  = "interview"
 	ScenarioCreated    = "created"
-	ScenarioAppended   = "appended"
+	ScenarioAppended1  = "appended1"
+	ScenarioAppended2  = "appended2"
 	ScenarioIsFinished = "finished"
 )
 
@@ -40,7 +41,7 @@ var responseFixtures = map[string]*chatgpt.ChatGPTResponse{
 		NextTopic:    "Introduction",
 		NextSubtopic: "Subtopic2",
 	},
-	ScenarioAppended: {
+	ScenarioAppended1: {
 		Topic:        "Introduction",
 		Subtopic:     "Subtopic2",
 		Question:     "Question2",
@@ -49,6 +50,16 @@ var responseFixtures = map[string]*chatgpt.ChatGPTResponse{
 		NextQuestion: "Question1",
 		NextTopic:    "Coding",
 		NextSubtopic: "Subtopic1",
+	},
+	ScenarioAppended2: {
+		Topic:        "General Backend Knowledge",
+		Subtopic:     "Subtopic1",
+		Question:     "Question1",
+		Score:        10,
+		Feedback:     "Feedback1",
+		NextQuestion: "Question2",
+		NextTopic:    "General Backend Knowledge",
+		NextSubtopic: "Subtopic2",
 	},
 	ScenarioIsFinished: {
 		Topic:        "General Backend Knowledge",
@@ -118,7 +129,7 @@ func GetMockMessages(key string) []conversation.Message {
 		}
 	case "t2q1":
 		return []conversation.Message{
-			conversation.NewMessage(1, 2, 1, conversation.Interviewer, MarshalAndString(responseFixtures[ScenarioAppended])),
+			conversation.NewMessage(1, 2, 1, conversation.Interviewer, MarshalAndString(responseFixtures[ScenarioAppended1])),
 		}
 	case "t2q1a1":
 		return []conversation.Message{
@@ -126,7 +137,7 @@ func GetMockMessages(key string) []conversation.Message {
 		}
 	case "t2q2":
 		return []conversation.Message{
-			conversation.NewMessage(1, 2, 2, conversation.Interviewer, MarshalAndString(responseFixtures[ScenarioIsFinished])),
+			conversation.NewMessage(1, 2, 2, conversation.Interviewer, MarshalAndString(responseFixtures[ScenarioAppended2])),
 		}
 	case "t2q2a2":
 		return []conversation.Message{
