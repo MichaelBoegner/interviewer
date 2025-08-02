@@ -165,7 +165,7 @@ func AppendConversation(
 			return nil, err
 		}
 
-		messageFinal := NewMessage(conversationID, conversation.CurrentTopic, questionNumber, Interviewer, chatGPTResponseString)
+		messageFinal := NewMessage(conversationID, topicID, questionNumber, Interviewer, chatGPTResponseString)
 		_, err = repo.AddMessage(conversationID, topicID, questionNumber, messageFinal)
 		if err != nil {
 			return nil, err
