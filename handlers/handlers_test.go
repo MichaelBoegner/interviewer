@@ -774,10 +774,10 @@ func Test_InterviewsHandler_Integration(t *testing.T) {
 }
 
 func Test_CreateConversationsHandler_Integration(t *testing.T) {
-	t.Skip()
 	cleanDBOrFail(t)
 
 	jwtoken, _ := testutil.CreateTestUserAndJWT()
+	Handler.OpenAI.(*mocks.MockOpenAIClient).Scenario = mocks.ScenarioInterview
 	interviewID := testutil.CreateTestInterview(jwtoken)
 	conversationsURL := testutil.TestServerURL + fmt.Sprintf("/api/conversations/create/%d", interviewID)
 
@@ -787,20 +787,23 @@ func Test_CreateConversationsHandler_Integration(t *testing.T) {
 			method: "POST",
 			url:    conversationsURL,
 			reqBody: `{
-				"message" : "Answer1"
+				"message" : "T1Q1A1"
 			}`,
 			headerKey:      "Authorization",
 			headerValue:    "Bearer " + jwtoken,
 			expectedStatus: http.StatusCreated,
 			respBodyFunc:   conversationBuilder.NewCreatedConversationMock(),
 			DBCheck:        true,
+			setup: func() {
+				Handler.OpenAI.(*mocks.MockOpenAIClient).Scenario = mocks.ScenarioCreated
+			},
 		},
 		{
 			name:   "CreateConversation_MissingIntervewID",
 			method: "POST",
 			url:    testutil.TestServerURL + "/api/conversations/create/",
 			reqBody: `{
-				"message" : "Answer1"
+				"message" : "T1Q1A1"
 			}`,
 			headerKey:      "Authorization",
 			headerValue:    "Bearer " + jwtoken,
@@ -815,7 +818,7 @@ func Test_CreateConversationsHandler_Integration(t *testing.T) {
 			method: "POST",
 			url:    testutil.TestServerURL + "/api/conversations/create/2",
 			reqBody: `{
-				"message" : "Answer1"
+				"message" : "T1Q1A1"
 			}`,
 			headerKey:      "Authorization",
 			headerValue:    "Bearer " + jwtoken,
@@ -832,6 +835,10 @@ func Test_CreateConversationsHandler_Integration(t *testing.T) {
 			var buf strings.Builder
 			log.SetOutput(&buf)
 			defer showLogsIfFail(t, tc.name, buf)
+
+			if tc.setup != nil {
+				tc.setup()
+			}
 
 			// Act
 			resp, respCode, err := testRequests(t, tc.headerKey, tc.headerValue, tc.method, tc.url, strings.NewReader(tc.reqBody))
