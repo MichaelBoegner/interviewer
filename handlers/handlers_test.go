@@ -638,7 +638,6 @@ func Test_RefreshTokensHandler_Integration(t *testing.T) {
 }
 
 func Test_InterviewsHandler_Integration(t *testing.T) {
-	t.Skip()
 	cleanDBOrFail(t)
 
 	jwtoken, userID := testutil.CreateTestUserAndJWT()
@@ -674,6 +673,9 @@ func Test_InterviewsHandler_Integration(t *testing.T) {
 				Subtopic:        "None",
 				CreatedAt:       time.Now().UTC(),
 				UpdatedAt:       time.Now().UTC(),
+			},
+			setup: func() {
+				Handler.OpenAI.(*mocks.MockOpenAIClient).Scenario = mocks.ScenarioInterview
 			},
 		},
 		{
@@ -730,6 +732,10 @@ func Test_InterviewsHandler_Integration(t *testing.T) {
 			var buf strings.Builder
 			log.SetOutput(&buf)
 			defer showLogsIfFail(t, tc.name, buf)
+
+			if tc.setup != nil {
+				tc.setup()
+			}
 
 			// Act
 			resp, respCode, err := testRequests(t, tc.headerKey, tc.headerValue, tc.method, tc.url, strings.NewReader(tc.reqBody))
