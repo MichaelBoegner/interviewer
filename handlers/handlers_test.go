@@ -84,7 +84,6 @@ func TestMain(m *testing.M) {
 }
 
 func Test_RequestVerificationHandler_Integration(t *testing.T) {
-	t.Skip()
 	cleanDBOrFail(t)
 
 	tests := []TestCase{
@@ -193,7 +192,6 @@ func Test_RequestVerificationHandler_Integration(t *testing.T) {
 }
 
 func Test_CreateUsersHandler_Integration(t *testing.T) {
-	t.Skip()
 	cleanDBOrFail(t)
 
 	tests := []TestCase{
@@ -281,7 +279,6 @@ func Test_CreateUsersHandler_Integration(t *testing.T) {
 }
 
 func Test_GetUsersHandler_Integration(t *testing.T) {
-	t.Skip()
 	cleanDBOrFail(t)
 
 	jwtoken, userID := testutil.CreateTestUserAndJWT()
@@ -376,7 +373,6 @@ func Test_GetUsersHandler_Integration(t *testing.T) {
 }
 
 func Test_LoginHandler_Integration(t *testing.T) {
-	t.Skip()
 	cleanDBOrFail(t)
 
 	_, _ = testutil.CreateTestUserAndJWT()
@@ -502,7 +498,6 @@ func Test_LoginHandler_Integration(t *testing.T) {
 }
 
 func Test_RefreshTokensHandler_Integration(t *testing.T) {
-	t.Skip()
 	cleanDBOrFail(t)
 
 	_, userID := testutil.CreateTestUserAndJWT()
