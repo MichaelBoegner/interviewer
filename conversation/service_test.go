@@ -15,6 +15,8 @@ import (
 )
 
 func TestCreateConversation(t *testing.T) {
+	ai := &mocks.MockOpenAIClient{}
+
 	tests := []struct {
 		name           string
 		interviewID    int
@@ -27,6 +29,7 @@ func TestCreateConversation(t *testing.T) {
 		failRepo       bool
 		expectError    bool
 		expected       *conversation.Conversation
+		setup          func()
 	}{
 		{
 			name:           "CreateConversation_Success",
@@ -52,6 +55,9 @@ func TestCreateConversation(t *testing.T) {
 				Topics:                conversation.ClonePredefinedTopics(),
 				CurrentSubtopic:       "Subtopic2",
 				CurrentQuestionNumber: 3,
+			},
+			setup: func() {
+				ai.Scenario = mocks.ScenarioCreated
 			},
 		},
 		{
@@ -80,14 +86,15 @@ func TestCreateConversation(t *testing.T) {
 			var buf strings.Builder
 			log.SetOutput(&buf)
 			defer showLogsIfFail(t, tc.name, buf)
+			if tc.setup != nil {
+				tc.setup()
+			}
 
 			repo := conversation.NewMockRepo()
 			interviewRepo := interview.NewMockRepo()
 			if tc.failRepo {
 				repo.FailRepo = true
 			}
-
-			ai := &mocks.MockOpenAIClient{}
 
 			convo, err := conversation.CreateConversation(
 				repo,
@@ -121,6 +128,8 @@ func TestCreateConversation(t *testing.T) {
 }
 
 func TestAppendConversation(t *testing.T) {
+	ai := &mocks.MockOpenAIClient{}
+
 	tests := []struct {
 		name        string
 		message     string
@@ -130,10 +139,11 @@ func TestAppendConversation(t *testing.T) {
 		prompt      string
 		failRepo    bool
 		expectError bool
+		setup       func()
 	}{
 		{
 			name:        "AppendConversation_Success",
-			message:     "Answer1",
+			message:     "T1Q2A2",
 			interviewID: 1,
 			convo: &conversation.Conversation{
 				ID:                    1,
@@ -147,10 +157,13 @@ func TestAppendConversation(t *testing.T) {
 			prompt:      "Prompt",
 			failRepo:    false,
 			expectError: false,
+			setup: func() {
+				ai.Scenario = mocks.ScenarioAppended1
+			},
 		},
 		{
 			name:        "AppendConversation_RepoError",
-			message:     "Answer1",
+			message:     "T1Q2A2",
 			interviewID: 1,
 			convo: &conversation.Conversation{
 				ID:                    1,
@@ -172,13 +185,15 @@ func TestAppendConversation(t *testing.T) {
 			var buf strings.Builder
 			log.SetOutput(&buf)
 			defer showLogsIfFail(t, tc.name, buf)
+			if tc.setup != nil {
+				tc.setup()
+			}
 
 			repo := conversation.NewMockRepo()
 			interviewRepo := interview.NewMockRepo()
 			if tc.failRepo {
 				repo.FailRepo = true
 			}
-			ai := &mocks.MockOpenAIClient{}
 
 			convo, err := conversation.CreateConversation(
 				repo,
@@ -189,7 +204,7 @@ func TestAppendConversation(t *testing.T) {
 				"Prompt",
 				"Question1",
 				"Subtopic1",
-				"Answer1")
+				"T1Q1A1")
 
 			if err != nil {
 				if tc.failRepo {
@@ -208,7 +223,7 @@ func TestAppendConversation(t *testing.T) {
 			}
 			if !tc.expectError {
 				if updatedConvo.CurrentTopic == 1 {
-					t.Errorf("expected question number to advance but got 1")
+					t.Errorf("expected topic number to advance")
 				}
 			}
 		})
