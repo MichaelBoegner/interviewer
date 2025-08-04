@@ -1,7 +1,9 @@
 package billing
 
+import "errors"
+
 type MockRepo struct {
-	failRepo bool
+	FailLogCreditTransaction bool
 }
 
 func NewMockRepo() *MockRepo {
@@ -9,6 +11,9 @@ func NewMockRepo() *MockRepo {
 }
 
 func (m *MockRepo) LogCreditTransaction(tx CreditTransaction) error {
+	if m.FailLogCreditTransaction {
+		return errors.New("Mocked LogCreditTransaction failure")
+	}
 	return nil
 }
 

@@ -9,8 +9,10 @@ import (
 )
 
 type MockRepo struct {
-	Users    map[int]User
-	failRepo bool
+	Users              map[int]User
+	failRepo           bool
+	FailGetUserByEmail bool
+	FailAddCredits     bool
 }
 
 var (
@@ -70,6 +72,9 @@ func (m *MockRepo) GetPasswordandID(username string) (int, string, error) {
 }
 
 func (m *MockRepo) GetUserByEmail(email string) (*User, error) {
+	if m.FailGetUserByEmail {
+		return nil, errors.New("Mocked GetUserByEmail failure")
+	}
 	if m.failRepo {
 		return nil, errors.New("Mocked DB failure")
 	}
@@ -108,6 +113,9 @@ func (m *MockRepo) UpdatePasswordByEmail(email string, password []byte) error {
 }
 
 func (m *MockRepo) AddCredits(userID, credits int, creditType string) error {
+	if m.FailAddCredits {
+		return errors.New("Mocked AddCredits failure")
+	}
 	if m.failRepo {
 		return errors.New("Mocked DB failure")
 	}
