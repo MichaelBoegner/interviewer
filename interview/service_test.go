@@ -83,10 +83,7 @@ func TestStartInterview(t *testing.T) {
 			repo := interview.NewMockRepo()
 			userRepo := user.NewMockRepo()
 			billingRepo := billing.NewMockRepo()
-
-			if tc.failRepo {
-				repo.FailRepo = true
-			}
+			repo.FailRepo = tc.failRepo
 
 			interviewStarted, err := interview.StartInterview(
 				repo,
@@ -176,9 +173,8 @@ func TestGetInterview(t *testing.T) {
 			defer showLogsIfFail(t, tc.name, buf)
 
 			repo := interview.NewMockRepo()
-			if tc.failRepo {
-				repo.FailRepo = true
-			}
+			repo.FailRepo = tc.failRepo
+
 			if tc.setup != nil {
 				_, err := repo.CreateInterview(tc.setup)
 				if err != nil {

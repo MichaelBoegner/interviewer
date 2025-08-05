@@ -92,9 +92,7 @@ func TestCreateConversation(t *testing.T) {
 
 			repo := conversation.NewMockRepo()
 			interviewRepo := interview.NewMockRepo()
-			if tc.failRepo {
-				repo.FailRepo = true
-			}
+			repo.FailRepo = tc.failRepo
 
 			convo, err := conversation.CreateConversation(
 				repo,
@@ -191,9 +189,7 @@ func TestAppendConversation(t *testing.T) {
 
 			repo := conversation.NewMockRepo()
 			interviewRepo := interview.NewMockRepo()
-			if tc.failRepo {
-				repo.FailRepo = true
-			}
+			repo.FailRepo = tc.failRepo
 
 			convo, err := conversation.CreateConversation(
 				repo,

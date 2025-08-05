@@ -53,9 +53,8 @@ func TestCreateUser(t *testing.T) {
 			defer showLogsIfFail(t, tc.name, buf)
 
 			repo := NewMockRepo()
-			if tc.failRepo {
-				repo.failRepo = true
-			}
+			repo.failRepo = tc.failRepo
+
 			jwt, err := VerificationToken(tc.email, tc.username, tc.password)
 			if err != nil {
 				t.Fatalf("VerificationToken failed: %v", err)
@@ -120,9 +119,7 @@ func TestLoginUser(t *testing.T) {
 			defer showLogsIfFail(t, tc.name, buf)
 
 			repo := NewMockRepo()
-			if tc.failRepo {
-				repo.failRepo = true
-			}
+			repo.failRepo = tc.failRepo
 
 			jwtoken, username, userID, err := LoginUser(repo, tc.email, tc.password)
 
@@ -185,9 +182,7 @@ func TestGetUser(t *testing.T) {
 			defer showLogsIfFail(t, tc.name, buf)
 
 			repo := NewMockRepo()
-			if tc.failRepo {
-				repo.failRepo = true
-			}
+			repo.failRepo = tc.failRepo
 
 			user, err := GetUser(repo, tc.userID)
 
@@ -240,9 +235,7 @@ func TestUpdateSubscription(t *testing.T) {
 			defer showLogsIfFail(t, tc.name, buf)
 
 			repo := NewMockRepo()
-			if tc.failRepo {
-				repo.failRepo = true
-			}
+			repo.failRepo = tc.failRepo
 
 			user, err := GetUser(repo, tc.userID)
 
