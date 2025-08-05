@@ -50,6 +50,7 @@ type TestCase struct {
 var (
 	Handler             *handlers.Handler
 	conversationBuilder *testutil.ConversationBuilder
+	mockAI              *mocks.MockOpenAIClient
 )
 
 func TestMain(m *testing.M) {
@@ -73,6 +74,7 @@ func TestMain(m *testing.M) {
 
 	log.Printf("TestMain: Test server started successfully at: %s", testutil.TestServerURL)
 
+	mockAI = Handler.OpenAI.(*mocks.MockOpenAIClient)
 	conversationBuilder = testutil.NewConversationBuilder()
 
 	code := m.Run()
@@ -670,7 +672,7 @@ func Test_InterviewsHandler_Integration(t *testing.T) {
 				UpdatedAt:       time.Now().UTC(),
 			},
 			setup: func() {
-				Handler.OpenAI.(*mocks.MockOpenAIClient).Scenario = mocks.ScenarioInterview
+				mockAI.Scenario = mocks.ScenarioInterview
 			},
 		},
 		{
@@ -778,7 +780,7 @@ func Test_CreateConversationsHandler_Integration(t *testing.T) {
 	cleanDBOrFail(t)
 
 	jwtoken, _ := testutil.CreateTestUserAndJWT()
-	Handler.OpenAI.(*mocks.MockOpenAIClient).Scenario = mocks.ScenarioInterview
+	mockAI.Scenario = mocks.ScenarioInterview
 	interviewID := testutil.CreateTestInterview(jwtoken)
 	conversationsURL := testutil.TestServerURL + fmt.Sprintf("/api/conversations/create/%d", interviewID)
 
@@ -796,7 +798,7 @@ func Test_CreateConversationsHandler_Integration(t *testing.T) {
 			respBodyFunc:   conversationBuilder.NewCreatedConversationMock(),
 			DBCheck:        true,
 			setup: func() {
-				Handler.OpenAI.(*mocks.MockOpenAIClient).Scenario = mocks.ScenarioCreated
+				mockAI.Scenario = mocks.ScenarioCreated
 			},
 		},
 		{
@@ -892,10 +894,10 @@ func Test_CreateConversationsHandler_Integration(t *testing.T) {
 func Test_AppendConversationsHandler_Integration(t *testing.T) {
 	cleanDBOrFail(t)
 	jwtoken, _ := testutil.CreateTestUserAndJWT()
-	Handler.OpenAI.(*mocks.MockOpenAIClient).Scenario = mocks.ScenarioInterview
+	mockAI.Scenario = mocks.ScenarioInterview
 
 	interviewID := testutil.CreateTestInterview(jwtoken)
-	Handler.OpenAI.(*mocks.MockOpenAIClient).Scenario = mocks.ScenarioCreated
+	mockAI.Scenario = mocks.ScenarioCreated
 
 	conversationID := testutil.CreateTestConversation(jwtoken, interviewID)
 	urlTest := testutil.TestServerURL + fmt.Sprintf("/api/conversations/append/%d", interviewID)
@@ -915,7 +917,7 @@ func Test_AppendConversationsHandler_Integration(t *testing.T) {
 			respBodyFunc:   testutil.NewAppendedConversationMock(),
 			DBCheck:        true,
 			setup: func() {
-				Handler.OpenAI.(*mocks.MockOpenAIClient).Scenario = mocks.ScenarioAppended1
+				mockAI.Scenario = mocks.ScenarioAppended1
 			},
 		},
 		{
@@ -964,7 +966,7 @@ func Test_AppendConversationsHandler_Integration(t *testing.T) {
 			respBodyFunc:   testutil.NewIsFinishedConversationMock(),
 			DBCheck:        true,
 			setup: func() {
-				Handler.OpenAI.(*mocks.MockOpenAIClient).Scenario = mocks.ScenarioIsFinished
+				mockAI.Scenario = mocks.ScenarioIsFinished
 			},
 		},
 	}
@@ -980,7 +982,7 @@ func Test_AppendConversationsHandler_Integration(t *testing.T) {
 					"conversation_id" : %d,
 					"message" : "T2Q1A1"
 				}`, conversationID)
-				Handler.OpenAI.(*mocks.MockOpenAIClient).Scenario = mocks.ScenarioAppended2
+				mockAI.Scenario = mocks.ScenarioAppended2
 				_, _, err := testRequests(t, tc.headerKey, tc.headerValue, tc.method, tc.url, strings.NewReader(reqBodyPre))
 				if err != nil {
 					t.Fatalf("Precondition request failed: %v", err)
