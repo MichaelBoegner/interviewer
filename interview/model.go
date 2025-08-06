@@ -29,6 +29,7 @@ type Summary struct {
 	ID        int       `json:"id"`
 	StartedAt time.Time `json:"started_at"`
 	Score     *int      `json:"score,omitempty"`
+	Status    string    `json:"status"`
 }
 
 var ErrNoValidCredits = errors.New("no valid credits")

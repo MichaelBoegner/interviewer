@@ -130,7 +130,7 @@ func (repo *Repository) GetInterview(interviewID int) (*Interview, error) {
 
 func (repo *Repository) GetInterviewSummariesByUserID(userID int) ([]Summary, error) {
 	rows, err := repo.DB.Query(`
-		SELECT id, created_at, score
+		SELECT id, created_at, score, status
 		FROM interviews
 		WHERE user_id = $1
 		ORDER BY created_at DESC
@@ -143,7 +143,7 @@ func (repo *Repository) GetInterviewSummariesByUserID(userID int) ([]Summary, er
 	var summaries []Summary
 	for rows.Next() {
 		var summary Summary
-		err := rows.Scan(&summary.ID, &summary.StartedAt, &summary.Score)
+		err := rows.Scan(&summary.ID, &summary.StartedAt, &summary.Score, &summary.Status)
 		if err != nil {
 			return nil, err
 		}
