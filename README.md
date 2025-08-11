@@ -328,7 +328,7 @@ Copyright (c) 2024 Michael Boegner
 
 This source code is proprietary. 
 All rights reserved. No part of this code may be reproduced, distributed, or used 
-without explicit permission from the author. 
+without explicit permission from the author.
 
 ---
 
