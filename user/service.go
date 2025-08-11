@@ -30,17 +30,17 @@ func VerificationToken(email, username, password string) (string, error) {
 		SignedString([]byte(os.Getenv("JWT_SECRET")))
 }
 
-func CreateUser(repo UserRepo, tokenStr string) (*User, error) {
+func CreateUser(repo UserRepo, tokenStr string) (*User, string, error) {
 	claims := &EmailClaims{}
 	tkn, err := jwt.ParseWithClaims(tokenStr, claims, func(token *jwt.Token) (interface{}, error) {
 		return []byte(os.Getenv("JWT_SECRET")), nil
 	})
 	if err != nil || !tkn.Valid {
-		return nil, errors.New("invalid or expired token")
+		return nil, "", errors.New("invalid or expired token")
 	}
 
 	if claims.Purpose != "verify_email" {
-		return nil, errors.New("token used for wrong purpose")
+		return nil, "", errors.New("token used for wrong purpose")
 	}
 
 	user := &User{
@@ -54,10 +54,16 @@ func CreateUser(repo UserRepo, tokenStr string) (*User, error) {
 
 	id, err := repo.CreateUser(user)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 	user.ID = id
-	return user, nil
+
+	jwToken, err := token.CreateJWT(strconv.Itoa(user.ID), 0)
+	if err != nil {
+		log.Printf("JWT creation failed: %v", err)
+		return nil, "", err
+	}
+	return user, jwToken, nil
 }
 
 func LoginUser(repo UserRepo, email, password string) (string, string, int, error) {

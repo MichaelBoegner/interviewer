@@ -123,7 +123,7 @@ func (h *Handler) CreateUsersHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userCreated, err := user.CreateUser(h.UserRepo, req.Token)
+	userCreated, jwToken, err := user.CreateUser(h.UserRepo, req.Token)
 	if err != nil {
 		log.Printf("CreateUser error: %v", err)
 		RespondWithError(w, http.StatusInternalServerError, "Internal server error")
@@ -141,6 +141,7 @@ func (h *Handler) CreateUsersHandler(w http.ResponseWriter, r *http.Request) {
 		UserID:   userCreated.ID,
 		Username: userCreated.Username,
 		Email:    userCreated.Email,
+		JWToken:  jwToken,
 	}
 	RespondWithJSON(w, http.StatusCreated, payload)
 }
