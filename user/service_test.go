@@ -59,7 +59,7 @@ func TestCreateUser(t *testing.T) {
 			if err != nil {
 				t.Fatalf("VerificationToken failed: %v", err)
 			}
-			user, err := CreateUser(repo, jwt)
+			user, _, err := CreateUser(repo, jwt)
 
 			if tc.expectError && err == nil {
 				t.Fatalf("expected error but got nil")
