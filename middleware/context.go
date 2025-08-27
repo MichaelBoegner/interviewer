@@ -43,10 +43,8 @@ const (
 func EnableCors(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if os.Getenv("ENV") == "production" {
-			log.Println("Using production")
 			w.Header().Set("Access-Control-Allow-Origin", "https://interviewer.dev")
 		} else {
-			log.Println("NOT using production")
 			w.Header().Set("Access-Control-Allow-Origin", "http://localhost:5173")
 		}
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")
