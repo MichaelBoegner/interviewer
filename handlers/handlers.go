@@ -713,9 +713,11 @@ func (h *Handler) CreateConversationsHandler(w http.ResponseWriter, r *http.Requ
 	}
 
 	conversationCreated, err := conversation.CreateConversation(
+		r.Context(),
 		h.ConversationRepo,
 		h.InterviewRepo,
 		h.OpenAI,
+		*h.Embedding,
 		conversationReturned,
 		interviewID,
 		interviewReturned.Prompt,
@@ -797,9 +799,11 @@ func (h *Handler) AppendConversationsHandler(w http.ResponseWriter, r *http.Requ
 	}
 
 	conversationReturned, err = conversation.AppendConversation(
+		r.Context(),
 		h.ConversationRepo,
 		h.InterviewRepo,
 		h.OpenAI,
+		*h.Embedding,
 		interviewID,
 		userID,
 		conversationReturned,

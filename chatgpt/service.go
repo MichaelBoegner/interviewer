@@ -269,3 +269,13 @@ func (c *OpenAIClient) ExtractJDSummary(jdInput *JDParsedOutput) (string, error)
 
 	return jdSummary, nil
 }
+
+func (c *OpenAIClient) ExtractResponseSummary(question, response string) (*ChatGPTResponse, error) {
+	systemPrompt := BuildResponseSummary(question, response)
+	summarizedResponse, err := c.GetChatGPT35Response(systemPrompt)
+	if err != nil {
+		return nil, err
+	}
+
+	return summarizedResponse, nil
+}

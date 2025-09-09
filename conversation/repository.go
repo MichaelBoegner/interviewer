@@ -210,7 +210,7 @@ func (repo *Repository) GetQuestions(conversation *Conversation) ([]*Question, e
 	return questions, nil
 }
 
-func (repo *Repository) CreateMessages(conversation *Conversation, messages []Message) error {
+func (repo *Repository) CreateMessages(conversation *Conversation, messages []Message) (int, error) {
 	var id int
 	for _, message := range messages {
 		query := `
@@ -229,14 +229,14 @@ func (repo *Repository) CreateMessages(conversation *Conversation, messages []Me
 		).Scan(&id)
 
 		if err == sql.ErrNoRows {
-			return err
+			return 0, err
 		} else if err != nil {
 			log.Printf("Error querying conversation: %v\n", err)
-			return err
+			return 0, err
 		}
 	}
 
-	return nil
+	return id, nil
 }
 
 func (repo *Repository) AddMessage(conversationID, topic_id, questionNumber int, message Message) (int, error) {
