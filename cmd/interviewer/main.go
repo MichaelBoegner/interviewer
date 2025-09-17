@@ -1,7 +1,7 @@
 package main
 
 import (
-	"log"
+	"log/slog"
 	"os"
 
 	"github.com/joho/godotenv"
@@ -9,17 +9,26 @@ import (
 )
 
 func main() {
-	log.SetFlags(log.LstdFlags | log.Llongfile)
-
-	if os.Getenv("ENV") != "production" {
-		if err := godotenv.Load(".env.dev"); err != nil {
-			log.Printf("Error loading .env file: %v", err)
-		}
+	var handler slog.Handler
+	if os.Getenv("ENV") == "production" {
+		handler = slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+			Level: slog.LevelInfo,
+		})
+	} else {
+		_ = godotenv.Load(".env.dev")
+		handler = slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+			Level: slog.LevelDebug,
+		})
 	}
 
-	srv, err := server.NewServer()
+	logger := slog.New(handler)
+
+	srv, err := server.NewServer(logger)
 	if err != nil {
-		log.Fatalf("Server intialization failed: %v", err)
+		logger.Error("server initialization failed", "error", err)
+		os.Exit(1)
 	}
+
+	logger.Info("starting server...")
 	srv.StartServer()
 }

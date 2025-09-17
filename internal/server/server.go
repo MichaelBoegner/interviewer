@@ -3,6 +3,7 @@ package server
 import (
 	"fmt"
 	"log"
+	"log/slog"
 	"net/http"
 
 	"github.com/michaelboegner/interviewer/billing"
@@ -21,7 +22,8 @@ type Server struct {
 	mux *http.ServeMux
 }
 
-func NewServer() (*Server, error) {
+func NewServer(logger *slog.Logger) (*Server, error) {
+	logger.Info("logger is functioning in server")
 	mux := http.NewServeMux()
 
 	db, err := database.StartDB()
