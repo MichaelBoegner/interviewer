@@ -55,7 +55,7 @@ func (h *Handler) RequestVerificationHandler(w http.ResponseWriter, r *http.Requ
 
 	verificationJWT, err := user.VerificationToken(req.Email, req.Username, req.Password)
 	if err != nil {
-		log.Printf("GenerateEmailVerificationToken failed: %v", err)
+		h.Logger.Error("GenerateEmailVerificationToken failed: %v", err)
 		RespondWithError(w, http.StatusInternalServerError, "Failed to create token")
 		return
 	}
@@ -63,7 +63,7 @@ func (h *Handler) RequestVerificationHandler(w http.ResponseWriter, r *http.Requ
 	verifyURL := os.Getenv("FRONTEND_URL") + "verify-email?token=" + verificationJWT
 	go func() {
 		if err := h.Mailer.SendVerificationEmail(req.Email, verifyURL); err != nil {
-			log.Printf("SendVerificationEmail failed: %v", err)
+			h.Logger.Error("SendVerificationEmail failed: %v", err)
 		}
 	}()
 
@@ -84,7 +84,7 @@ func (h *Handler) CheckEmailHandler(w http.ResponseWriter, r *http.Request) {
 		Email string `json:"email"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		log.Printf("Decoding check-email body failed: %v", err)
+		h.Logger.Error("Decoding check-email body failed: %v", err)
 		RespondWithError(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
@@ -99,7 +99,7 @@ func (h *Handler) CheckEmailHandler(w http.ResponseWriter, r *http.Request) {
 			RespondWithJSON(w, http.StatusOK, map[string]bool{"exists": false})
 			return
 		}
-		log.Printf("CheckEmailHandler internal error: %v", err)
+		h.Logger.Error("CheckEmailHandler internal error: %v", err)
 		RespondWithError(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
@@ -118,21 +118,21 @@ func (h *Handler) CreateUsersHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
-		log.Printf("Decoding params failed: %v", err)
+		h.Logger.Error("Decoding params failed: %v", err)
 		RespondWithError(w, http.StatusInternalServerError, "Internal Server Error")
 		return
 	}
 
 	userCreated, err := user.CreateUser(h.UserRepo, req.Token)
 	if err != nil {
-		log.Printf("CreateUser error: %v", err)
+		h.Logger.Error("CreateUser error: %v", err)
 		RespondWithError(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
 
 	err = h.Mailer.SendWelcome(userCreated.Email)
 	if err != nil {
-		log.Printf("h.Mailer.SendWelcome failed: %v", err)
+		h.Logger.Error("h.Mailer.SendWelcome failed: %v", err)
 		RespondWithError(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
@@ -159,20 +159,20 @@ func (h *Handler) GetUsersHandler(w http.ResponseWriter, r *http.Request) {
 
 	userIDParam, err := GetPathID(r, "/api/users/")
 	if err != nil {
-		log.Printf("GetPathID error: %v\n", err)
+		h.Logger.Error("GetPathID error: %v\n", err)
 		RespondWithError(w, http.StatusBadRequest, "UserID required")
 		return
 	}
 
 	if userID != userIDParam {
-		log.Printf("UserID mismatch: %v vs. %v", userID, userIDParam)
+		h.Logger.Error("UserID mismatch: %v vs. %v", userID, userIDParam)
 		RespondWithError(w, http.StatusUnauthorized, "Invalid ID")
 		return
 	}
 
 	userReturned, err := user.GetUser(h.UserRepo, userID)
 	if err != nil {
-		log.Printf("GetUsers error: %v", err)
+		h.Logger.Error("GetUsers error: %v", err)
 		return
 	}
 
@@ -199,48 +199,48 @@ func (h *Handler) DeleteUserHandler(w http.ResponseWriter, r *http.Request) {
 
 	userIDParam, err := GetPathID(r, "/api/users/delete/")
 	if err != nil {
-		log.Printf("GetPathID error: %v\n", err)
+		h.Logger.Error("GetPathID error: %v\n", err)
 		RespondWithError(w, http.StatusBadRequest, "UserID required")
 		return
 	}
 
 	if userID != userIDParam {
-		log.Printf("UserID mismatch: %v vs. %v", userID, userIDParam)
+		h.Logger.Error("UserID mismatch: %v vs. %v", userID, userIDParam)
 		RespondWithError(w, http.StatusUnauthorized, "Invalid ID")
 		return
 	}
 
 	userReturned, err := user.GetUser(h.UserRepo, userID)
 	if err != nil {
-		log.Printf("GetUser error: %v", err)
+		h.Logger.Error("GetUser error: %v", err)
 		RespondWithError(w, http.StatusInternalServerError, "Failed to find user")
 		return
 	}
 
 	err = h.Billing.CancelSubscription(h.UserRepo, userReturned.Email)
 	if err != nil {
-		log.Printf("h.Billing.CancelSubscription failed: %v", err)
+		h.Logger.Error("h.Billing.CancelSubscription failed: %v", err)
 		RespondWithError(w, http.StatusInternalServerError, "Failed to update user")
 		return
 	}
 
 	err = user.MarkUserDeleted(h.UserRepo, userID)
 	if err != nil {
-		log.Printf("DeleteUser failed: %v", err)
+		h.Logger.Error("DeleteUser failed: %v", err)
 		RespondWithError(w, http.StatusInternalServerError, "Failed to delete user")
 		return
 	}
 
 	err = token.DeleteRefreshToken(h.TokenRepo, userID)
 	if err != nil {
-		log.Printf("DeleteRefreshTokensForUser failed: %v", err)
+		h.Logger.Error("DeleteRefreshTokensForUser failed: %v", err)
 		RespondWithError(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
 
 	err = h.Mailer.SendDeletionConfirmation(userReturned.Email)
 	if err != nil {
-		log.Printf("h.Mailer.SendDeletionConfirmation failed: %v", err)
+		h.Logger.Error("h.Mailer.SendDeletionConfirmation failed: %v", err)
 		RespondWithError(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
@@ -257,13 +257,13 @@ func (h *Handler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	params := &middleware.AcceptedVals{}
 	err := json.NewDecoder(r.Body).Decode(params)
 	if err != nil {
-		log.Printf("Decoding params failed: %v", err)
+		h.Logger.Error("Decoding params failed: %v", err)
 		RespondWithError(w, http.StatusInternalServerError, "Internal Server Error")
 		return
 	}
 
 	if params.Email == "" || params.Password == "" {
-		log.Printf("Invalid username or password.")
+		h.Logger.Error("Invalid username or password.")
 		RespondWithError(w, http.StatusBadRequest, "Invalid username or password.")
 		return
 
@@ -271,7 +271,7 @@ func (h *Handler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 	jwToken, username, userID, err := user.LoginUser(h.UserRepo, params.Email, params.Password)
 	if err != nil {
-		log.Printf("LoginUser error: %v", err)
+		h.Logger.Error("LoginUser error: %v", err)
 		if errors.Is(err, user.ErrAccountDeleted) {
 			RespondWithError(w, http.StatusUnauthorized, user.ErrAccountDeleted.Error())
 			return
@@ -282,7 +282,7 @@ func (h *Handler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 	refreshToken, err := token.CreateRefreshToken(h.TokenRepo, userID)
 	if err != nil {
-		log.Printf("RefreshToken error: %v", err)
+		h.Logger.Error("RefreshToken error: %v", err)
 		RespondWithError(w, http.StatusUnauthorized, "")
 		return
 	}
@@ -344,14 +344,14 @@ func (h *Handler) GithubLoginHandler(w http.ResponseWriter, r *http.Request) {
 	client = &http.Client{}
 	req, err = http.NewRequest("GET", "https://api.github.com/user", nil)
 	if err != nil {
-		log.Printf("http.NewRequest failed: %v", err)
+		h.Logger.Error("http.NewRequest failed: %v", err)
 		RespondWithError(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
 	req.Header.Set("Authorization", "Bearer "+tokenResp.AccessToken)
 	githubResp, err := client.Do(req)
 	if err != nil {
-		log.Printf("GET api.github.com/user failed: %v", err)
+		h.Logger.Error("GET api.github.com/user failed: %v", err)
 		RespondWithError(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
@@ -366,14 +366,14 @@ func (h *Handler) GithubLoginHandler(w http.ResponseWriter, r *http.Request) {
 	if githubUser.Email == "" {
 		req, err := http.NewRequest("GET", "https://api.github.com/user/emails", nil)
 		if err != nil {
-			log.Printf("http.NewRequest failed: %v", err)
+			h.Logger.Error("http.NewRequest failed: %v", err)
 			RespondWithError(w, http.StatusInternalServerError, "Internal server error")
 			return
 		}
 		req.Header.Set("Authorization", "Bearer "+tokenResp.AccessToken)
 		emailResp, err := client.Do(req)
 		if err != nil {
-			log.Printf("GET api.github.com/user/emails failed: %v", err)
+			h.Logger.Error("GET api.github.com/user/emails failed: %v", err)
 			RespondWithError(w, http.StatusInternalServerError, "Internal server error")
 			return
 		}
@@ -395,7 +395,7 @@ func (h *Handler) GithubLoginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if githubUser.Email == "" {
-		log.Printf("GitHub login failed: no verified email found for user %s", githubUser.Login)
+		h.Logger.Error("GitHub login failed: no verified email found for user %s", githubUser.Login)
 		RespondWithError(w, http.StatusUnauthorized, "We couldn’t retrieve a valid email address from GitHub. Please check your GitHub email settings and try again.")
 		return
 	}
@@ -408,13 +408,13 @@ func (h *Handler) GithubLoginHandler(w http.ResponseWriter, r *http.Request) {
 
 	jwt, err := token.CreateJWT(strconv.Itoa(user.ID), 0)
 	if err != nil {
-		log.Printf("token.CreateJWT failed: %v", err)
+		h.Logger.Error("token.CreateJWT failed: %v", err)
 		RespondWithError(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
 	refreshToken, err := token.CreateRefreshToken(h.TokenRepo, user.ID)
 	if err != nil {
-		log.Printf("token.CreateRefreshToken failed: %v", err)
+		h.Logger.Error("token.CreateRefreshToken failed: %v", err)
 		RespondWithError(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
@@ -443,48 +443,48 @@ func (h *Handler) RefreshTokensHandler(w http.ResponseWriter, r *http.Request) {
 
 	err := json.NewDecoder(r.Body).Decode(params)
 	if err != nil {
-		log.Printf("Decoding params failed: %v", err)
+		h.Logger.Error("Decoding params failed: %v", err)
 		RespondWithError(w, http.StatusInternalServerError, "Internal Server Error")
 		return
 	}
 
 	if params.UserID == 0 {
-		log.Printf("Invalid userID")
+		h.Logger.Error("Invalid userID")
 		RespondWithError(w, http.StatusBadRequest, "Invalid username or password")
 		return
 	}
 
 	storedToken, err := token.GetStoredRefreshToken(h.TokenRepo, params.UserID)
 	if err != nil {
-		log.Printf("GetStoredRefreshToken error: %v", err)
+		h.Logger.Error("GetStoredRefreshToken error: %v", err)
 		RespondWithError(w, http.StatusBadRequest, "Invalid user_id")
 		return
 	}
 
 	ok := token.VerifyRefreshToken(storedToken, providedToken)
 	if !ok {
-		log.Printf("VerifyRefreshToken error")
+		h.Logger.Error("VerifyRefreshToken error")
 		RespondWithError(w, http.StatusUnauthorized, "Refresh token is invalid")
 		return
 	}
 
 	refreshToken, err := token.CreateRefreshToken(h.TokenRepo, params.UserID)
 	if err != nil {
-		log.Printf("CreateRefreshToken error: %v", err)
+		h.Logger.Error("CreateRefreshToken error: %v", err)
 		RespondWithError(w, http.StatusUnauthorized, "")
 		return
 	}
 
 	user, err := h.UserRepo.GetUser(params.UserID)
 	if err != nil || user.AccountStatus == "deleted" {
-		log.Printf("Refresh attempt for deleted account ID %d", params.UserID)
+		h.Logger.Error("Refresh attempt for deleted account ID %d", params.UserID)
 		RespondWithError(w, http.StatusUnauthorized, "Account deactivated")
 		return
 	}
 
 	jwToken, err := token.CreateJWT(strconv.Itoa(params.UserID), 0)
 	if err != nil {
-		log.Printf("JWT creation failed: %v", err)
+		h.Logger.Error("JWT creation failed: %v", err)
 		RespondWithError(w, http.StatusInternalServerError, "")
 		return
 	}
@@ -512,14 +512,14 @@ func (h *Handler) InterviewsHandler(w http.ResponseWriter, r *http.Request) {
 	params := &middleware.AcceptedVals{}
 	err := json.NewDecoder(r.Body).Decode(params)
 	if err != nil {
-		log.Printf("Decoding params failed: %v", err)
+		h.Logger.Error("Decoding params failed: %v", err)
 		RespondWithError(w, http.StatusInternalServerError, "Internal Server Error")
 		return
 	}
 
 	userReturned, err := user.GetUser(h.UserRepo, userID)
 	if err != nil {
-		log.Printf("GetUser error: %v", err)
+		h.Logger.Error("GetUser error: %v", err)
 		RespondWithError(w, http.StatusInternalServerError, "Failed to find user")
 		return
 	}
@@ -537,7 +537,7 @@ func (h *Handler) InterviewsHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		var openaiErr *chatgpt.OpenAIError
 		if errors.As(err, &openaiErr) {
-			log.Printf("OpenAI error: %v", openaiErr)
+			h.Logger.Error("OpenAI error: %v", openaiErr)
 			RespondWithError(w, openaiErr.StatusCode, openaiErr.Message)
 			return
 		}
@@ -545,21 +545,21 @@ func (h *Handler) InterviewsHandler(w http.ResponseWriter, r *http.Request) {
 			RespondWithError(w, http.StatusPaymentRequired, "You do not have enough credits to start a new interview or your subscription has expired.")
 			return
 		}
-		log.Printf("Interview failed to start: %v", err)
+		h.Logger.Error("Interview failed to start: %v", err)
 		RespondWithError(w, http.StatusInternalServerError, "Failed to start interview.")
 		return
 	}
 
 	conversationID, err := conversation.CreateEmptyConversation(h.ConversationRepo, interviewStarted.Id, interviewStarted.Subtopic)
 	if err != nil {
-		log.Printf("conversation.CreateEmptyConversation failed: %v", err)
+		h.Logger.Error("conversation.CreateEmptyConversation failed: %v", err)
 		RespondWithError(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
 
 	err = interview.LinkConversation(h.InterviewRepo, interviewStarted.Id, conversationID)
 	if err != nil {
-		log.Printf("interview.LinkConversation failed: %v", err)
+		h.Logger.Error("interview.LinkConversation failed: %v", err)
 		RespondWithError(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
@@ -587,19 +587,19 @@ func (h *Handler) GetInterviewHandler(w http.ResponseWriter, r *http.Request) {
 
 	interviewID, err := GetPathID(r, "/api/interviews/")
 	if err != nil {
-		log.Printf("GetPathID failed: %v", err)
+		h.Logger.Error("GetPathID failed: %v", err)
 		RespondWithError(w, http.StatusBadRequest, "Invalid interview ID")
 		return
 	}
 
 	interviewReturned, err := interview.GetInterview(h.InterviewRepo, interviewID)
 	if err != nil {
-		log.Printf("GetInterview failed: %v", err)
+		h.Logger.Error("GetInterview failed: %v", err)
 		RespondWithError(w, http.StatusNotFound, "Interview not found")
 		return
 	}
 	if interviewReturned.UserId != userID {
-		log.Printf("User ID mismatch on interview fetch")
+		h.Logger.Error("User ID mismatch on interview fetch")
 		RespondWithError(w, http.StatusUnauthorized, "Unauthorized")
 		return
 	}
@@ -639,21 +639,21 @@ func (h *Handler) UpdateInterviewStatusHandler(w http.ResponseWriter, r *http.Re
 
 	interviewReturned, err := interview.GetInterview(h.InterviewRepo, interviewID)
 	if err != nil {
-		log.Printf("GetInterview error: %v\n", err)
+		h.Logger.Error("GetInterview error: %v\n", err)
 		RespondWithError(w, http.StatusBadRequest, "Invalid ID")
 		return
 	}
 
 	err = ValidateInterviewStatusTransition(interviewReturned.Status, payload.Status)
 	if err != nil {
-		log.Printf("ValidateInterviewStatusTransition failed: %v", err)
+		h.Logger.Error("ValidateInterviewStatusTransition failed: %v", err)
 		RespondWithError(w, http.StatusBadRequest, "Invalid status transition")
 		return
 	}
 
 	err = h.InterviewRepo.UpdateStatus(interviewID, userID, payload.Status)
 	if err != nil {
-		log.Printf("UpdateInterviewStatus failed: %v", err)
+		h.Logger.Error("UpdateInterviewStatus failed: %v", err)
 		RespondWithError(w, http.StatusInternalServerError, "Could not update status")
 		return
 	}
@@ -676,7 +676,7 @@ func (h *Handler) CreateConversationsHandler(w http.ResponseWriter, r *http.Requ
 	params := &middleware.AcceptedVals{}
 	err := json.NewDecoder(r.Body).Decode(params)
 	if err != nil {
-		log.Printf("Decoding params failed: %v", err)
+		h.Logger.Error("Decoding params failed: %v", err)
 		RespondWithError(w, http.StatusInternalServerError, "Internal Server Error")
 		return
 	}
@@ -684,19 +684,19 @@ func (h *Handler) CreateConversationsHandler(w http.ResponseWriter, r *http.Requ
 	interviewID, err := GetPathID(r, "/api/conversations/create/")
 
 	if err != nil {
-		log.Printf("PathID error: %v\n", err)
+		h.Logger.Error("PathID error: %v\n", err)
 		RespondWithError(w, http.StatusBadRequest, "Missing ID")
 		return
 	}
 
 	interviewReturned, err := interview.GetInterview(h.InterviewRepo, interviewID)
 	if err != nil {
-		log.Printf("GetInterview error: %v\n", err)
+		h.Logger.Error("GetInterview error: %v\n", err)
 		RespondWithError(w, http.StatusBadRequest, "Invalid ID")
 		return
 	}
 	if interviewReturned.UserId != userID {
-		log.Printf("interview.userid != token user_id")
+		h.Logger.Error("interview.userid != token user_id")
 		RespondWithError(w, http.StatusUnauthorized, "Unauthorized")
 		return
 	}
@@ -707,7 +707,7 @@ func (h *Handler) CreateConversationsHandler(w http.ResponseWriter, r *http.Requ
 
 	conversationReturned, err := conversation.GetConversation(h.ConversationRepo, interviewID)
 	if err != nil {
-		log.Printf("conversation.GetConversation failed: %v", err)
+		h.Logger.Error("conversation.GetConversation failed: %v", err)
 		RespondWithError(w, http.StatusBadRequest, "Invalid ID")
 		return
 	}
@@ -725,11 +725,11 @@ func (h *Handler) CreateConversationsHandler(w http.ResponseWriter, r *http.Requ
 	if err != nil {
 		var openaiErr *chatgpt.OpenAIError
 		if errors.As(err, &openaiErr) {
-			log.Printf("OpenAI error: %v", openaiErr)
+			h.Logger.Error("OpenAI error: %v", openaiErr)
 			RespondWithError(w, openaiErr.StatusCode, openaiErr.Message)
 			return
 		}
-		log.Printf("CreateConversation error: %v", err)
+		h.Logger.Error("CreateConversation error: %v", err)
 		RespondWithError(w, http.StatusBadRequest, "Invalid interview_id")
 		return
 	}
@@ -755,32 +755,32 @@ func (h *Handler) AppendConversationsHandler(w http.ResponseWriter, r *http.Requ
 	params := &middleware.AcceptedVals{}
 	err := json.NewDecoder(r.Body).Decode(params)
 	if err != nil {
-		log.Printf("Decoding params failed: %v", err)
+		h.Logger.Error("Decoding params failed: %v", err)
 		RespondWithError(w, http.StatusInternalServerError, "Internal Server Error")
 		return
 	}
 
 	if params.Message == "" {
-		log.Printf("messageUserResponse is nil")
+		h.Logger.Error("messageUserResponse is nil")
 		RespondWithError(w, http.StatusBadRequest, "Missing message")
 		return
 	}
 
 	interviewID, err := GetPathID(r, "/api/conversations/append/")
 	if err != nil {
-		log.Printf("PathID error: %v\n", err)
+		h.Logger.Error("PathID error: %v\n", err)
 		RespondWithError(w, http.StatusBadRequest, "Missing ID")
 		return
 	}
 
 	interviewReturned, err := interview.GetInterview(h.InterviewRepo, interviewID)
 	if err != nil {
-		log.Printf("GetInterview error: %v\n", err)
+		h.Logger.Error("GetInterview error: %v\n", err)
 		RespondWithError(w, http.StatusBadRequest, "Invalid ID")
 		return
 	}
 	if interviewReturned.UserId != userID {
-		log.Printf("interview.userid != token user_id")
+		h.Logger.Error("interview.userid != token user_id")
 		RespondWithError(w, http.StatusUnauthorized, "Unauthorized")
 		return
 	}
@@ -791,7 +791,7 @@ func (h *Handler) AppendConversationsHandler(w http.ResponseWriter, r *http.Requ
 
 	conversationReturned, err := conversation.GetConversation(h.ConversationRepo, interviewID)
 	if err != nil {
-		log.Printf("GetConversation error: %v", err)
+		h.Logger.Error("GetConversation error: %v", err)
 		RespondWithError(w, http.StatusBadRequest, "Invalid ID.")
 		return
 	}
@@ -808,11 +808,11 @@ func (h *Handler) AppendConversationsHandler(w http.ResponseWriter, r *http.Requ
 	if err != nil {
 		var openaiErr *chatgpt.OpenAIError
 		if errors.As(err, &openaiErr) {
-			log.Printf("OpenAI error: %v", openaiErr)
+			h.Logger.Error("OpenAI error: %v", openaiErr)
 			RespondWithError(w, openaiErr.StatusCode, openaiErr.Message)
 			return
 		}
-		log.Printf("AppendConversation error: %v", err)
+		h.Logger.Error("AppendConversation error: %v", err)
 		RespondWithError(w, http.StatusBadRequest, "Invalid ID.")
 		return
 	}
@@ -837,26 +837,26 @@ func (h *Handler) GetConversationHandler(w http.ResponseWriter, r *http.Request)
 
 	interviewID, err := GetPathID(r, "/api/conversations/")
 	if err != nil {
-		log.Printf("PathID error: %v\n", err)
+		h.Logger.Error("PathID error: %v\n", err)
 		RespondWithError(w, http.StatusBadRequest, "Missing ID")
 		return
 	}
 
 	interviewReturned, err := interview.GetInterview(h.InterviewRepo, interviewID)
 	if err != nil {
-		log.Printf("GetInterview error: %v\n", err)
+		h.Logger.Error("GetInterview error: %v\n", err)
 		RespondWithError(w, http.StatusBadRequest, "Invalid ID")
 		return
 	}
 	if interviewReturned.UserId != userID {
-		log.Printf("interview.userid != token user_id")
+		h.Logger.Error("interview.userid != token user_id")
 		RespondWithError(w, http.StatusUnauthorized, "Unauthorized")
 		return
 	}
 
 	conversationReturned, err := conversation.GetConversation(h.ConversationRepo, interviewID)
 	if err != nil {
-		log.Printf("GetConversation error: %v", err)
+		h.Logger.Error("GetConversation error: %v", err)
 		RespondWithError(w, http.StatusBadRequest, "Invalid ID.")
 		return
 	}
@@ -876,14 +876,14 @@ func (h *Handler) RequestResetHandler(w http.ResponseWriter, r *http.Request) {
 	var params PasswordResetRequest
 	err := json.NewDecoder(r.Body).Decode(&params)
 	if err != nil {
-		log.Printf("Decoding request failed: %v", err)
+		h.Logger.Error("Decoding request failed: %v", err)
 		RespondWithError(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 
 	resetJWT, err := user.RequestPasswordReset(h.UserRepo, params.Email)
 	if err != nil {
-		log.Printf("Error generating reset token for email %s: %v", params.Email, err)
+		h.Logger.Error("Error generating reset token for email %s: %v", params.Email, err)
 		w.WriteHeader(http.StatusOK)
 		return
 	}
@@ -894,7 +894,7 @@ func (h *Handler) RequestResetHandler(w http.ResponseWriter, r *http.Request) {
 	go func(email, resetURL string) {
 		err := h.Mailer.SendPasswordReset(email, resetURL)
 		if err != nil {
-			log.Printf("SendPasswordReset error: %v", err)
+			h.Logger.Error("SendPasswordReset error: %v", err)
 			return
 		}
 	}(params.Email, resetURL)
@@ -911,13 +911,13 @@ func (h *Handler) ResetPasswordHandler(w http.ResponseWriter, r *http.Request) {
 
 	var params PasswordResetPayload
 	if err := json.NewDecoder(r.Body).Decode(&params); err != nil {
-		log.Printf("Decoding payload failed: %v", err)
+		h.Logger.Error("Decoding payload failed: %v", err)
 		RespondWithError(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 	err := user.ResetPassword(h.UserRepo, params.NewPassword, params.Token)
 	if err != nil {
-		log.Printf("ResetPasswordHandler failed: %v", err)
+		h.Logger.Error("ResetPasswordHandler failed: %v", err)
 		RespondWithError(w, http.StatusUnauthorized, "Invalid or expired token")
 		return
 	}
@@ -934,14 +934,14 @@ func (h *Handler) CreateCheckoutSessionHandler(w http.ResponseWriter, r *http.Re
 
 	userID, ok := r.Context().Value(middleware.ContextKeyTokenParams).(int)
 	if !ok {
-		log.Printf("r.Context().Value() failed")
+		h.Logger.Error("r.Context().Value() failed")
 		RespondWithError(w, http.StatusUnauthorized, "Unauthorized")
 		return
 	}
 
 	var params CheckoutRequest
 	if err := json.NewDecoder(r.Body).Decode(&params); err != nil || params.Tier == "" {
-		log.Printf("jsonNewDecoder failed: %v", err)
+		h.Logger.Error("jsonNewDecoder failed: %v", err)
 		RespondWithError(w, http.StatusBadRequest, "Missing or invalid tier")
 		return
 	}
@@ -967,14 +967,14 @@ func (h *Handler) CreateCheckoutSessionHandler(w http.ResponseWriter, r *http.Re
 
 	priceIDInt, err := strconv.Atoi(priceID)
 	if err != nil {
-		log.Printf("strconv.Atoi() failed: %v", err)
+		h.Logger.Error("strconv.Atoi() failed: %v", err)
 		RespondWithError(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
 
 	url, err := h.Billing.RequestCheckoutSession(user.Email, priceIDInt)
 	if err != nil {
-		log.Printf("billing.CreateCheckoutSession failed: %v", err)
+		h.Logger.Error("billing.CreateCheckoutSession failed: %v", err)
 		RespondWithError(w, http.StatusInternalServerError, "Could not start checkout")
 		return
 	}
@@ -996,14 +996,14 @@ func (h *Handler) CancelSubscriptionHandler(w http.ResponseWriter, r *http.Reque
 
 	userReturned, err := user.GetUser(h.UserRepo, userID)
 	if err != nil {
-		log.Printf("GetUser failed: %v", err)
+		h.Logger.Error("GetUser failed: %v", err)
 		RespondWithError(w, http.StatusInternalServerError, "Could not retrieve user")
 		return
 	}
 
 	err = h.Billing.RequestDeleteSubscription(userReturned.SubscriptionID)
 	if err != nil {
-		log.Printf("DeleteSubscription failed: %v", err)
+		h.Logger.Error("DeleteSubscription failed: %v", err)
 		RespondWithError(w, http.StatusInternalServerError, "Could not cancel subscription")
 		return
 	}
@@ -1025,14 +1025,14 @@ func (h *Handler) ResumeSubscriptionHandler(w http.ResponseWriter, r *http.Reque
 
 	userReturned, err := user.GetUser(h.UserRepo, userID)
 	if err != nil {
-		log.Printf("GetUser failed: %v", err)
+		h.Logger.Error("GetUser failed: %v", err)
 		RespondWithError(w, http.StatusInternalServerError, "Could not retrieve user")
 		return
 	}
 
 	err = h.Billing.RequestResumeSubscription(userReturned.SubscriptionID)
 	if err != nil {
-		log.Printf("DeleteSubscription failed: %v", err)
+		h.Logger.Error("DeleteSubscription failed: %v", err)
 		RespondWithError(w, http.StatusInternalServerError, "Could not cancel subscription")
 		return
 	}
@@ -1054,7 +1054,7 @@ func (h *Handler) ChangePlanHandler(w http.ResponseWriter, r *http.Request) {
 
 	var params CheckoutRequest
 	if err := json.NewDecoder(r.Body).Decode(&params); err != nil || params.Tier == "" {
-		log.Printf("jsonNewDecoder failed: %v", err)
+		h.Logger.Error("jsonNewDecoder failed: %v", err)
 		RespondWithError(w, http.StatusBadRequest, "Missing or invalid tier")
 		return
 	}
@@ -1078,13 +1078,13 @@ func (h *Handler) ChangePlanHandler(w http.ResponseWriter, r *http.Request) {
 
 	priceIDInt, err := strconv.Atoi(priceID)
 	if err != nil {
-		log.Printf("strconv.Atoi() failed: %v", err)
+		h.Logger.Error("strconv.Atoi() failed: %v", err)
 		RespondWithError(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
 
 	if err := h.Billing.RequestUpdateSubscriptionVariant(user.SubscriptionID, priceIDInt); err != nil {
-		log.Printf("UpdateLemonSubscriptionVariant failed: %v", err)
+		h.Logger.Error("UpdateLemonSubscriptionVariant failed: %v", err)
 		RespondWithError(w, http.StatusInternalServerError, "Failed to update subscription")
 		return
 	}
@@ -1100,7 +1100,7 @@ func (h *Handler) BillingWebhookHandler(w http.ResponseWriter, r *http.Request) 
 
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		log.Printf("io.ReadAll failed: %v", err)
+		h.Logger.Error("io.ReadAll failed: %v", err)
 		RespondWithError(w, http.StatusBadRequest, "Bad Request")
 		return
 	}
@@ -1108,7 +1108,7 @@ func (h *Handler) BillingWebhookHandler(w http.ResponseWriter, r *http.Request) 
 
 	signature := r.Header.Get("X-Signature")
 	if !h.Billing.VerifyBillingSignature(signature, body, os.Getenv("LEMON_WEBHOOK_SECRET")) {
-		log.Printf("Invalid billing event signature")
+		h.Logger.Error("Invalid billing event signature")
 		RespondWithError(w, http.StatusUnauthorized, "Invalid signature")
 		return
 	}
@@ -1116,7 +1116,7 @@ func (h *Handler) BillingWebhookHandler(w http.ResponseWriter, r *http.Request) 
 	var webhookPayload billing.BillingWebhookPayload
 	err = json.Unmarshal(body, &webhookPayload)
 	if err != nil {
-		log.Printf("json.Unmarshal failed: %v", err)
+		h.Logger.Error("json.Unmarshal failed: %v", err)
 		RespondWithError(w, http.StatusBadRequest, "Invalid JSON")
 		return
 	}
@@ -1124,12 +1124,12 @@ func (h *Handler) BillingWebhookHandler(w http.ResponseWriter, r *http.Request) 
 	webhookID := webhookPayload.Meta.WebhookID
 	exists, err := h.BillingRepo.HasWebhookBeenProcessed(webhookID)
 	if err != nil {
-		log.Printf("h.BillingRepo.HasWebhookBeenProcessed failed: %v", err)
+		h.Logger.Error("h.BillingRepo.HasWebhookBeenProcessed failed: %v", err)
 		RespondWithError(w, http.StatusInternalServerError, "Error checking webhook")
 		return
 	}
 	if exists {
-		log.Printf("Webhook %s already processed", webhookID)
+		h.Logger.Error("Webhook %s already processed", webhookID)
 		w.WriteHeader(http.StatusOK)
 		return
 	}
@@ -1140,91 +1140,91 @@ func (h *Handler) BillingWebhookHandler(w http.ResponseWriter, r *http.Request) 
 
 	eventType := webhookPayload.Meta.EventName
 
-	log.Printf("Received webhook: eventType=%q, webhookID=%s, subscriptionID=%s", eventType, webhookID, subscriptionID)
+	h.Logger.Error("Received webhook: eventType=%q, webhookID=%s, subscriptionID=%s", eventType, webhookID, subscriptionID)
 
 	switch eventType {
 	case "order_created":
 		var orderAttrs billing.OrderAttributes
 		if err := json.Unmarshal(webhookPayload.Data.Attributes, &orderAttrs); err != nil {
-			log.Printf("Unmarshal order_created failed: %v", err)
+			h.Logger.Error("Unmarshal order_created failed: %v", err)
 			RespondWithError(w, http.StatusBadRequest, "Invalid order_created payload")
 			return
 		}
 
 		err = h.Billing.ApplyCredits(h.UserRepo, h.BillingRepo, orderAttrs.UserEmail, orderAttrs.FirstOrderItem.VariantID)
 		if err != nil {
-			log.Printf("h.Billing.ApplyCredits failed: %v", err)
+			h.Logger.Error("h.Billing.ApplyCredits failed: %v", err)
 			RespondWithError(w, http.StatusInternalServerError, "Failed to update user")
 			return
 		}
 	case "subscription_created":
 		var SubCreatedAttrs billing.SubscriptionAttributes
 		if err := json.Unmarshal(webhookPayload.Data.Attributes, &SubCreatedAttrs); err != nil {
-			log.Printf("Unmarshal subscription_created failed: %v", err)
+			h.Logger.Error("Unmarshal subscription_created failed: %v", err)
 			RespondWithError(w, http.StatusBadRequest, "Invalid subscription_created payload")
 			return
 		}
 
 		exists, err := h.UserRepo.HasActiveOrCancelledSubscription(SubCreatedAttrs.UserEmail)
 		if err != nil {
-			log.Printf("Subscription duplicate check failed: %v", err)
+			h.Logger.Error("Subscription duplicate check failed: %v", err)
 			RespondWithError(w, http.StatusInternalServerError, "Subscription check failed")
 			return
 		}
 		if exists {
-			log.Printf("Duplicate subscription attempt blocked for %s", SubCreatedAttrs.UserEmail)
+			h.Logger.Error("Duplicate subscription attempt blocked for %s", SubCreatedAttrs.UserEmail)
 			return
 		}
 
 		err = h.Billing.CreateSubscription(h.UserRepo, SubCreatedAttrs, subscriptionID)
 		if err != nil {
-			log.Printf("h.Billing.CreateSubscription failed: %v", err)
+			h.Logger.Error("h.Billing.CreateSubscription failed: %v", err)
 			RespondWithError(w, http.StatusInternalServerError, "Failed to update user")
 			return
 		}
 	case "subscription_cancelled":
 		if err := json.Unmarshal(webhookPayload.Data.Attributes, &emailAttribute); err != nil {
-			log.Printf("Unmarshal subscription_cancelled failed: %v", err)
+			h.Logger.Error("Unmarshal subscription_cancelled failed: %v", err)
 			RespondWithError(w, http.StatusBadRequest, "Invalid subscription_cancelled payload")
 			return
 		}
 
 		err = h.Billing.CancelSubscription(h.UserRepo, emailAttribute.UserEmail)
 		if err != nil {
-			log.Printf("h.Billing.CancelSubscription failed: %v", err)
+			h.Logger.Error("h.Billing.CancelSubscription failed: %v", err)
 			RespondWithError(w, http.StatusInternalServerError, "Failed to update user")
 			return
 		}
 	case "subscription_resumed":
 		if err := json.Unmarshal(webhookPayload.Data.Attributes, &emailAttribute); err != nil {
-			log.Printf("Unmarshal subscription_resumed failed: %v", err)
+			h.Logger.Error("Unmarshal subscription_resumed failed: %v", err)
 			RespondWithError(w, http.StatusBadRequest, "Invalid subscription_resumed payload")
 			return
 		}
 
 		err = h.Billing.ResumeSubscription(h.UserRepo, emailAttribute.UserEmail)
 		if err != nil {
-			log.Printf("h.Billing.ResumeSubscription failed: %v", err)
+			h.Logger.Error("h.Billing.ResumeSubscription failed: %v", err)
 			RespondWithError(w, http.StatusInternalServerError, "Failed to update user")
 			return
 		}
 	case "subscription_expired":
 		if err := json.Unmarshal(webhookPayload.Data.Attributes, &emailAttribute); err != nil {
-			log.Printf("Unmarshal subscription_expired failed: %v", err)
+			h.Logger.Error("Unmarshal subscription_expired failed: %v", err)
 			RespondWithError(w, http.StatusBadRequest, "Invalid subscription_expired payload")
 			return
 		}
 
 		err = h.Billing.ExpireSubscription(h.UserRepo, h.BillingRepo, emailAttribute.UserEmail)
 		if err != nil {
-			log.Printf("h.Billing.ExpireSubscription failed: %v", err)
+			h.Logger.Error("h.Billing.ExpireSubscription failed: %v", err)
 			RespondWithError(w, http.StatusInternalServerError, "Failed to update user")
 			return
 		}
 	case "subscription_payment_success":
 		var SubRenewAttrs billing.SubscriptionRenewAttributes
 		if err := json.Unmarshal(webhookPayload.Data.Attributes, &SubRenewAttrs); err != nil {
-			log.Printf("Unmarshal subscription_payment_success failed: %v", err)
+			h.Logger.Error("Unmarshal subscription_payment_success failed: %v", err)
 			RespondWithError(w, http.StatusBadRequest, "Invalid subscription_payment_success payload")
 			return
 		}
@@ -1236,74 +1236,74 @@ func (h *Handler) BillingWebhookHandler(w http.ResponseWriter, r *http.Request) 
 
 		err = h.Billing.RenewSubscription(h.UserRepo, h.BillingRepo, SubRenewAttrs)
 		if err != nil {
-			log.Printf("h.Billing.RenewSubscription failed: %v", err)
+			h.Logger.Error("h.Billing.RenewSubscription failed: %v", err)
 			RespondWithError(w, http.StatusInternalServerError, "Failed to update user")
 			return
 		}
 	case "subscription_plan_changed":
 		var SubChangedAttrs billing.SubscriptionAttributes
 		if err := json.Unmarshal(webhookPayload.Data.Attributes, &SubChangedAttrs); err != nil {
-			log.Printf("Unmarshal subscription_plan_changed failed: %v", err)
+			h.Logger.Error("Unmarshal subscription_plan_changed failed: %v", err)
 			RespondWithError(w, http.StatusBadRequest, "Invalid subscription_plan_changed payload")
 			return
 		}
 
 		err = h.Billing.ChangeSubscription(h.UserRepo, h.BillingRepo, SubChangedAttrs)
 		if err != nil {
-			log.Printf("h.Billing.ChangeSubscription failed: %v", err)
+			h.Logger.Error("h.Billing.ChangeSubscription failed: %v", err)
 			RespondWithError(w, http.StatusInternalServerError, "Failed to update user")
 			return
 		}
 	case "subscription_updated":
 		var SubChangedAttrs billing.SubscriptionAttributes
 		if err := json.Unmarshal(webhookPayload.Data.Attributes, &SubChangedAttrs); err != nil {
-			log.Printf("Unmarshal subscription_updated failed: %v", err)
+			h.Logger.Error("Unmarshal subscription_updated failed: %v", err)
 			RespondWithError(w, http.StatusBadRequest, "Invalid subscription_updated payload")
 			return
 		}
 
 		err = h.Billing.UpdateSubscription(h.UserRepo, SubChangedAttrs, subscriptionID)
 		if err != nil {
-			log.Printf("h.Billing.UpdateSubscription failed: %v", err)
+			h.Logger.Error("h.Billing.UpdateSubscription failed: %v", err)
 			RespondWithError(w, http.StatusInternalServerError, "Failed to update user")
 			return
 		}
 	case "order_refunded":
 		var orderAttrs billing.OrderAttributes
 		if err := json.Unmarshal(webhookPayload.Data.Attributes, &orderAttrs); err != nil {
-			log.Printf("Unmarshal order_created failed: %v", err)
+			h.Logger.Error("Unmarshal order_created failed: %v", err)
 			RespondWithError(w, http.StatusBadRequest, "Invalid order_created payload")
 			return
 		}
 
 		err = h.Billing.DeductCredits(h.UserRepo, h.BillingRepo, orderAttrs)
 		if err != nil {
-			log.Printf("h.Billing.DeductCredits failed: %v", err)
+			h.Logger.Error("h.Billing.DeductCredits failed: %v", err)
 			RespondWithError(w, http.StatusInternalServerError, "Failed to update user")
 			return
 		}
 	case "subscription_payment_failed", "subscription_payment_recovered":
 		if err := json.Unmarshal(webhookPayload.Data.Attributes, &emailAttribute); err != nil {
-			log.Printf("Unmarshal %s failed: %v", eventType, err)
+			h.Logger.Error("Unmarshal %s failed: %v", eventType, err)
 			RespondWithError(w, http.StatusBadRequest, "Invalid payment status payload")
 			return
 		}
-		log.Printf("Payment event: %s for user %s", eventType, emailAttribute.UserEmail)
+		h.Logger.Error("Payment event: %s for user %s", eventType, emailAttribute.UserEmail)
 	default:
-		log.Printf("Unhandled event type: %s", eventType)
+		h.Logger.Error("Unhandled event type: %s", eventType)
 		RespondWithError(w, http.StatusNotImplemented, "Unhandled event type")
 		return
 	}
 
 	if err != nil {
-		log.Printf("eventType switch func failed: %v", err)
+		h.Logger.Error("eventType switch func failed: %v", err)
 		RespondWithError(w, http.StatusInternalServerError, "Failed to update user")
 		return
 	}
 
 	err = h.BillingRepo.MarkWebhookProcessed(webhookID, eventType)
 	if err != nil {
-		log.Printf("MarkWebhookProcessed failed: %v", err)
+		h.Logger.Error("MarkWebhookProcessed failed: %v", err)
 		w.WriteHeader(http.StatusOK)
 		return
 	}
@@ -1329,7 +1329,7 @@ func (h *Handler) DashboardHandler(w http.ResponseWriter, r *http.Request) {
 			RespondWithError(w, http.StatusUnauthorized, "User not found")
 			return
 		}
-		log.Printf("dashboard.GetDashboardData failed: %v", err)
+		h.Logger.Error("dashboard.GetDashboardData failed: %v", err)
 		RespondWithError(w, http.StatusInternalServerError, "Could not load dashboard")
 		return
 	}
@@ -1355,11 +1355,11 @@ func (h *Handler) JDInputHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		var openaiErr *chatgpt.OpenAIError
 		if errors.As(err, &openaiErr) {
-			log.Printf("OpenAI error: %v", openaiErr)
+			h.Logger.Error("OpenAI error: %v", openaiErr)
 			RespondWithError(w, openaiErr.StatusCode, openaiErr.Message)
 			return
 		}
-		log.Printf("chatgpt.ExtractJDInput failed: %v", err)
+		h.Logger.Error("chatgpt.ExtractJDInput failed: %v", err)
 		RespondWithError(w, http.StatusInternalServerError, "Failed to process job description")
 		return
 	}
@@ -1368,11 +1368,11 @@ func (h *Handler) JDInputHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		var openaiErr *chatgpt.OpenAIError
 		if errors.As(err, &openaiErr) {
-			log.Printf("OpenAI error: %v", openaiErr)
+			h.Logger.Error("OpenAI error: %v", openaiErr)
 			RespondWithError(w, openaiErr.StatusCode, openaiErr.Message)
 			return
 		}
-		log.Printf("chatgpt.ExtractJDSummary failed: %v", err)
+		h.Logger.Error("chatgpt.ExtractJDSummary failed: %v", err)
 		RespondWithError(w, http.StatusInternalServerError, "Failed to process job description")
 		return
 
