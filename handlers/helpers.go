@@ -37,7 +37,7 @@ func GetPathID(r *http.Request, prefix string) (int, error) {
 
 	if path == "" {
 		log.Printf("getPathID returned empty string")
-		err := errors.New("Missing or invalid url param")
+		err := errors.New("missing or invalid url param")
 		return 0, err
 	}
 
