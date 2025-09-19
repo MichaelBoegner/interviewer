@@ -23,7 +23,7 @@
 - [Security Implementation](#-security-implementation)
 - [Testing Strategy](#-testing-strategy)
 - [Frontend](#-frontend)
-- [License](#-license)
+- [License](#-license) 
 
 ## 🚀 Overview
 
