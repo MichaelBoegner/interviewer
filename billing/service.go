@@ -8,7 +8,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"os"
 	"strconv"
@@ -45,13 +44,13 @@ func (b *Billing) RequestCheckoutSession(userEmail string, variantID int) (strin
 
 	body, err := json.Marshal(payload)
 	if err != nil {
-		log.Printf("json.Marshal failed: %v", err)
+		b.Logger.Error("json.Marshal failed", "error", err)
 		return "", err
 	}
 
 	req, err := http.NewRequest("POST", "https://api.lemonsqueezy.com/v1/checkouts", bytes.NewBuffer(body))
 	if err != nil {
-		log.Printf("http.NewRequest failed: %v", err)
+		b.Logger.Error("http.NewRequest failed", "error", err)
 		return "", err
 	}
 
@@ -64,20 +63,20 @@ func (b *Billing) RequestCheckoutSession(userEmail string, variantID int) (strin
 	}
 	res, err := client.Do(req)
 	if err != nil {
-		log.Printf("client.Do failed: %v", err)
+		b.Logger.Error("client.Do failed", "error", err)
 		return "", err
 	}
 	defer res.Body.Close()
 
 	if res.StatusCode < 200 || res.StatusCode >= 300 {
 		bodyBytes, _ := io.ReadAll(res.Body)
-		log.Printf("LemonSqueezy returned error: %s", string(bodyBytes))
+		b.Logger.Error("LemonSqueezy returned error", "error", string(bodyBytes))
 		return "", fmt.Errorf("LemonSqueezy API error: %s", res.Status)
 	}
 
 	var result CheckoutResponse
 	if err := json.NewDecoder(res.Body).Decode(&result); err != nil {
-		log.Printf("NewDecoder failed: %v", err)
+		b.Logger.Error("NewDecoder failed", "error", err)
 		return "", err
 	}
 
@@ -190,7 +189,7 @@ func (b *Billing) VerifyBillingSignature(signature string, body []byte, secret s
 func (b *Billing) ApplyCredits(userRepo user.UserRepo, billingRepo BillingRepo, email string, variantID int) error {
 	user, err := userRepo.GetUserByEmail(email)
 	if err != nil {
-		log.Printf("repo.GetUserByEmail failed: %v", err)
+		b.Logger.Error("repo.GetUserByEmail failed", "error", err)
 		return err
 	}
 
@@ -213,12 +212,12 @@ func (b *Billing) ApplyCredits(userRepo user.UserRepo, billingRepo BillingRepo, 
 		creditType = "subscription"
 		reason = "Premium subscription monthly credit grant"
 	default:
-		log.Printf("ERROR: unknown variantID: %d", variantID)
+		b.Logger.Error("ERROR: unknown variantID", "error", variantID)
 		return fmt.Errorf("unknown variant ID: %d", variantID)
 	}
 
 	if err := userRepo.AddCredits(user.ID, credits, creditType); err != nil {
-		log.Printf("repo.AddCredits failed: %v", err)
+		b.Logger.Error("repo.AddCredits failed", "error", err)
 		return err
 	}
 
@@ -229,7 +228,7 @@ func (b *Billing) ApplyCredits(userRepo user.UserRepo, billingRepo BillingRepo, 
 		Reason:     reason,
 	}
 	if err := billingRepo.LogCreditTransaction(tx); err != nil {
-		log.Printf("Warning: credit granted but failed to log transaction: %v", err)
+		b.Logger.Error("Warning: credit granted but failed to log transaction", "error", err)
 		return err
 	}
 
@@ -239,7 +238,7 @@ func (b *Billing) ApplyCredits(userRepo user.UserRepo, billingRepo BillingRepo, 
 func (b *Billing) DeductCredits(userRepo user.UserRepo, billingRepo BillingRepo, orderAttrs OrderAttributes) error {
 	user, err := userRepo.GetUserByEmail(orderAttrs.UserEmail)
 	if err != nil {
-		log.Printf("repo.GetUserByEmail failed: %v", err)
+		b.Logger.Error("repo.GetUserByEmail failed", "error", err)
 		return err
 	}
 
@@ -264,12 +263,12 @@ func (b *Billing) DeductCredits(userRepo user.UserRepo, billingRepo BillingRepo,
 		creditType = "subscription"
 		reason = "Premium subscription monthly credit refund"
 	default:
-		log.Printf("ERROR: unknown variantID: %d", variantID)
+		b.Logger.Error("unknown variantID", "variantID", variantID)
 		return fmt.Errorf("unknown variant ID: %d", variantID)
 	}
 
 	if err := userRepo.AddCredits(user.ID, -credits, creditType); err != nil {
-		log.Printf("repo.DeductCredits failed: %v", err)
+		b.Logger.Error("repo.DeductCredits failed", "error", err)
 		return err
 	}
 
@@ -280,7 +279,7 @@ func (b *Billing) DeductCredits(userRepo user.UserRepo, billingRepo BillingRepo,
 		Reason:     reason,
 	}
 	if err := billingRepo.LogCreditTransaction(tx); err != nil {
-		log.Printf("Warning: refund deduction succeeded but failed to log transaction: %v", err)
+		b.Logger.Warn("Refund deduction succeeded but failed to log transaction", "error", err)
 		return err
 	}
 
@@ -290,7 +289,7 @@ func (b *Billing) DeductCredits(userRepo user.UserRepo, billingRepo BillingRepo,
 func (b *Billing) CreateSubscription(userRepo user.UserRepo, subCreatedAttrs SubscriptionAttributes, subscriptionID string) error {
 	user, err := userRepo.GetUserByEmail(subCreatedAttrs.UserEmail)
 	if err != nil {
-		log.Printf("repo.GetUserByEmail failed: %v", err)
+		b.Logger.Error("repo.GetUserByEmail failed", "error", err)
 		return err
 	}
 
@@ -301,7 +300,7 @@ func (b *Billing) CreateSubscription(userRepo user.UserRepo, subCreatedAttrs Sub
 	case b.VariantIDPremium:
 		tier = "premium"
 	default:
-		log.Printf("ERROR: unknown variantID: %d", subCreatedAttrs.VariantID)
+		b.Logger.Error("unknown variantID", "variantID", subCreatedAttrs.VariantID)
 		return fmt.Errorf("unknown variant ID: %d", subCreatedAttrs.VariantID)
 	}
 
@@ -314,7 +313,7 @@ func (b *Billing) CreateSubscription(userRepo user.UserRepo, subCreatedAttrs Sub
 		subCreatedAttrs.EndsAt,
 	)
 	if err != nil {
-		log.Printf("CreateSubscriptionData failed: %v", err)
+		b.Logger.Error("CreateSubscriptionData failed", "error", err)
 		return err
 	}
 
@@ -324,7 +323,7 @@ func (b *Billing) CreateSubscription(userRepo user.UserRepo, subCreatedAttrs Sub
 func (b *Billing) CancelSubscription(userRepo user.UserRepo, email string) error {
 	user, err := userRepo.GetUserByEmail(email)
 	if err != nil {
-		log.Printf("repo.GetUserByEmail failed: %v", err)
+		b.Logger.Error("repo.GetUserByEmail failed", "error", err)
 		return err
 	}
 
@@ -333,7 +332,7 @@ func (b *Billing) CancelSubscription(userRepo user.UserRepo, email string) error
 		"cancelled",
 	)
 	if err != nil {
-		log.Printf("CancelSubscriptionData failed: %v", err)
+		b.Logger.Error("CancelSubscriptionData failed", "error", err)
 		return err
 	}
 
@@ -343,7 +342,7 @@ func (b *Billing) CancelSubscription(userRepo user.UserRepo, email string) error
 func (b *Billing) ResumeSubscription(userRepo user.UserRepo, email string) error {
 	user, err := userRepo.GetUserByEmail(email)
 	if err != nil {
-		log.Printf("repo.GetUserByEmail failed: %v", err)
+		b.Logger.Error("repo.GetUserByEmail failed", "error", err)
 		return err
 	}
 
@@ -352,7 +351,7 @@ func (b *Billing) ResumeSubscription(userRepo user.UserRepo, email string) error
 		"active",
 	)
 	if err != nil {
-		log.Printf("CancelSubscriptionData failed: %v", err)
+		b.Logger.Error("CancelSubscriptionData failed", "error", err)
 		return err
 	}
 
@@ -362,7 +361,7 @@ func (b *Billing) ResumeSubscription(userRepo user.UserRepo, email string) error
 func (b *Billing) ExpireSubscription(userRepo user.UserRepo, billingRepo BillingRepo, email string) error {
 	user, err := userRepo.GetUserByEmail(email)
 	if err != nil {
-		log.Printf("repo.GetUserByEmail failed: %v", err)
+		b.Logger.Error("repo.GetUserByEmail failed", "error", err)
 		return err
 	}
 
@@ -371,14 +370,14 @@ func (b *Billing) ExpireSubscription(userRepo user.UserRepo, billingRepo Billing
 		"expired",
 	)
 	if err != nil {
-		log.Printf("CancelSubscriptionData failed: %v", err)
+		b.Logger.Error("CancelSubscriptionData failed", "error", err)
 		return err
 	}
 
 	if user.SubscriptionCredits > 0 {
 		err = userRepo.AddCredits(user.ID, -user.SubscriptionCredits, "subscription")
 		if err != nil {
-			log.Printf("repo.AddCredits failed: %v", err)
+			b.Logger.Error("repo.AddCredits failed", "error", err)
 			return err
 		}
 
@@ -389,7 +388,7 @@ func (b *Billing) ExpireSubscription(userRepo user.UserRepo, billingRepo Billing
 			Reason:     "Zeroed out credits on subscription expiration",
 		}
 		if err := billingRepo.LogCreditTransaction(tx); err != nil {
-			log.Printf("Warning: zero-out succeeded but failed to log transaction: %v", err)
+			b.Logger.Warn("Zero-out succeeded but failed to log transaction", "error", err)
 		}
 	}
 
@@ -399,7 +398,7 @@ func (b *Billing) ExpireSubscription(userRepo user.UserRepo, billingRepo Billing
 func (b *Billing) RenewSubscription(userRepo user.UserRepo, billingRepo BillingRepo, subRenewAttrs SubscriptionRenewAttributes) error {
 	user, err := userRepo.GetUserByEmail(subRenewAttrs.UserEmail)
 	if err != nil {
-		log.Printf("repo.GetUserByEmail failed: %v", err)
+		b.Logger.Error("repo.GetUserByEmail failed", "error", err)
 		return err
 	}
 
@@ -419,12 +418,12 @@ func (b *Billing) RenewSubscription(userRepo user.UserRepo, billingRepo BillingR
 		credits = 20
 		reason = "Premium subscription monthly credit"
 	default:
-		log.Printf("ERROR: unknown user.SubscriptionTier: %s", user.SubscriptionTier)
+		b.Logger.Error("unknown user.SubscriptionTier", "subscriptionTier", user.SubscriptionTier)
 		return fmt.Errorf("unknown user.SubscriptionTier: %s", user.SubscriptionTier)
 	}
 
 	if err := userRepo.AddCredits(user.ID, credits, "subscription"); err != nil {
-		log.Printf("repo.AddCredits failed: %v", err)
+		b.Logger.Error("repo.AddCredits failed", "error", err)
 		return err
 	}
 
@@ -435,7 +434,7 @@ func (b *Billing) RenewSubscription(userRepo user.UserRepo, billingRepo BillingR
 		Reason:     reason,
 	}
 	if err := billingRepo.LogCreditTransaction(tx); err != nil {
-		log.Printf("Warning: credit granted but failed to log transaction: %v", err)
+		b.Logger.Warn("credit granted but failed to log transaction", "error", err)
 		return err
 	}
 
@@ -445,7 +444,7 @@ func (b *Billing) RenewSubscription(userRepo user.UserRepo, billingRepo BillingR
 func (b *Billing) ChangeSubscription(userRepo user.UserRepo, billingRepo BillingRepo, subChangedAttrs SubscriptionAttributes) error {
 	user, err := userRepo.GetUserByEmail(subChangedAttrs.UserEmail)
 	if err != nil {
-		log.Printf("repo.GetUserByEmail failed: %v", err)
+		b.Logger.Error("repo.GetUserByEmail failed", "error", err)
 		return err
 	}
 
@@ -468,12 +467,12 @@ func (b *Billing) ChangeSubscription(userRepo user.UserRepo, billingRepo Billing
 		credits = 10
 		reason = "Pro upgraded to Premium subscription monthly credit"
 	default:
-		log.Printf("ERROR: unknown user.SubscriptionTier: %s", user.SubscriptionTier)
+		b.Logger.Error("unknown user.SubscriptionTier", "error", user.SubscriptionTier)
 		return fmt.Errorf("unknown user.SubscriptionTier: %s", user.SubscriptionTier)
 	}
 
 	if err := userRepo.AddCredits(user.ID, credits, "subscription"); err != nil {
-		log.Printf("repo.AddCredits failed: %v", err)
+		b.Logger.Error("repo.AddCredits failed", "error", err)
 		return err
 	}
 
@@ -484,7 +483,7 @@ func (b *Billing) ChangeSubscription(userRepo user.UserRepo, billingRepo Billing
 		Reason:     reason,
 	}
 	if err := billingRepo.LogCreditTransaction(tx); err != nil {
-		log.Printf("Warning: credit granted but failed to log transaction: %v", err)
+		b.Logger.Warn("credit granted but failed to log transaction", "error", err)
 		return err
 	}
 
@@ -494,7 +493,7 @@ func (b *Billing) ChangeSubscription(userRepo user.UserRepo, billingRepo Billing
 func (b *Billing) UpdateSubscription(userRepo user.UserRepo, subUpdatedAttrs SubscriptionAttributes, subscriptionID string) error {
 	user, err := userRepo.GetUserByEmail(subUpdatedAttrs.UserEmail)
 	if err != nil {
-		log.Printf("repo.GetUserByEmail failed: %v", err)
+		b.Logger.Error("repo.GetUserByEmail failed", "error", err)
 		return err
 	}
 
@@ -505,7 +504,7 @@ func (b *Billing) UpdateSubscription(userRepo user.UserRepo, subUpdatedAttrs Sub
 	case b.VariantIDPremium:
 		tier = "premium"
 	default:
-		log.Printf("ERROR: unknown variantID: %d", subUpdatedAttrs.VariantID)
+		b.Logger.Error("unknown variantID", "variantID", subUpdatedAttrs.VariantID)
 		return fmt.Errorf("unknown variant ID: %d", subUpdatedAttrs.VariantID)
 	}
 
@@ -518,7 +517,7 @@ func (b *Billing) UpdateSubscription(userRepo user.UserRepo, subUpdatedAttrs Sub
 		subUpdatedAttrs.EndsAt,
 	)
 	if err != nil {
-		log.Printf("UpdateSubscriptionData failed: %v", err)
+		b.Logger.Error("UpdateSubscriptionData failed", "error", err)
 		return err
 	}
 

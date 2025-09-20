@@ -36,8 +36,8 @@ func NewServer(logger *slog.Logger) (*Server, error) {
 	conversationRepo := conversation.NewRepository(db)
 	billingRepo := billing.NewRepository(db)
 	openAI := chatgpt.NewOpenAI(logger)
-	mailer := mailer.NewMailer()
-	billing, err := billing.NewBilling()
+	mailer := mailer.NewMailer(logger)
+	billing, err := billing.NewBilling(logger)
 	if err != nil {
 		log.Printf("billing.NewBilling failed: %v", err)
 		return nil, err

@@ -1,10 +1,14 @@
 package mailer
 
-import "os"
+import (
+	"log/slog"
+	"os"
+)
 
 type Mailer struct {
 	APIKey  string
 	BaseURL string
+	Logger  *slog.Logger
 }
 
 const signature = `
@@ -19,10 +23,11 @@ const signature = `
 		</p>
 	`
 
-func NewMailer() *Mailer {
+func NewMailer(logger *slog.Logger) *Mailer {
 	return &Mailer{
 		APIKey:  os.Getenv("RESEND_API_KEY"),
 		BaseURL: "https://api.resend.com",
+		Logger:  logger,
 	}
 }
 
