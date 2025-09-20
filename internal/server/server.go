@@ -23,7 +23,6 @@ type Server struct {
 }
 
 func NewServer(logger *slog.Logger) (*Server, error) {
-	logger.Info("logger is functioning in server")
 	mux := http.NewServeMux()
 
 	db, err := database.StartDB()
@@ -36,15 +35,15 @@ func NewServer(logger *slog.Logger) (*Server, error) {
 	tokenRepo := token.NewRepository(db)
 	conversationRepo := conversation.NewRepository(db)
 	billingRepo := billing.NewRepository(db)
-	openAI := chatgpt.NewOpenAI()
-	mailer := mailer.NewMailer()
-	billing, err := billing.NewBilling()
+	openAI := chatgpt.NewOpenAI(logger)
+	mailer := mailer.NewMailer(logger)
+	billing, err := billing.NewBilling(logger)
 	if err != nil {
 		log.Printf("billing.NewBilling failed: %v", err)
 		return nil, err
 	}
 
-	handler := handlers.NewHandler(interviewRepo, userRepo, tokenRepo, conversationRepo, billingRepo, billing, mailer, openAI, db)
+	handler := handlers.NewHandler(interviewRepo, userRepo, tokenRepo, conversationRepo, billingRepo, billing, mailer, openAI, db, logger)
 
 	mux.Handle("/api/users", http.HandlerFunc(handler.CreateUsersHandler))
 	mux.Handle("/api/auth/login", http.HandlerFunc(handler.LoginHandler))
