@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"strings"
@@ -53,33 +54,41 @@ var (
 	mockAI              *mocks.MockOpenAIClient
 )
 
-func TestMain(m *testing.M) {
-	log.SetFlags(log.LstdFlags | log.Llongfile)
+var logger *slog.Logger
 
-	log.Println("Loading environment variables...")
-	err := godotenv.Load("../.env.test")
-	if err != nil {
-		log.Fatalf("Error loading .env.test file: %v", err)
+func TestMain(m *testing.M) {
+	handler := slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+		Level: slog.LevelDebug,
+	})
+	logger = slog.New(handler)
+
+	logger.Info("Loading environment variables...")
+	if err := godotenv.Load("../.env.test"); err != nil {
+		logger.Error("failed to load .env.test", "error", err)
+		os.Exit(1)
 	}
 
-	log.Println("Initializing test server...")
-	Handler, err = testutil.InitTestServer()
+	logger.Info("Initializing test server...")
+	var err error
+	Handler, err = testutil.InitTestServer(logger)
 	if err != nil {
-		log.Fatalf("Test server initialization failed: %v", err)
+		logger.Error("test server initialization failed", "error", err)
+		os.Exit(1)
 	}
 
 	if testutil.TestServerURL == "" {
-		log.Fatal("TestMain: TestServerURL is empty! The server did not start properly.")
+		logger.Error("TestServerURL is empty! The server did not start properly")
+		os.Exit(1)
 	}
 
-	log.Printf("TestMain: Test server started successfully at: %s", testutil.TestServerURL)
+	logger.Info("Test server started", "url", testutil.TestServerURL)
 
 	mockAI = Handler.OpenAI.(*mocks.MockOpenAIClient)
 	conversationBuilder = testutil.NewConversationBuilder()
 
 	code := m.Run()
 
-	log.Println("Stopping test server...")
+	logger.Info("Stopping test server...")
 	testutil.StopTestServer()
 
 	os.Exit(code)

@@ -12,7 +12,7 @@ func NewMockRepo() *MockRepo {
 
 func (m *MockRepo) LogCreditTransaction(tx CreditTransaction) error {
 	if m.FailLogCreditTransaction {
-		return errors.New("Mocked LogCreditTransaction failure")
+		return errors.New("mocked LogCreditTransaction failure")
 	}
 	return nil
 }
