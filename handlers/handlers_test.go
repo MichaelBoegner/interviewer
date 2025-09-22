@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"log/slog"
 	"net/http"
 	"os"
@@ -20,7 +19,6 @@ import (
 	"github.com/michaelboegner/interviewer/internal/mocks"
 	"github.com/michaelboegner/interviewer/internal/testutil"
 	"github.com/michaelboegner/interviewer/interview"
-	"github.com/michaelboegner/interviewer/middleware"
 	"github.com/michaelboegner/interviewer/token"
 	"github.com/michaelboegner/interviewer/user"
 )
@@ -35,9 +33,7 @@ type TestCase struct {
 	reqBody        string
 	headerKey      string
 	headerValue    string
-	params         middleware.AcceptedVals
 	expectedStatus int
-	expectError    bool
 	respBody       handlers.ReturnVals
 	respBodyFunc   func() handlers.ReturnVals
 	Interview      *interview.Interview
@@ -63,7 +59,7 @@ func TestMain(m *testing.M) {
 	logger = slog.New(handler)
 
 	logger.Info("Loading environment variables...")
-	if err := godotenv.Load("../.env.test"); err != nil {
+	if err := godotenv.Load("../.env.dev"); err != nil {
 		logger.Error("failed to load .env.test", "error", err)
 		os.Exit(1)
 	}
@@ -157,18 +153,20 @@ func Test_RequestVerificationHandler_Integration(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			var buf strings.Builder
-			log.SetOutput(&buf)
+			logger := slog.New(slog.NewTextHandler(&buf, &slog.HandlerOptions{Level: slog.LevelDebug, AddSource: true}))
 			defer showLogsIfFail(t, tc.name, buf)
 
 			// Act
 			resp, respCode, err := testRequests(t, tc.headerKey, tc.headerValue, tc.method, tc.url, strings.NewReader(tc.reqBody))
 			if err != nil {
-				log.Fatalf("TestRequest for interview creation failed: %v", err)
+				logger.Error("TestRequest for interview creation failed", "error", err)
+				t.Fatalf("TestRequest failed: %v", err)
 			}
 
 			respUnmarshalled := &handlers.ReturnVals{}
 			err = json.Unmarshal(resp, respUnmarshalled)
 			if err != nil {
+				logger.Error("json.Unmarshal failed", "error", err)
 				t.Fatalf("failed to unmarshal response: %v", err)
 			}
 
@@ -236,12 +234,12 @@ func Test_CreateUsersHandler_Integration(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			var buf strings.Builder
-			log.SetOutput(&buf)
+			logger := slog.New(slog.NewTextHandler(&buf, &slog.HandlerOptions{Level: slog.LevelDebug, AddSource: true}))
 			defer showLogsIfFail(t, tc.name, buf)
 
 			verificationJWT, err := user.VerificationToken(tc.email, tc.username, tc.password)
 			if err != nil {
-				log.Printf("GenerateEmailVerificationToken failed: %v", err)
+				logger.Error("GenerateEmailVerificationToken failed", "error", err)
 			}
 			reqBodyUser := strings.NewReader(fmt.Sprintf(`{
 							"token": "%s"
@@ -250,12 +248,14 @@ func Test_CreateUsersHandler_Integration(t *testing.T) {
 			// Act
 			resp, respCode, err := testRequests(t, tc.headerKey, tc.headerValue, tc.method, tc.url, reqBodyUser)
 			if err != nil {
-				log.Fatalf("TestRequest for interview creation failed: %v", err)
+				logger.Error("TestRequest for interview creation failed", "error", err)
+				t.Fatalf("TestRequest failed: %v", err)
 			}
 
 			respUnmarshalled := &handlers.ReturnVals{}
 			err = json.Unmarshal(resp, respUnmarshalled)
 			if err != nil {
+				logger.Error("json.Unmarshal failed", "error", err)
 				t.Fatalf("failed to unmarshal response: %v", err)
 			}
 
@@ -338,18 +338,20 @@ func Test_GetUsersHandler_Integration(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			var buf strings.Builder
-			log.SetOutput(&buf)
+			logger := slog.New(slog.NewTextHandler(&buf, &slog.HandlerOptions{Level: slog.LevelDebug, AddSource: true}))
 			defer showLogsIfFail(t, tc.name, buf)
 
 			// Act
 			resp, respCode, err := testRequests(t, tc.headerKey, tc.headerValue, tc.method, tc.url, strings.NewReader(tc.reqBody))
 			if err != nil {
-				log.Fatalf("TestRequest for interview creation failed: %v", err)
+				logger.Error("TestRequest for interview creation failed", "error", err)
+				t.Fatalf("TestRequest failed: %v", err)
 			}
 
 			respUnmarshalled := &handlers.ReturnVals{}
 			err = json.Unmarshal(resp, respUnmarshalled)
 			if err != nil {
+				logger.Error("json.Unmarshal failed", "error", err)
 				t.Fatalf("failed to unmarshal response: %v", err)
 			}
 
@@ -452,18 +454,20 @@ func Test_LoginHandler_Integration(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			var buf strings.Builder
-			log.SetOutput(&buf)
+			logger := slog.New(slog.NewTextHandler(&buf, &slog.HandlerOptions{Level: slog.LevelDebug, AddSource: true}))
 			defer showLogsIfFail(t, tc.name, buf)
 
 			// Act
 			resp, respCode, err := testRequests(t, tc.headerKey, tc.headerValue, tc.method, tc.url, strings.NewReader(tc.reqBody))
 			if err != nil {
-				log.Fatalf("TestRequest for interview creation failed: %v", err)
+				logger.Error("TestRequest for interview creation failed", "error", err)
+				t.Fatalf("TestRequest failed: %v", err)
 			}
 
 			respUnmarshalled := &handlers.ReturnVals{}
 			err = json.Unmarshal(resp, respUnmarshalled)
 			if err != nil {
+				logger.Error("json.Unmarshal failed", "error", err)
 				t.Fatalf("failed to unmarshal response: %v", err)
 			}
 
@@ -587,18 +591,20 @@ func Test_RefreshTokensHandler_Integration(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			var buf strings.Builder
-			log.SetOutput(&buf)
+			logger := slog.New(slog.NewTextHandler(&buf, &slog.HandlerOptions{Level: slog.LevelDebug, AddSource: true}))
 			defer showLogsIfFail(t, tc.name, buf)
 
 			// Act
 			resp, respCode, err := testRequests(t, tc.headerKey, tc.headerValue, tc.method, tc.url, strings.NewReader(tc.reqBody))
 			if err != nil {
-				log.Fatalf("TestRequest for interview creation failed: %v", err)
+				logger.Error("TestRequest for interview creation failed", "error", err)
+				t.Fatalf("TestRequest failed: %v", err)
 			}
 
 			respUnmarshalled := &handlers.ReturnVals{}
 			err = json.Unmarshal(resp, respUnmarshalled)
 			if err != nil {
+				logger.Error("json.Unmarshal failed", "error", err)
 				t.Fatalf("failed to unmarshal response: %v", err)
 			}
 
@@ -736,7 +742,7 @@ func Test_InterviewsHandler_Integration(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			var buf strings.Builder
-			log.SetOutput(&buf)
+			logger := slog.New(slog.NewTextHandler(&buf, &slog.HandlerOptions{Level: slog.LevelDebug, AddSource: true}))
 			defer showLogsIfFail(t, tc.name, buf)
 
 			if tc.setup != nil {
@@ -746,12 +752,14 @@ func Test_InterviewsHandler_Integration(t *testing.T) {
 			// Act
 			resp, respCode, err := testRequests(t, tc.headerKey, tc.headerValue, tc.method, tc.url, strings.NewReader(tc.reqBody))
 			if err != nil {
-				log.Fatalf("TestRequest for interview creation failed: %v", err)
+				logger.Error("TestRequest for interview creation failed", "error", err)
+				t.Fatalf("TestRequest failed: %v", err)
 			}
 
 			respUnmarshalled := &handlers.ReturnVals{}
 			err = json.Unmarshal(resp, respUnmarshalled)
 			if err != nil {
+				logger.Error("json.Unmarshal failed", "error", err)
 				t.Fatalf("failed to unmarshal response: %v", err)
 			}
 
@@ -845,7 +853,7 @@ func Test_CreateConversationsHandler_Integration(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			var buf strings.Builder
-			log.SetOutput(&buf)
+			logger := slog.New(slog.NewTextHandler(&buf, &slog.HandlerOptions{Level: slog.LevelDebug, AddSource: true}))
 			defer showLogsIfFail(t, tc.name, buf)
 
 			if tc.setup != nil {
@@ -855,12 +863,14 @@ func Test_CreateConversationsHandler_Integration(t *testing.T) {
 			// Act
 			resp, respCode, err := testRequests(t, tc.headerKey, tc.headerValue, tc.method, tc.url, strings.NewReader(tc.reqBody))
 			if err != nil {
-				log.Fatalf("TestRequest for interview creation failed: %v", err)
+				logger.Error("TestRequest for interview creation failed", "error", err)
+				t.Fatalf("TestRequest failed: %v", err)
 			}
 
 			respUnmarshalled := &handlers.ReturnVals{}
 			err = json.Unmarshal(resp, respUnmarshalled)
 			if err != nil {
+				logger.Error("json.Unmarshal failed", "error", err)
 				t.Fatalf("failed to unmarshal response: %v", err)
 			}
 
@@ -983,7 +993,7 @@ func Test_AppendConversationsHandler_Integration(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			var buf strings.Builder
-			log.SetOutput(&buf)
+			logger := slog.New(slog.NewTextHandler(&buf, &slog.HandlerOptions{Level: slog.LevelDebug, AddSource: true}))
 			defer showLogsIfFail(t, tc.name, buf)
 
 			if tc.name == "AppendConversation_IsFinished" {
@@ -1005,11 +1015,13 @@ func Test_AppendConversationsHandler_Integration(t *testing.T) {
 			// Act
 			resp, respCode, err := testRequests(t, tc.headerKey, tc.headerValue, tc.method, tc.url, strings.NewReader(tc.reqBody))
 			if err != nil {
+				logger.Error("TestRequest failed", "error", err)
 				t.Fatalf("TestRequest failed: %v", err)
 			}
 
 			respUnmarshalled := &handlers.ReturnVals{}
 			if err := json.Unmarshal(resp, respUnmarshalled); err != nil {
+				logger.Error("json.Unmarshal failed", "error", err)
 				t.Fatalf("failed to unmarshal response: %v", err)
 			}
 
@@ -1042,7 +1054,6 @@ func Test_AppendConversationsHandler_Integration(t *testing.T) {
 }
 
 func showLogsIfFail(t *testing.T, name string, buf strings.Builder) {
-	log.SetOutput(os.Stderr)
 	if t.Failed() {
 		fmt.Printf("---- logs for test: %s ----\n%s\n", name, buf.String())
 	}
