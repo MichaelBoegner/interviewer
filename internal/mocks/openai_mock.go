@@ -77,6 +77,12 @@ type MockOpenAIClient struct {
 	Scenario string
 }
 
+func NewMockOpenAIClient() *MockOpenAIClient {
+	mockOpenAIClient := &MockOpenAIClient{}
+
+	return mockOpenAIClient
+}
+
 func (m *MockOpenAIClient) GetChatGPTResponse(prompt string) (*chatgpt.ChatGPTResponse, error) {
 	return responseFixtures[ScenarioInterview], nil
 }

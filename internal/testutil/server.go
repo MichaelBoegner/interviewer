@@ -37,9 +37,9 @@ func InitTestServer(logger *slog.Logger) (*handlers.Handler, error) {
 	tokenRepo := token.NewRepository(db)
 	conversationRepo := conversation.NewRepository(db)
 	billingRepo := billing.NewRepository(db)
-	openAI := &mocks.MockOpenAIClient{}
+	openAI := mocks.NewMockOpenAIClient()
 	mailer := mocks.NewMockMailer()
-	billing, err := billing.NewBilling()
+	billing, err := billing.NewBilling(logger)
 	if err != nil {
 		logger.Error("billing.NewBilling failed", "error", err)
 		return nil, err
