@@ -25,7 +25,7 @@
 - [Frontend](#-frontend)
 - [License](#-license)
 
-## 🚀 Overview
+## 🚀 Overview 
 
 Interviewer App is a robust backend service, coupled with a light demo frontend, that powers an interactive Backend Engineer interviewing experience. It leverages ChatGPT's conversational AI capabilities to create personalized, adaptive interview sessions tailored to each user's preferences.
 
