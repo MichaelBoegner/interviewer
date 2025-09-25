@@ -137,11 +137,11 @@ func (h *Handler) CreateUsersHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	go func() {
-		if err := h.Mailer.SendWelcome(userCreated.Email); err != nil {
+	go func(email string) {
+		if err := h.Mailer.SendWelcome(email); err != nil {
 			log.Printf("SendWelcome failed: %v", err)
 		}
-	}()
+	}(userCreated.Email)
 
 	payload := &ReturnVals{
 		UserID:   userCreated.ID,
