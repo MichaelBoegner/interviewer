@@ -130,6 +130,13 @@ func (h *Handler) CreateUsersHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	jwt, err := token.CreateJWT(strconv.Itoa(userCreated.ID), 0)
+	if err != nil {
+		log.Printf("token.CreateJWT failed: %v", err)
+		RespondWithError(w, http.StatusInternalServerError, "Internal server error")
+		return
+	}
+
 	err = h.Mailer.SendWelcome(userCreated.Email)
 	if err != nil {
 		log.Printf("h.Mailer.SendWelcome failed: %v", err)
@@ -141,6 +148,7 @@ func (h *Handler) CreateUsersHandler(w http.ResponseWriter, r *http.Request) {
 		UserID:   userCreated.ID,
 		Username: userCreated.Username,
 		Email:    userCreated.Email,
+		JWToken:  jwt,
 	}
 	RespondWithJSON(w, http.StatusCreated, payload)
 }
