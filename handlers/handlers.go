@@ -61,11 +61,11 @@ func (h *Handler) RequestVerificationHandler(w http.ResponseWriter, r *http.Requ
 	}
 
 	verifyURL := os.Getenv("FRONTEND_URL") + "verify-email?token=" + verificationJWT
-	go func() {
-		if err := h.Mailer.SendVerificationEmail(req.Email, verifyURL); err != nil {
+	go func(email, url string) {
+		if err := h.Mailer.SendVerificationEmail(email, url); err != nil {
 			log.Printf("SendVerificationEmail failed: %v", err)
 		}
-	}()
+	}(req.Email, verifyURL)
 
 	payload := &ReturnVals{
 		Message: "Verification email sent",
