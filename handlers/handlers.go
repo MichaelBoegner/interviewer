@@ -60,11 +60,12 @@ func (h *Handler) RequestVerificationHandler(w http.ResponseWriter, r *http.Requ
 	}
 
 	verifyURL := os.Getenv("FRONTEND_URL") + "verify-email?token=" + verificationJWT
-	go func() {
-		if err := h.Mailer.SendVerificationEmail(req.Email, verifyURL); err != nil {
-			h.Logger.Error("SendVerificationEmail failed", "error", err)
+
+	go func(email, url string) {
+		if err := h.Mailer.SendVerificationEmail(email, url); err != nil {
+			log.Printf("SendVerificationEmail failed: %v", err)
 		}
-	}()
+	}(req.Email, verifyURL)
 
 	payload := &ReturnVals{
 		Message: "Verification email sent",
@@ -129,17 +130,24 @@ func (h *Handler) CreateUsersHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.Mailer.SendWelcome(userCreated.Email)
+	jwt, err := token.CreateJWT(strconv.Itoa(userCreated.ID), 0)
 	if err != nil {
-		h.Logger.Error("h.Mailer.SendWelcome failed", "error", err)
+		log.Printf("token.CreateJWT failed: %v", err)
 		RespondWithError(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
+
+	go func(email string) {
+		if err := h.Mailer.SendWelcome(email); err != nil {
+			log.Printf("SendWelcome failed: %v", err)
+		}
+	}(userCreated.Email)
 
 	payload := &ReturnVals{
 		UserID:   userCreated.ID,
 		Username: userCreated.Username,
 		Email:    userCreated.Email,
+		JWToken:  jwt,
 	}
 	RespondWithJSON(w, http.StatusCreated, payload)
 }
