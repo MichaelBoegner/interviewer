@@ -4,7 +4,7 @@
 ![Go Version](https://img.shields.io/badge/Go-1.20+-00ADD8?style=flat&logo=go&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15+-336791?style=flat&logo=postgresql&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=flat&logo=docker&logoColor=white)
-![CI Status](https://github.com/michaelboegner/interviewer/actions/workflows/ci.yml/badge.svg)
+![CI Status](https://github.com/michaelboegner/interviewer/actions/workflows/ci.yml/badge.svg) 
 
 
 ---
@@ -23,9 +23,9 @@
 - [Security Implementation](#-security-implementation)
 - [Testing Strategy](#-testing-strategy)
 - [Frontend](#-frontend)
-- [License](#-license) 
+- [License](#-license)
 
-## 🚀 Overview
+## 🚀 Overview 
 
 Interviewer App is a robust backend service, coupled with a light demo frontend, that powers an interactive Backend Engineer interviewing experience. It leverages ChatGPT's conversational AI capabilities to create personalized, adaptive interview sessions tailored to each user's preferences.
 
