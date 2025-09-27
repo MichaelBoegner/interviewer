@@ -212,7 +212,7 @@ func (b *Billing) ApplyCredits(userRepo user.UserRepo, billingRepo BillingRepo, 
 		creditType = "subscription"
 		reason = "Premium subscription monthly credit grant"
 	default:
-		b.Logger.Error("ERROR: unknown variantID", "error", variantID)
+		b.Logger.Error("ERROR: unknown variantID", "variantID", variantID)
 		return fmt.Errorf("unknown variant ID: %d", variantID)
 	}
 
@@ -467,7 +467,7 @@ func (b *Billing) ChangeSubscription(userRepo user.UserRepo, billingRepo Billing
 		credits = 10
 		reason = "Pro upgraded to Premium subscription monthly credit"
 	default:
-		b.Logger.Error("unknown user.SubscriptionTier", "error", user.SubscriptionTier)
+		b.Logger.Error("unknown user.SubscriptionTier", "subscriptionTier", user.SubscriptionTier)
 		return fmt.Errorf("unknown user.SubscriptionTier: %s", user.SubscriptionTier)
 	}
 

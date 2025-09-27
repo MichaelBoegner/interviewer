@@ -63,7 +63,7 @@ func (h *Handler) RequestVerificationHandler(w http.ResponseWriter, r *http.Requ
 
 	go func(email, url string) {
 		if err := h.Mailer.SendVerificationEmail(email, url); err != nil {
-			log.Printf("SendVerificationEmail failed: %v", err)
+			h.Logger.Error("SendVerificationEmail failed", "error", err)
 		}
 	}(req.Email, verifyURL)
 
@@ -132,14 +132,14 @@ func (h *Handler) CreateUsersHandler(w http.ResponseWriter, r *http.Request) {
 
 	jwt, err := token.CreateJWT(strconv.Itoa(userCreated.ID), 0)
 	if err != nil {
-		log.Printf("token.CreateJWT failed: %v", err)
+		h.Logger.Error("token.CreateJWT failed", "error", err)
 		RespondWithError(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
 
 	go func(email string) {
 		if err := h.Mailer.SendWelcome(email); err != nil {
-			log.Printf("SendWelcome failed: %v", err)
+			h.Logger.Error("SendWelcome failed", "error", err)
 		}
 	}(userCreated.Email)
 
@@ -164,7 +164,7 @@ func (h *Handler) GetUsersHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userIDParam, err := GetPathID(r, "/api/users/")
+	userIDParam, err := GetPathID(r, "/api/users/", h.Logger)
 	if err != nil {
 		h.Logger.Error("GetPathID error", "error", err)
 		RespondWithError(w, http.StatusBadRequest, "UserID required")
@@ -204,7 +204,7 @@ func (h *Handler) DeleteUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userIDParam, err := GetPathID(r, "/api/users/delete/")
+	userIDParam, err := GetPathID(r, "/api/users/delete/", h.Logger)
 	if err != nil {
 		h.Logger.Error("GetPathID error", "error", err)
 		RespondWithError(w, http.StatusBadRequest, "UserID required")
@@ -597,7 +597,7 @@ func (h *Handler) GetInterviewHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	interviewID, err := GetPathID(r, "/api/interviews/")
+	interviewID, err := GetPathID(r, "/api/interviews/", h.Logger)
 	if err != nil {
 		h.Logger.Error("GetPathID failed", "error", err)
 		RespondWithError(w, http.StatusBadRequest, "Invalid interview ID")
@@ -635,7 +635,7 @@ func (h *Handler) UpdateInterviewStatusHandler(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	interviewID, err := GetPathID(r, "/api/interviews/")
+	interviewID, err := GetPathID(r, "/api/interviews/", h.Logger)
 	if err != nil {
 		RespondWithError(w, http.StatusBadRequest, "Invalid interview ID")
 		return
@@ -693,7 +693,7 @@ func (h *Handler) CreateConversationsHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	interviewID, err := GetPathID(r, "/api/conversations/create/")
+	interviewID, err := GetPathID(r, "/api/conversations/create/", h.Logger)
 
 	if err != nil {
 		h.Logger.Error("PathID error", "error", err)
@@ -778,7 +778,7 @@ func (h *Handler) AppendConversationsHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	interviewID, err := GetPathID(r, "/api/conversations/append/")
+	interviewID, err := GetPathID(r, "/api/conversations/append/", h.Logger)
 	if err != nil {
 		h.Logger.Error("PathID error", "error", err)
 		RespondWithError(w, http.StatusBadRequest, "Missing ID")
@@ -847,7 +847,7 @@ func (h *Handler) GetConversationHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	interviewID, err := GetPathID(r, "/api/conversations/")
+	interviewID, err := GetPathID(r, "/api/conversations/", h.Logger)
 	if err != nil {
 		h.Logger.Error("PathID error", "error", err)
 		RespondWithError(w, http.StatusBadRequest, "Missing ID")
