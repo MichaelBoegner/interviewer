@@ -255,6 +255,14 @@ func Test_CreateUsersHandler_Integration(t *testing.T) {
 			expected := tc.respBody
 			got := *respUnmarshalled
 
+			// Assert JWT is non-empty
+			if got.JWToken == "" {
+				t.Fatalf("[%s] expected JWT, got empty string", tc.name)
+			}
+
+			// Ignore JWToken when diffing
+			got.JWToken = ""
+
 			if diff := cmp.Diff(expected, got, cmpopts.EquateApproxTime(time.Second)); diff != "" {
 				t.Errorf("Mismatch (-expected +got):\n%s", diff)
 			}
