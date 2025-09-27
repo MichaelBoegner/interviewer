@@ -263,7 +263,7 @@ func (h *Handler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 	if params.Email == "" || params.Password == "" {
 		h.Logger.Error("Invalid username or password.")
-		RespondWithError(w, http.StatusBadRequest, "Invalid username or password.")
+		RespondWithError(w, http.StatusBadRequest, "Authentication failed.")
 		return
 
 	}

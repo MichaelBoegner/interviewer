@@ -39,7 +39,7 @@ func NewServer(logger *slog.Logger) (*Server, error) {
 	mailer := mailer.NewMailer(logger)
 	billing, err := billing.NewBilling(logger)
 	if err != nil {
-		log.Printf("billing.NewBilling failed: %v", err)
+		logger.Error("billing.NewBilling failed", "error", err)
 		return nil, err
 	}
 
@@ -154,7 +154,7 @@ func NewServer(logger *slog.Logger) (*Server, error) {
 	return &Server{mux: mux}, nil
 }
 
-func (s *Server) StartServer() {
-	log.Printf("Serving files from %s on port: %s\n", ".", "8080")
+func (s *Server) StartServer(logger *slog.Logger) {
+	logger.Info("Serving files from %s on port: %s\n", ".", "8080")
 	log.Fatal(http.ListenAndServe(":8080", middleware.EnableCors(s.mux)))
 }
