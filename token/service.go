@@ -97,7 +97,7 @@ func ExtractUserIDFromToken(tokenString string) (int, error) {
 
 	token, err := jwt.ParseWithClaims(tokenString, &CustomClaims{}, func(tokenString *jwt.Token) (interface{}, error) {
 		if _, ok := tokenString.Method.(*jwt.SigningMethodHMAC); !ok {
-			return 0, fmt.Errorf("Unauthorized")
+			return 0, fmt.Errorf("unauthorized")
 		}
 		return []byte(jwtSecret), nil
 	})
@@ -116,5 +116,5 @@ func ExtractUserIDFromToken(tokenString string) (int, error) {
 		return userID, nil
 	}
 
-	return 0, fmt.Errorf("Unauthorized")
+	return 0, fmt.Errorf("unauthorized")
 }

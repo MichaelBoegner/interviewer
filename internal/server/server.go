@@ -155,6 +155,6 @@ func NewServer(logger *slog.Logger) (*Server, error) {
 }
 
 func (s *Server) StartServer(logger *slog.Logger) {
-	logger.Info("Serving files from %s on port: %s\n", ".", "8080")
+	logger.Info("Serving files", "directory", ".", "port", "8080")
 	log.Fatal(http.ListenAndServe(":8080", middleware.EnableCors(s.mux)))
 }

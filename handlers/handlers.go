@@ -283,7 +283,7 @@ func (h *Handler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 			RespondWithError(w, http.StatusUnauthorized, user.ErrAccountDeleted.Error())
 			return
 		}
-		RespondWithError(w, http.StatusUnauthorized, "Invalid username or password.")
+		RespondWithError(w, http.StatusUnauthorized, "Authentication failed.")
 		return
 	}
 
@@ -457,7 +457,7 @@ func (h *Handler) RefreshTokensHandler(w http.ResponseWriter, r *http.Request) {
 
 	if params.UserID == 0 {
 		h.Logger.Error("Invalid userID")
-		RespondWithError(w, http.StatusBadRequest, "Invalid username or password")
+		RespondWithError(w, http.StatusBadRequest, "Authentication failed")
 		return
 	}
 

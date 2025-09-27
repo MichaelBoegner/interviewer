@@ -71,7 +71,7 @@ func (b *Billing) RequestCheckoutSession(userEmail string, variantID int) (strin
 	if res.StatusCode < 200 || res.StatusCode >= 300 {
 		bodyBytes, _ := io.ReadAll(res.Body)
 		b.Logger.Error("LemonSqueezy returned error", "error", string(bodyBytes))
-		return "", fmt.Errorf("LemonSqueezy API error: %s", res.Status)
+		return "", fmt.Errorf("lemonSqueezy API error: %s", res.Status)
 	}
 
 	var result CheckoutResponse
