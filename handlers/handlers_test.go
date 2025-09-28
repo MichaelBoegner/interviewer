@@ -59,7 +59,7 @@ func TestMain(m *testing.M) {
 	logger = slog.New(handler)
 
 	logger.Info("Loading environment variables...")
-	if err := godotenv.Load("../.env.dev"); err != nil {
+	if err := godotenv.Load("../.env.test"); err != nil {
 		logger.Error("failed to load .env.test", "error", err)
 		os.Exit(1)
 	}
