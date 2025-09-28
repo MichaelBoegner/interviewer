@@ -30,5 +30,5 @@ func main() {
 	}
 
 	logger.Info("starting server...")
-	srv.StartServer()
+	srv.StartServer(logger)
 }

@@ -3,6 +3,7 @@ package billing
 import (
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"os"
 	"strconv"
 	"time"
@@ -13,6 +14,7 @@ type Billing struct {
 	VariantIDIndividual int
 	VariantIDPro        int
 	VariantIDPremium    int
+	Logger              *slog.Logger
 }
 type CheckoutPayload struct {
 	Data CheckoutData `json:"data"`
@@ -100,7 +102,7 @@ type BillingRepo interface {
 	MarkWebhookProcessed(id string, event string) error
 }
 
-func NewBilling() (*Billing, error) {
+func NewBilling(logger *slog.Logger) (*Billing, error) {
 	individualID, err := strconv.Atoi(os.Getenv("LEMON_VARIANT_ID_INDIVIDUAL"))
 	if err != nil {
 		return nil, fmt.Errorf("invalid INDIVIDUAL ID: %w", err)
@@ -118,5 +120,6 @@ func NewBilling() (*Billing, error) {
 		VariantIDIndividual: individualID,
 		VariantIDPro:        proID,
 		VariantIDPremium:    premiumID,
+		Logger:              logger,
 	}, nil
 }

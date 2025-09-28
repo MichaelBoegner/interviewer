@@ -5,12 +5,28 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"log"
+	"log/slog"
+	"os"
 	"strings"
 	"testing"
 
 	"github.com/michaelboegner/interviewer/billing"
 	"github.com/michaelboegner/interviewer/user"
 )
+
+func NewTestBilling() *billing.Billing {
+	handler := slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+		Level: slog.LevelDebug,
+	})
+	logger := slog.New(handler)
+
+	return &billing.Billing{
+		VariantIDIndividual: 1,
+		VariantIDPro:        2,
+		VariantIDPremium:    3,
+		Logger:              logger,
+	}
+}
 
 func TestApplyCredits(t *testing.T) {
 	tests := []struct {
@@ -84,11 +100,7 @@ func TestApplyCredits(t *testing.T) {
 			userRepo.FailAddCredits = tc.failCredit
 			billingRepo.FailLogCreditTransaction = tc.failLog
 
-			b := billing.Billing{
-				VariantIDIndividual: 1,
-				VariantIDPro:        2,
-				VariantIDPremium:    3,
-			}
+			b := NewTestBilling()
 
 			err := b.ApplyCredits(userRepo, billingRepo, "test@example.com", tc.variantID)
 			if tc.expectErr && err == nil {
@@ -165,11 +177,7 @@ func TestDeductCredits(t *testing.T) {
 			userRepo.FailAddCredits = tc.failCredit
 			billingRepo.FailLogCreditTransaction = tc.failLog
 
-			b := billing.Billing{
-				VariantIDIndividual: 1,
-				VariantIDPro:        2,
-				VariantIDPremium:    3,
-			}
+			b := NewTestBilling()
 
 			attrs := billing.OrderAttributes{
 				UserEmail: "test@example.com",
@@ -192,7 +200,7 @@ func TestDeductCredits(t *testing.T) {
 }
 
 func TestVerifyBillingSignature(t *testing.T) {
-	b := billing.Billing{}
+	b := NewTestBilling()
 	body := []byte(`{"key":"value"}`)
 	secret := "testsecret"
 	mac := hmacSha256(body, secret)

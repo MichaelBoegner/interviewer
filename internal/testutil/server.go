@@ -1,7 +1,7 @@
 package testutil
 
 import (
-	"log"
+	"log/slog"
 	"net/http"
 	"net/http/httptest"
 
@@ -22,30 +22,30 @@ var (
 	TestServerURL string
 )
 
-func InitTestServer() (*handlers.Handler, error) {
-	log.Println("Initializing test database connection...")
+func InitTestServer(logger *slog.Logger) (*handlers.Handler, error) {
+	logger.Info("Initializing test database connection...")
 
 	db, err := database.StartDB()
 	if err != nil {
-		log.Fatalf("Failed to connect to test database: %v", err)
+		logger.Error("Failed to connect to test database", "error", err)
 	}
 
-	log.Println("Database connected successfully.")
+	logger.Info("Database connected successfully.")
 
 	interviewRepo := interview.NewRepository(db)
 	userRepo := user.NewRepository(db)
 	tokenRepo := token.NewRepository(db)
 	conversationRepo := conversation.NewRepository(db)
 	billingRepo := billing.NewRepository(db)
-	openAI := &mocks.MockOpenAIClient{}
+	openAI := mocks.NewMockOpenAIClient()
 	mailer := mocks.NewMockMailer()
-	billing, err := billing.NewBilling()
+	billing, err := billing.NewBilling(logger)
 	if err != nil {
-		log.Printf("billing.NewBilling failed: %v", err)
+		logger.Error("billing.NewBilling failed", "error", err)
 		return nil, err
 	}
 
-	handler := handlers.NewHandler(interviewRepo, userRepo, tokenRepo, conversationRepo, billingRepo, billing, mailer, openAI, db)
+	handler := handlers.NewHandler(interviewRepo, userRepo, tokenRepo, conversationRepo, billingRepo, billing, mailer, openAI, db, logger)
 
 	TestMux = http.NewServeMux()
 	TestMux.Handle("/api/users", http.HandlerFunc(handler.CreateUsersHandler))
@@ -154,7 +154,7 @@ func InitTestServer() (*handlers.Handler, error) {
 		),
 	)
 
-	log.Println("Starting in-memory test server...")
+	logger.Info("Starting in-memory test server...")
 
 	TestServer = httptest.NewServer(TestMux)
 	TestServerURL = TestServer.URL

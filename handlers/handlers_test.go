@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"strings"
@@ -19,7 +19,6 @@ import (
 	"github.com/michaelboegner/interviewer/internal/mocks"
 	"github.com/michaelboegner/interviewer/internal/testutil"
 	"github.com/michaelboegner/interviewer/interview"
-	"github.com/michaelboegner/interviewer/middleware"
 	"github.com/michaelboegner/interviewer/token"
 	"github.com/michaelboegner/interviewer/user"
 )
@@ -34,9 +33,7 @@ type TestCase struct {
 	reqBody        string
 	headerKey      string
 	headerValue    string
-	params         middleware.AcceptedVals
 	expectedStatus int
-	expectError    bool
 	respBody       handlers.ReturnVals
 	respBodyFunc   func() handlers.ReturnVals
 	Interview      *interview.Interview
@@ -53,33 +50,41 @@ var (
 	mockAI              *mocks.MockOpenAIClient
 )
 
-func TestMain(m *testing.M) {
-	log.SetFlags(log.LstdFlags | log.Llongfile)
+var logger *slog.Logger
 
-	log.Println("Loading environment variables...")
-	err := godotenv.Load("../.env.test")
-	if err != nil {
-		log.Fatalf("Error loading .env.test file: %v", err)
+func TestMain(m *testing.M) {
+	handler := slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+		Level: slog.LevelDebug,
+	})
+	logger = slog.New(handler)
+
+	logger.Info("Loading environment variables...")
+	if err := godotenv.Load("../.env.test"); err != nil {
+		logger.Error("failed to load .env.test", "error", err)
+		os.Exit(1)
 	}
 
-	log.Println("Initializing test server...")
-	Handler, err = testutil.InitTestServer()
+	logger.Info("Initializing test server...")
+	var err error
+	Handler, err = testutil.InitTestServer(logger)
 	if err != nil {
-		log.Fatalf("Test server initialization failed: %v", err)
+		logger.Error("test server initialization failed", "error", err)
+		os.Exit(1)
 	}
 
 	if testutil.TestServerURL == "" {
-		log.Fatal("TestMain: TestServerURL is empty! The server did not start properly.")
+		logger.Error("TestServerURL is empty! The server did not start properly")
+		os.Exit(1)
 	}
 
-	log.Printf("TestMain: Test server started successfully at: %s", testutil.TestServerURL)
+	logger.Info("Test server started", "url", testutil.TestServerURL)
 
 	mockAI = Handler.OpenAI.(*mocks.MockOpenAIClient)
 	conversationBuilder = testutil.NewConversationBuilder()
 
 	code := m.Run()
 
-	log.Println("Stopping test server...")
+	logger.Info("Stopping test server...")
 	testutil.StopTestServer()
 
 	os.Exit(code)
@@ -147,14 +152,10 @@ func Test_RequestVerificationHandler_Integration(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			var buf strings.Builder
-			log.SetOutput(&buf)
-			defer showLogsIfFail(t, tc.name, buf)
-
 			// Act
 			resp, respCode, err := testRequests(t, tc.headerKey, tc.headerValue, tc.method, tc.url, strings.NewReader(tc.reqBody))
 			if err != nil {
-				log.Fatalf("TestRequest for interview creation failed: %v", err)
+				t.Fatalf("TestRequest failed: %v", err)
 			}
 
 			respUnmarshalled := &handlers.ReturnVals{}
@@ -226,13 +227,9 @@ func Test_CreateUsersHandler_Integration(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			var buf strings.Builder
-			log.SetOutput(&buf)
-			defer showLogsIfFail(t, tc.name, buf)
-
 			verificationJWT, err := user.VerificationToken(tc.email, tc.username, tc.password)
 			if err != nil {
-				log.Printf("GenerateEmailVerificationToken failed: %v", err)
+				t.Fatalf("GenerateEmailVerificationToken failed: %v", err)
 			}
 			reqBodyUser := strings.NewReader(fmt.Sprintf(`{
 							"token": "%s"
@@ -241,7 +238,7 @@ func Test_CreateUsersHandler_Integration(t *testing.T) {
 			// Act
 			resp, respCode, err := testRequests(t, tc.headerKey, tc.headerValue, tc.method, tc.url, reqBodyUser)
 			if err != nil {
-				log.Fatalf("TestRequest for interview creation failed: %v", err)
+				t.Fatalf("TestRequest failed: %v", err)
 			}
 
 			respUnmarshalled := &handlers.ReturnVals{}
@@ -257,6 +254,14 @@ func Test_CreateUsersHandler_Integration(t *testing.T) {
 
 			expected := tc.respBody
 			got := *respUnmarshalled
+
+			// Assert JWT is non-empty
+			if got.JWToken == "" {
+				t.Fatalf("[%s] expected JWT, got empty string", tc.name)
+			}
+
+			// Ignore JWToken when diffing
+			got.JWToken = ""
 
 			if diff := cmp.Diff(expected, got, cmpopts.EquateApproxTime(time.Second)); diff != "" {
 				t.Errorf("Mismatch (-expected +got):\n%s", diff)
@@ -283,7 +288,7 @@ func Test_CreateUsersHandler_Integration(t *testing.T) {
 func Test_GetUsersHandler_Integration(t *testing.T) {
 	cleanDBOrFail(t)
 
-	jwtoken, userID := testutil.CreateTestUserAndJWT()
+	jwtoken, userID := testutil.CreateTestUserAndJWT(logger)
 
 	tests := []TestCase{
 		{
@@ -328,14 +333,10 @@ func Test_GetUsersHandler_Integration(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			var buf strings.Builder
-			log.SetOutput(&buf)
-			defer showLogsIfFail(t, tc.name, buf)
-
 			// Act
 			resp, respCode, err := testRequests(t, tc.headerKey, tc.headerValue, tc.method, tc.url, strings.NewReader(tc.reqBody))
 			if err != nil {
-				log.Fatalf("TestRequest for interview creation failed: %v", err)
+				t.Fatalf("TestRequest failed: %v", err)
 			}
 
 			respUnmarshalled := &handlers.ReturnVals{}
@@ -377,7 +378,7 @@ func Test_GetUsersHandler_Integration(t *testing.T) {
 func Test_LoginHandler_Integration(t *testing.T) {
 	cleanDBOrFail(t)
 
-	_, _ = testutil.CreateTestUserAndJWT()
+	_, _ = testutil.CreateTestUserAndJWT(logger)
 
 	tests := []TestCase{
 		{
@@ -442,14 +443,10 @@ func Test_LoginHandler_Integration(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			var buf strings.Builder
-			log.SetOutput(&buf)
-			defer showLogsIfFail(t, tc.name, buf)
-
 			// Act
 			resp, respCode, err := testRequests(t, tc.headerKey, tc.headerValue, tc.method, tc.url, strings.NewReader(tc.reqBody))
 			if err != nil {
-				log.Fatalf("TestRequest for interview creation failed: %v", err)
+				t.Fatalf("TestRequest failed: %v", err)
 			}
 
 			respUnmarshalled := &handlers.ReturnVals{}
@@ -502,7 +499,7 @@ func Test_LoginHandler_Integration(t *testing.T) {
 func Test_RefreshTokensHandler_Integration(t *testing.T) {
 	cleanDBOrFail(t)
 
-	_, userID := testutil.CreateTestUserAndJWT()
+	_, userID := testutil.CreateTestUserAndJWT(logger)
 	refreshToken, err := token.GetStoredRefreshToken(Handler.TokenRepo, userID)
 	if err != nil {
 		t.Fatalf("TC GetStoredRefreshToken failed: %v", err)
@@ -577,14 +574,10 @@ func Test_RefreshTokensHandler_Integration(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			var buf strings.Builder
-			log.SetOutput(&buf)
-			defer showLogsIfFail(t, tc.name, buf)
-
 			// Act
 			resp, respCode, err := testRequests(t, tc.headerKey, tc.headerValue, tc.method, tc.url, strings.NewReader(tc.reqBody))
 			if err != nil {
-				log.Fatalf("TestRequest for interview creation failed: %v", err)
+				t.Fatalf("TestRequest failed: %v", err)
 			}
 
 			respUnmarshalled := &handlers.ReturnVals{}
@@ -637,8 +630,8 @@ func Test_RefreshTokensHandler_Integration(t *testing.T) {
 func Test_InterviewsHandler_Integration(t *testing.T) {
 	cleanDBOrFail(t)
 
-	jwtoken, userID := testutil.CreateTestUserAndJWT()
-	expiredJWT := testutil.CreateTestExpiredJWT(userID, -1)
+	jwtoken, userID := testutil.CreateTestUserAndJWT(logger)
+	expiredJWT := testutil.CreateTestExpiredJWT(userID, -1, logger)
 
 	tests := []TestCase{
 		{
@@ -726,10 +719,6 @@ func Test_InterviewsHandler_Integration(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			var buf strings.Builder
-			log.SetOutput(&buf)
-			defer showLogsIfFail(t, tc.name, buf)
-
 			if tc.setup != nil {
 				tc.setup()
 			}
@@ -737,7 +726,7 @@ func Test_InterviewsHandler_Integration(t *testing.T) {
 			// Act
 			resp, respCode, err := testRequests(t, tc.headerKey, tc.headerValue, tc.method, tc.url, strings.NewReader(tc.reqBody))
 			if err != nil {
-				log.Fatalf("TestRequest for interview creation failed: %v", err)
+				t.Fatalf("TestRequest failed: %v", err)
 			}
 
 			respUnmarshalled := &handlers.ReturnVals{}
@@ -779,9 +768,9 @@ func Test_InterviewsHandler_Integration(t *testing.T) {
 func Test_CreateConversationsHandler_Integration(t *testing.T) {
 	cleanDBOrFail(t)
 
-	jwtoken, _ := testutil.CreateTestUserAndJWT()
+	jwtoken, _ := testutil.CreateTestUserAndJWT(logger)
 	mockAI.Scenario = mocks.ScenarioInterview
-	interviewID := testutil.CreateTestInterview(jwtoken)
+	interviewID := testutil.CreateTestInterview(jwtoken, logger)
 	conversationsURL := testutil.TestServerURL + fmt.Sprintf("/api/conversations/create/%d", interviewID)
 
 	tests := []TestCase{
@@ -835,10 +824,6 @@ func Test_CreateConversationsHandler_Integration(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			var buf strings.Builder
-			log.SetOutput(&buf)
-			defer showLogsIfFail(t, tc.name, buf)
-
 			if tc.setup != nil {
 				tc.setup()
 			}
@@ -846,7 +831,7 @@ func Test_CreateConversationsHandler_Integration(t *testing.T) {
 			// Act
 			resp, respCode, err := testRequests(t, tc.headerKey, tc.headerValue, tc.method, tc.url, strings.NewReader(tc.reqBody))
 			if err != nil {
-				log.Fatalf("TestRequest for interview creation failed: %v", err)
+				t.Fatalf("TestRequest failed: %v", err)
 			}
 
 			respUnmarshalled := &handlers.ReturnVals{}
@@ -893,13 +878,13 @@ func Test_CreateConversationsHandler_Integration(t *testing.T) {
 
 func Test_AppendConversationsHandler_Integration(t *testing.T) {
 	cleanDBOrFail(t)
-	jwtoken, _ := testutil.CreateTestUserAndJWT()
+	jwtoken, _ := testutil.CreateTestUserAndJWT(logger)
 	mockAI.Scenario = mocks.ScenarioInterview
 
-	interviewID := testutil.CreateTestInterview(jwtoken)
+	interviewID := testutil.CreateTestInterview(jwtoken, logger)
 	mockAI.Scenario = mocks.ScenarioCreated
 
-	conversationID := testutil.CreateTestConversation(jwtoken, interviewID)
+	conversationID := testutil.CreateTestConversation(jwtoken, interviewID, logger)
 	urlTest := testutil.TestServerURL + fmt.Sprintf("/api/conversations/append/%d", interviewID)
 
 	tests := []TestCase{
@@ -973,10 +958,6 @@ func Test_AppendConversationsHandler_Integration(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			var buf strings.Builder
-			log.SetOutput(&buf)
-			defer showLogsIfFail(t, tc.name, buf)
-
 			if tc.name == "AppendConversation_IsFinished" {
 				reqBodyPre := fmt.Sprintf(`{
 					"conversation_id" : %d,
@@ -1029,13 +1010,6 @@ func Test_AppendConversationsHandler_Integration(t *testing.T) {
 				}
 			}
 		})
-	}
-}
-
-func showLogsIfFail(t *testing.T, name string, buf strings.Builder) {
-	log.SetOutput(os.Stderr)
-	if t.Failed() {
-		fmt.Printf("---- logs for test: %s ----\n%s\n", name, buf.String())
 	}
 }
 

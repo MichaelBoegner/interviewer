@@ -2,6 +2,7 @@ package chatgpt
 
 import (
 	"fmt"
+	"log/slog"
 	"os"
 	"strings"
 )
@@ -24,6 +25,7 @@ type ChatGPTResponse struct {
 
 type OpenAIClient struct {
 	APIKey string
+	Logger *slog.Logger
 }
 
 type OpenAIError struct {
@@ -43,9 +45,10 @@ func (e *OpenAIError) Error() string {
 	return fmt.Sprintf("OpenAI error %d: %s", e.StatusCode, e.Message)
 }
 
-func NewOpenAI() *OpenAIClient {
+func NewOpenAI(logger *slog.Logger) *OpenAIClient {
 	return &OpenAIClient{
 		APIKey: os.Getenv("OPENAI_API_KEY"),
+		Logger: logger,
 	}
 }
 

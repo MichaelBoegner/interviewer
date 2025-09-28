@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"strings"
 )
@@ -33,7 +32,7 @@ func (c *OpenAIClient) GetChatGPTResponse(prompt string) (*ChatGPTResponse, erro
 
 	req, err := http.NewRequestWithContext(ctx, "POST", "https://api.openai.com/v1/chat/completions", bytes.NewBuffer(requestBody))
 	if err != nil {
-		log.Printf("NewRequestWithContext failed: %v", err)
+		c.Logger.Error("NewRequestWithContext failed", "error", err)
 		return nil, err
 	}
 
@@ -64,7 +63,7 @@ func (c *OpenAIClient) GetChatGPTResponse(prompt string) (*ChatGPTResponse, erro
 
 	var result map[string]interface{}
 	if err := json.Unmarshal(body, &result); err != nil {
-		log.Printf("Unmarshal result err: %v", err)
+		c.Logger.Error("Unmarshal result err", "error", err)
 		return nil, err
 	}
 
@@ -78,7 +77,7 @@ func (c *OpenAIClient) GetChatGPTResponse(prompt string) (*ChatGPTResponse, erro
 
 	var chatGPTResponse ChatGPTResponse
 	if err := json.Unmarshal([]byte(chatGPTResponseRaw), &chatGPTResponse); err != nil {
-		log.Printf("Unmarshal chatGPTResponse err: %v", err)
+		c.Logger.Error("Unmarshal chatGPTResponse err", "error", err)
 		return nil, err
 	}
 
@@ -100,7 +99,7 @@ func (c *OpenAIClient) GetChatGPTResponseConversation(conversationHistory []map[
 
 	req, err := http.NewRequestWithContext(ctx, "POST", "https://api.openai.com/v1/chat/completions", bytes.NewBuffer(requestBody))
 	if err != nil {
-		log.Printf("NewRequestWithContext failed: %v", err)
+		c.Logger.Error("NewRequestWithContext failed", "error", err)
 		return nil, err
 	}
 
@@ -131,7 +130,7 @@ func (c *OpenAIClient) GetChatGPTResponseConversation(conversationHistory []map[
 
 	var result map[string]interface{}
 	if err := json.Unmarshal(body, &result); err != nil {
-		log.Printf("Unmarshal result err: %v", err)
+		c.Logger.Error("Unmarshal result err", "error", err)
 		return nil, err
 	}
 
@@ -145,7 +144,7 @@ func (c *OpenAIClient) GetChatGPTResponseConversation(conversationHistory []map[
 
 	var chatGPTResponse ChatGPTResponse
 	if err := json.Unmarshal([]byte(chatGPTResponseRaw), &chatGPTResponse); err != nil {
-		log.Printf("Unmarshal chatGPTResponse err: %v", err)
+		c.Logger.Error("Unmarshal chatGPTResponse err", "error", err)
 		return nil, err
 	}
 
@@ -173,7 +172,7 @@ func (c *OpenAIClient) GetChatGPT35Response(prompt string) (*ChatGPTResponse, er
 
 	req, err := http.NewRequestWithContext(ctx, "POST", "https://api.openai.com/v1/chat/completions", bytes.NewBuffer(requestBody))
 	if err != nil {
-		log.Printf("NewRequestWithContext failed: %v", err)
+		c.Logger.Error("NewRequestWithContext failed", "error", err)
 		return nil, err
 	}
 
@@ -204,7 +203,7 @@ func (c *OpenAIClient) GetChatGPT35Response(prompt string) (*ChatGPTResponse, er
 
 	var result map[string]interface{}
 	if err := json.Unmarshal(body, &result); err != nil {
-		log.Printf("Unmarshal result err: %v", err)
+		c.Logger.Error("Unmarshal result err", "error", err)
 		return nil, err
 	}
 
@@ -218,7 +217,7 @@ func (c *OpenAIClient) GetChatGPT35Response(prompt string) (*ChatGPTResponse, er
 
 	var chatGPTResponse ChatGPTResponse
 	if err := json.Unmarshal([]byte(chatGPTResponseRaw), &chatGPTResponse); err != nil {
-		log.Printf("Unmarshal chatGPTResponse err: %v", err)
+		c.Logger.Error("Unmarshal chatGPTResponse err", "error", err)
 		return nil, err
 	}
 
