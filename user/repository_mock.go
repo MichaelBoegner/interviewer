@@ -33,7 +33,7 @@ func NewMockRepo() *MockRepo {
 
 func (m *MockRepo) CreateUser(user *User) (int, error) {
 	if m.failRepo {
-		return 0, errors.New("Mocked DB failure")
+		return 0, errors.New("mocked DB failure")
 	}
 
 	return 1, nil
@@ -41,7 +41,7 @@ func (m *MockRepo) CreateUser(user *User) (int, error) {
 
 func (m *MockRepo) MarkUserDeleted(userID int) error {
 	if m.failRepo {
-		return errors.New("Mocked DB failure")
+		return errors.New("mocked DB failure")
 	}
 
 	return nil
@@ -49,7 +49,7 @@ func (m *MockRepo) MarkUserDeleted(userID int) error {
 
 func (m *MockRepo) GetUser(userID int) (*User, error) {
 	if m.failRepo {
-		return nil, errors.New("Mocked DB failure")
+		return nil, errors.New("mocked DB failure")
 	}
 
 	mockUser := &User{
@@ -65,7 +65,7 @@ func (m *MockRepo) GetUser(userID int) (*User, error) {
 
 func (m *MockRepo) GetPasswordandID(username string) (int, string, error) {
 	if m.failRepo {
-		return 0, "", errors.New("Mocked DB failure")
+		return 0, "", errors.New("mocked DB failure")
 	}
 
 	return 1, string(PasswordHashed), nil
@@ -73,10 +73,10 @@ func (m *MockRepo) GetPasswordandID(username string) (int, string, error) {
 
 func (m *MockRepo) GetUserByEmail(email string) (*User, error) {
 	if m.FailGetUserByEmail {
-		return nil, errors.New("Mocked GetUserByEmail failure")
+		return nil, errors.New("mocked GetUserByEmail failure")
 	}
 	if m.failRepo {
-		return nil, errors.New("Mocked DB failure")
+		return nil, errors.New("mocked DB failure")
 	}
 
 	mockUser := &User{
@@ -91,7 +91,7 @@ func (m *MockRepo) GetUserByEmail(email string) (*User, error) {
 
 func (m *MockRepo) GetUserByCustomerID(customerID string) (*User, error) {
 	if m.failRepo {
-		return nil, errors.New("Mocked DB failure")
+		return nil, errors.New("mocked DB failure")
 	}
 
 	mockUser := &User{
@@ -106,7 +106,7 @@ func (m *MockRepo) GetUserByCustomerID(customerID string) (*User, error) {
 
 func (m *MockRepo) UpdatePasswordByEmail(email string, password []byte) error {
 	if m.failRepo {
-		return errors.New("Mocked DB failure")
+		return errors.New("mocked DB failure")
 	}
 
 	return nil
@@ -114,10 +114,10 @@ func (m *MockRepo) UpdatePasswordByEmail(email string, password []byte) error {
 
 func (m *MockRepo) AddCredits(userID, credits int, creditType string) error {
 	if m.FailAddCredits {
-		return errors.New("Mocked AddCredits failure")
+		return errors.New("mocked AddCredits failure")
 	}
 	if m.failRepo {
-		return errors.New("Mocked DB failure")
+		return errors.New("mocked DB failure")
 	}
 
 	return nil
@@ -125,7 +125,7 @@ func (m *MockRepo) AddCredits(userID, credits int, creditType string) error {
 
 func (m *MockRepo) UpdateSubscriptionData(userID int, status, tier, subscriptionID string, startsAt, endsAt time.Time) error {
 	if m.failRepo {
-		return errors.New("Mocked DB failure")
+		return errors.New("mocked DB failure")
 	}
 
 	return nil
@@ -133,7 +133,7 @@ func (m *MockRepo) UpdateSubscriptionData(userID int, status, tier, subscription
 
 func (m *MockRepo) UpdateSubscriptionStatusData(userID int, status string) error {
 	if m.failRepo {
-		return errors.New("Mocked DB failure")
+		return errors.New("mocked DB failure")
 	}
 
 	return nil
@@ -141,7 +141,7 @@ func (m *MockRepo) UpdateSubscriptionStatusData(userID int, status string) error
 
 func (m *MockRepo) HasActiveOrCancelledSubscription(email string) (bool, error) {
 	if m.failRepo {
-		return false, errors.New("Mocked DB failure")
+		return false, errors.New("mocked DB failure")
 	}
 
 	return true, nil
