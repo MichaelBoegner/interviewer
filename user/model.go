@@ -53,5 +53,5 @@ type UserRepo interface {
 var (
 	ErrDuplicateEmail = errors.New("duplicate email")
 	ErrDuplicateUser  = errors.New("duplicate user")
-	ErrAccountDeleted = errors.New("Account is no longer active")
+	ErrAccountDeleted = errors.New("account is no longer active")
 )

@@ -173,7 +173,7 @@ func verifyResetToken(tokenString string) (string, error) {
 	if claims, ok := token.Claims.(*jwt.RegisteredClaims); ok && token.Valid {
 		return claims.Subject, nil
 	} else {
-		return "", errors.New("Invalid token")
+		return "", errors.New("invalid token")
 	}
 }
 
