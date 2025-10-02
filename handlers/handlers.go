@@ -1053,7 +1053,6 @@ func (h *Handler) BillingWebhookHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	if exists {
-
 		w.WriteHeader(http.StatusOK)
 		return
 	}
@@ -1090,7 +1089,6 @@ func (h *Handler) BillingWebhookHandler(w http.ResponseWriter, r *http.Request) 
 			return
 		}
 		if exists {
-
 			return
 		}
 
@@ -1140,7 +1138,6 @@ func (h *Handler) BillingWebhookHandler(w http.ResponseWriter, r *http.Request) 
 		}
 
 		if SubRenewAttrs.BillingReason == "initial" {
-
 			return
 		}
 
@@ -1192,7 +1189,6 @@ func (h *Handler) BillingWebhookHandler(w http.ResponseWriter, r *http.Request) 
 		}
 
 	default:
-
 		RespondWithError(w, http.StatusNotImplemented, "Unhandled event type")
 		return
 	}
