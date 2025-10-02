@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"database/sql"
-	"log/slog"
 
 	"github.com/michaelboegner/interviewer/billing"
 	"github.com/michaelboegner/interviewer/chatgpt"
@@ -62,7 +61,6 @@ type Handler struct {
 	Mailer           mailer.MailerClient
 	OpenAI           chatgpt.AIClient
 	DB               *sql.DB
-	Logger           *slog.Logger
 }
 
 func NewHandler(
@@ -74,8 +72,7 @@ func NewHandler(
 	billing *billing.Billing,
 	mailer mailer.MailerClient,
 	openAI chatgpt.AIClient,
-	db *sql.DB,
-	logger *slog.Logger) *Handler {
+	db *sql.DB) *Handler {
 	return &Handler{
 		InterviewRepo:    interviewRepo,
 		UserRepo:         userRepo,
@@ -86,6 +83,5 @@ func NewHandler(
 		Mailer:           mailer,
 		OpenAI:           openAI,
 		DB:               db,
-		Logger:           logger,
 	}
 }
