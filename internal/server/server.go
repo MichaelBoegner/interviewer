@@ -43,7 +43,7 @@ func NewServer(logger *slog.Logger) (*Server, error) {
 		return nil, err
 	}
 
-	handler := handlers.NewHandler(interviewRepo, userRepo, tokenRepo, conversationRepo, billingRepo, billing, mailer, openAI, db, logger)
+	handler := handlers.NewHandler(interviewRepo, userRepo, tokenRepo, conversationRepo, billingRepo, billing, mailer, openAI, db)
 
 	mux.Handle("/api/users", http.HandlerFunc(handler.CreateUsersHandler))
 	mux.Handle("/api/auth/login", http.HandlerFunc(handler.LoginHandler))

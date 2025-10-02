@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"log/slog"
 	"net/http"
 	"strconv"
 	"strings"
@@ -32,19 +31,17 @@ func ValidateInterviewStatusTransition(currentStatus, nextStatus string) error {
 	return fmt.Errorf("invalid state transition: %s → %s", currentStatus, nextStatus)
 }
 
-func GetPathID(r *http.Request, prefix string, logger *slog.Logger) (int, error) {
+func GetPathID(r *http.Request, prefix string) (int, error) {
 	path := strings.TrimPrefix(r.URL.Path, prefix)
 	path = strings.Trim(path, "/")
 
 	if path == "" {
-		logger.Error("getPathID returned empty string")
 		err := errors.New("missing or invalid url param")
 		return 0, err
 	}
 
 	id, err := strconv.Atoi(path)
 	if err != nil {
-		logger.Error("getPathID failed", "error", err)
 		return 0, err
 	}
 
