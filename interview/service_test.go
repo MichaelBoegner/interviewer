@@ -83,13 +83,10 @@ func TestStartInterview(t *testing.T) {
 			repo := interview.NewMockRepo()
 			userRepo := user.NewMockRepo()
 			billingRepo := billing.NewMockRepo()
+			interviewService := interview.NewInterview(repo, userRepo, billingRepo, tc.aiClient)
 			repo.FailRepo = tc.failRepo
 
-			interviewStarted, err := interview.StartInterview(
-				repo,
-				userRepo,
-				billingRepo,
-				tc.aiClient,
+			interviewStarted, err := interviewService.StartInterview(
 				tc.user,
 				tc.length,
 				tc.numQuestions,
@@ -173,6 +170,9 @@ func TestGetInterview(t *testing.T) {
 			defer showLogsIfFail(t, tc.name, buf)
 
 			repo := interview.NewMockRepo()
+			userRepo := user.NewMockRepo()
+			billingRepo := billing.NewMockRepo()
+			interviewService := interview.NewInterview(repo, userRepo, billingRepo, &mocks.MockOpenAIClient{})
 			repo.FailRepo = tc.failRepo
 
 			if tc.setup != nil {
@@ -182,7 +182,7 @@ func TestGetInterview(t *testing.T) {
 				}
 			}
 
-			got, err := interview.GetInterview(repo, tc.interviewID)
+			got, err := interviewService.GetInterview(tc.interviewID)
 
 			if tc.expectError && err == nil {
 				t.Fatalf("expected error but got nil")

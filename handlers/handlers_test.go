@@ -749,7 +749,7 @@ func Test_InterviewsHandler_Integration(t *testing.T) {
 
 			// Assert Database
 			if tc.DBCheck {
-				interviewReturned, err := interview.GetInterview(Handler.InterviewRepo, respUnmarshalled.InterviewID)
+				interviewReturned, err := Handler.InterviewService.GetInterview(respUnmarshalled.InterviewID)
 				if err != nil {
 					t.Fatalf("Assert Database: GetInterview failed: %v", err)
 				}
