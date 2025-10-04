@@ -536,11 +536,7 @@ func (h *Handler) InterviewsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	interviewStarted, err := interview.StartInterview(
-		h.InterviewRepo,
-		h.UserRepo,
-		h.BillingRepo,
-		h.OpenAI,
+	interviewStarted, err := h.InterviewService.StartInterview(
 		userReturned,
 		30,
 		3,
@@ -569,7 +565,7 @@ func (h *Handler) InterviewsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = interview.LinkConversation(h.InterviewRepo, interviewStarted.Id, conversationID)
+	err = h.InterviewService.LinkConversation(interviewStarted.Id, conversationID)
 	if err != nil {
 		h.Logger.Error("interview.LinkConversation failed", "error", err)
 		RespondWithError(w, http.StatusInternalServerError, "Internal server error")
@@ -604,7 +600,7 @@ func (h *Handler) GetInterviewHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	interviewReturned, err := interview.GetInterview(h.InterviewRepo, interviewID)
+	interviewReturned, err := h.InterviewService.GetInterview(interviewID)
 	if err != nil {
 		h.Logger.Error("GetInterview failed", "error", err)
 		RespondWithError(w, http.StatusNotFound, "Interview not found")
@@ -649,7 +645,7 @@ func (h *Handler) UpdateInterviewStatusHandler(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	interviewReturned, err := interview.GetInterview(h.InterviewRepo, interviewID)
+	interviewReturned, err := h.InterviewService.GetInterview(interviewID)
 	if err != nil {
 		h.Logger.Error("GetInterview error", "error", err)
 		RespondWithError(w, http.StatusBadRequest, "Invalid ID")
@@ -663,7 +659,7 @@ func (h *Handler) UpdateInterviewStatusHandler(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	err = h.InterviewRepo.UpdateStatus(interviewID, userID, payload.Status)
+	err = h.InterviewService.InterviewRepo.UpdateStatus(interviewID, userID, payload.Status)
 	if err != nil {
 		h.Logger.Error("UpdateInterviewStatus failed", "error", err)
 		RespondWithError(w, http.StatusInternalServerError, "Could not update status")
@@ -701,7 +697,7 @@ func (h *Handler) CreateConversationsHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	interviewReturned, err := interview.GetInterview(h.InterviewRepo, interviewID)
+	interviewReturned, err := h.InterviewService.GetInterview(interviewID)
 	if err != nil {
 		h.Logger.Error("GetInterview error", "error", err)
 		RespondWithError(w, http.StatusBadRequest, "Invalid ID")
@@ -785,7 +781,7 @@ func (h *Handler) AppendConversationsHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	interviewReturned, err := interview.GetInterview(h.InterviewRepo, interviewID)
+	interviewReturned, err := h.InterviewService.GetInterview(interviewID)
 	if err != nil {
 		h.Logger.Error("GetInterview error", "error", err)
 		RespondWithError(w, http.StatusBadRequest, "Invalid ID")
@@ -854,7 +850,7 @@ func (h *Handler) GetConversationHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	interviewReturned, err := interview.GetInterview(h.InterviewRepo, interviewID)
+	interviewReturned, err := h.InterviewService.GetInterview(interviewID)
 	if err != nil {
 		h.Logger.Error("GetInterview error", "error", err)
 		RespondWithError(w, http.StatusBadRequest, "Invalid ID")

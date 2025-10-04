@@ -54,7 +54,7 @@ type ReturnVals struct {
 
 type Handler struct {
 	UserRepo         user.UserRepo
-	InterviewRepo    interview.InterviewRepo
+	InterviewService *interview.InterviewService
 	ConversationRepo conversation.ConversationRepo
 	TokenRepo        token.TokenRepo
 	BillingRepo      billing.BillingRepo
@@ -66,7 +66,7 @@ type Handler struct {
 }
 
 func NewHandler(
-	interviewRepo interview.InterviewRepo,
+	interviewService *interview.InterviewService,
 	userRepo user.UserRepo,
 	tokenRepo token.TokenRepo,
 	conversationRepo conversation.ConversationRepo,
@@ -77,7 +77,7 @@ func NewHandler(
 	db *sql.DB,
 	logger *slog.Logger) *Handler {
 	return &Handler{
-		InterviewRepo:    interviewRepo,
+		InterviewService: interviewService,
 		UserRepo:         userRepo,
 		TokenRepo:        tokenRepo,
 		ConversationRepo: conversationRepo,

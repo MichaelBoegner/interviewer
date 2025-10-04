@@ -10,18 +10,14 @@ import (
 	"github.com/michaelboegner/interviewer/user"
 )
 
-func StartInterview(
-	interviewRepo InterviewRepo,
-	userRepo user.UserRepo,
-	billingRepo billing.BillingRepo,
-	ai chatgpt.AIClient,
+func (i *InterviewService) StartInterview(
 	user *user.User,
 	length,
 	numberQuestions int,
 	difficulty string,
 	jd string) (*Interview, error) {
 
-	err := deductAndLogCredit(user, userRepo, billingRepo)
+	err := deductAndLogCredit(user, i.UserRepo, i.BillingRepo)
 	if err != nil {
 		log.Printf("checkCreditsLogTransaction failed: %v", err)
 		return nil, err
@@ -31,12 +27,12 @@ func StartInterview(
 	jdSummary := ""
 
 	if jd != "" {
-		jdInput, err := ai.ExtractJDInput(jd)
+		jdInput, err := i.AI.ExtractJDInput(jd)
 		if err != nil {
 			fmt.Printf("ai.ExtractJDInput() failed: %v", err)
 			return nil, err
 		}
-		jdSummary, err = ai.ExtractJDSummary(jdInput)
+		jdSummary, err = i.AI.ExtractJDSummary(jdInput)
 		if err != nil {
 			fmt.Printf("ai.ExtractJDSummary() failed: %v", err)
 			return nil, err
@@ -45,7 +41,7 @@ func StartInterview(
 
 	prompt := chatgpt.BuildPrompt([]string{}, "Introduction", 1, jdSummary)
 
-	chatGPTResponse, err := ai.GetChatGPTResponse(prompt)
+	chatGPTResponse, err := i.AI.GetChatGPTResponse(prompt)
 	if err != nil {
 		log.Printf("getChatGPTResponse err: %v\n", err)
 		return nil, err
@@ -67,7 +63,7 @@ func StartInterview(
 		UpdatedAt:       now,
 	}
 
-	id, err := interviewRepo.CreateInterview(interview)
+	id, err := i.InterviewRepo.CreateInterview(interview)
 	if err != nil {
 		log.Printf("CreateInterview err: %v", err)
 		return nil, err
@@ -77,8 +73,8 @@ func StartInterview(
 	return interview, nil
 }
 
-func LinkConversation(interviewRepo InterviewRepo, interviewID, conversationID int) error {
-	err := interviewRepo.LinkConversation(interviewID, conversationID)
+func (i *InterviewService) LinkConversation(interviewID, conversationID int) error {
+	err := i.InterviewRepo.LinkConversation(interviewID, conversationID)
 	if err != nil {
 		log.Printf("interviewRepo.LinkConversation failed: %v", err)
 		return err
@@ -87,8 +83,8 @@ func LinkConversation(interviewRepo InterviewRepo, interviewID, conversationID i
 	return nil
 }
 
-func GetInterview(interviewRepo InterviewRepo, interviewID int) (*Interview, error) {
-	interview, err := interviewRepo.GetInterview(interviewID)
+func (i *InterviewService) GetInterview(interviewID int) (*Interview, error) {
+	interview, err := i.InterviewRepo.GetInterview(interviewID)
 	if err != nil {
 		return nil, err
 	}

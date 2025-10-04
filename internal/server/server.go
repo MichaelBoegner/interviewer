@@ -36,6 +36,7 @@ func NewServer(logger *slog.Logger) (*Server, error) {
 	conversationRepo := conversation.NewRepository(db)
 	billingRepo := billing.NewRepository(db)
 	openAI := chatgpt.NewOpenAI(logger)
+	interviewService := interview.NewInterview(interviewRepo, userRepo, billingRepo, openAI)
 	mailer := mailer.NewMailer(logger)
 	billing, err := billing.NewBilling(logger)
 	if err != nil {
@@ -43,7 +44,7 @@ func NewServer(logger *slog.Logger) (*Server, error) {
 		return nil, err
 	}
 
-	handler := handlers.NewHandler(interviewRepo, userRepo, tokenRepo, conversationRepo, billingRepo, billing, mailer, openAI, db, logger)
+	handler := handlers.NewHandler(interviewService, userRepo, tokenRepo, conversationRepo, billingRepo, billing, mailer, openAI, db, logger)
 
 	mux.Handle("/api/users", http.HandlerFunc(handler.CreateUsersHandler))
 	mux.Handle("/api/auth/login", http.HandlerFunc(handler.LoginHandler))
