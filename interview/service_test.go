@@ -1,10 +1,7 @@
 package interview_test
 
 import (
-	"fmt"
-	"log"
 	"log/slog"
-	"os"
 	"strings"
 	"testing"
 	"time"
@@ -198,12 +195,5 @@ func TestGetInterview(t *testing.T) {
 				}
 			}
 		})
-	}
-}
-
-func showLogsIfFail(t *testing.T, name string, buf strings.Builder) {
-	log.SetOutput(os.Stderr)
-	if t.Failed() {
-		fmt.Printf("---- logs for test: %s ----\n%s\n", name, buf.String())
 	}
 }
