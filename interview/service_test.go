@@ -3,6 +3,7 @@ package interview_test
 import (
 	"fmt"
 	"log"
+	"log/slog"
 	"os"
 	"strings"
 	"testing"
@@ -77,13 +78,11 @@ func TestStartInterview(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			var buf strings.Builder
-			log.SetOutput(&buf)
-			defer showLogsIfFail(t, tc.name, buf)
-
+			logger := slog.New(slog.NewTextHandler(&buf, &slog.HandlerOptions{Level: slog.LevelDebug, AddSource: true}))
 			repo := interview.NewMockRepo()
 			userRepo := user.NewMockRepo()
 			billingRepo := billing.NewMockRepo()
-			interviewService := interview.NewInterview(repo, userRepo, billingRepo, tc.aiClient)
+			interviewService := interview.NewInterview(repo, userRepo, billingRepo, tc.aiClient, logger)
 			repo.FailRepo = tc.failRepo
 
 			interviewStarted, err := interviewService.StartInterview(
@@ -166,13 +165,11 @@ func TestGetInterview(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			var buf strings.Builder
-			log.SetOutput(&buf)
-			defer showLogsIfFail(t, tc.name, buf)
-
+			logger := slog.New(slog.NewTextHandler(&buf, &slog.HandlerOptions{Level: slog.LevelDebug, AddSource: true}))
 			repo := interview.NewMockRepo()
 			userRepo := user.NewMockRepo()
 			billingRepo := billing.NewMockRepo()
-			interviewService := interview.NewInterview(repo, userRepo, billingRepo, &mocks.MockOpenAIClient{})
+			interviewService := interview.NewInterview(repo, userRepo, billingRepo, &mocks.MockOpenAIClient{}, logger)
 			repo.FailRepo = tc.failRepo
 
 			if tc.setup != nil {

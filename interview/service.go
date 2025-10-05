@@ -2,7 +2,7 @@ package interview
 
 import (
 	"fmt"
-	"log"
+	"log/slog"
 	"time"
 
 	"github.com/michaelboegner/interviewer/billing"
@@ -17,9 +17,9 @@ func (i *InterviewService) StartInterview(
 	difficulty string,
 	jd string) (*Interview, error) {
 
-	err := deductAndLogCredit(user, i.UserRepo, i.BillingRepo)
+	err := deductAndLogCredit(user, i.UserRepo, i.BillingRepo, i.Logger)
 	if err != nil {
-		log.Printf("checkCreditsLogTransaction failed: %v", err)
+		i.Logger.Error("checkCreditsLogTransaction failed", "error", err)
 		return nil, err
 	}
 
@@ -29,12 +29,12 @@ func (i *InterviewService) StartInterview(
 	if jd != "" {
 		jdInput, err := i.AI.ExtractJDInput(jd)
 		if err != nil {
-			fmt.Printf("ai.ExtractJDInput() failed: %v", err)
+			i.Logger.Error("ai.ExtractJDInput() failed", "error", err)
 			return nil, err
 		}
 		jdSummary, err = i.AI.ExtractJDSummary(jdInput)
 		if err != nil {
-			fmt.Printf("ai.ExtractJDSummary() failed: %v", err)
+			i.Logger.Error("ai.ExtractJDSummary() failed", "error", err)
 			return nil, err
 		}
 	}
@@ -43,7 +43,7 @@ func (i *InterviewService) StartInterview(
 
 	chatGPTResponse, err := i.AI.GetChatGPTResponse(prompt)
 	if err != nil {
-		log.Printf("getChatGPTResponse err: %v\n", err)
+		i.Logger.Error("getChatGPTResponse err", "error", err)
 		return nil, err
 	}
 
@@ -65,7 +65,7 @@ func (i *InterviewService) StartInterview(
 
 	id, err := i.InterviewRepo.CreateInterview(interview)
 	if err != nil {
-		log.Printf("CreateInterview err: %v", err)
+		i.Logger.Error("CreateInterview err", "error", err)
 		return nil, err
 	}
 	interview.Id = id
@@ -76,7 +76,7 @@ func (i *InterviewService) StartInterview(
 func (i *InterviewService) LinkConversation(interviewID, conversationID int) error {
 	err := i.InterviewRepo.LinkConversation(interviewID, conversationID)
 	if err != nil {
-		log.Printf("interviewRepo.LinkConversation failed: %v", err)
+		i.Logger.Error("interviewRepo.LinkConversation failed", "error", err)
 		return err
 	}
 
@@ -86,13 +86,14 @@ func (i *InterviewService) LinkConversation(interviewID, conversationID int) err
 func (i *InterviewService) GetInterview(interviewID int) (*Interview, error) {
 	interview, err := i.InterviewRepo.GetInterview(interviewID)
 	if err != nil {
+		i.Logger.Error("interviewRepo.GetInterview failed", "error", err)
 		return nil, err
 	}
 
 	return interview, nil
 }
 
-func canUseCredit(user *user.User) (string, error) {
+func canUseCredit(user *user.User, logger *slog.Logger) (string, error) {
 	now := time.Now()
 
 	switch {
@@ -100,27 +101,31 @@ func canUseCredit(user *user.User) (string, error) {
 		user.SubscriptionEndDate.After(now) &&
 		user.SubscriptionStatus != "expired" &&
 		user.SubscriptionCredits > 0:
+		logger.Info("subscrtipion plan in canUseCredit check")
 		return "subscription", nil
 	case user.IndividualCredits > 0:
+		logger.Info("individual plan in canUseCredit check")
 		return "individual", nil
 	default:
+		logger.Info("no valid credits in canUseCredit check")
 		return "", ErrNoValidCredits
 	}
 }
 
-func deductAndLogCredit(user *user.User, userRepo user.UserRepo, billingRepo billing.BillingRepo) error {
-	creditType, err := canUseCredit(user)
+func deductAndLogCredit(user *user.User, userRepo user.UserRepo, billingRepo billing.BillingRepo, logger *slog.Logger) error {
+	creditType, err := canUseCredit(user, logger)
 	if err != nil {
-		log.Print("canUseCredit failed", err)
+		logger.Error("canUseCredit failed", "error", err)
 		return err
 	}
-	if creditType != "" {
-
+	if creditType == "" {
+		logger.Info("user doesn't have a valid plan or credits")
+		return fmt.Errorf("user doesn't have a valid plan or credits")
 	}
 
 	err = userRepo.AddCredits(user.ID, -1, creditType)
 	if err != nil {
-		log.Printf("AddCredits failed: %v", err)
+		logger.Error("AddCredits failed", "error", err)
 		return err
 	}
 
@@ -132,7 +137,7 @@ func deductAndLogCredit(user *user.User, userRepo user.UserRepo, billingRepo bil
 		Reason:     reason,
 	}
 	if err := billingRepo.LogCreditTransaction(tx); err != nil {
-		log.Printf("billingRepo.LogCreditTransaction failed: %v", err)
+		logger.Error("billingRepo.LogCreditTransaction failed", "error", err)
 		return err
 	}
 

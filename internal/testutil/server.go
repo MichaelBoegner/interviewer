@@ -40,7 +40,7 @@ func InitTestServer(logger *slog.Logger) (*handlers.Handler, error) {
 	openAI := mocks.NewMockOpenAIClient()
 	mailer := mocks.NewMockMailer()
 	billing, err := billing.NewBilling(logger)
-	interviewService := interview.NewInterview(interviewRepo, userRepo, billingRepo, openAI)
+	interviewService := interview.NewInterview(interviewRepo, userRepo, billingRepo, openAI, logger)
 	if err != nil {
 		logger.Error("billing.NewBilling failed", "error", err)
 		return nil, err

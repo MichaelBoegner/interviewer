@@ -2,6 +2,7 @@ package interview
 
 import (
 	"errors"
+	"log/slog"
 	"time"
 
 	"github.com/michaelboegner/interviewer/billing"
@@ -40,16 +41,18 @@ type InterviewService struct {
 	UserRepo      user.UserRepo       `json:"user_repo,omitempty"`
 	BillingRepo   billing.BillingRepo `json:"billing_repo,omitempty"`
 	AI            chatgpt.AIClient    `jaon:"ai,omitempty"`
+	Logger        *slog.Logger
 }
 
 var ErrNoValidCredits = errors.New("no valid credits")
 
-func NewInterview(interviewRepo InterviewRepo, userRepo user.UserRepo, billingRepo billing.BillingRepo, ai chatgpt.AIClient) *InterviewService {
+func NewInterview(interviewRepo InterviewRepo, userRepo user.UserRepo, billingRepo billing.BillingRepo, ai chatgpt.AIClient, logger *slog.Logger) *InterviewService {
 	return &InterviewService{
 		InterviewRepo: interviewRepo,
 		UserRepo:      userRepo,
 		BillingRepo:   billingRepo,
 		AI:            ai,
+		Logger:        logger,
 	}
 }
 

@@ -36,7 +36,7 @@ func NewServer(logger *slog.Logger) (*Server, error) {
 	conversationRepo := conversation.NewRepository(db)
 	billingRepo := billing.NewRepository(db)
 	openAI := chatgpt.NewOpenAI(logger)
-	interviewService := interview.NewInterview(interviewRepo, userRepo, billingRepo, openAI)
+	interviewService := interview.NewInterview(interviewRepo, userRepo, billingRepo, openAI, logger)
 	mailer := mailer.NewMailer(logger)
 	billing, err := billing.NewBilling(logger)
 	if err != nil {
