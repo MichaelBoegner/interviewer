@@ -12,7 +12,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-func VerificationToken(email, username, password string) (string, error) {
+func (u *UserService) VerificationToken(email, username, password string) (string, error) {
 	passwordHashed, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.MinCost)
 	if err != nil {
 		return "", err
@@ -30,7 +30,7 @@ func VerificationToken(email, username, password string) (string, error) {
 		SignedString([]byte(os.Getenv("JWT_SECRET")))
 }
 
-func CreateUser(repo UserRepo, tokenStr string) (*User, error) {
+func (u *UserService) CreateUser(tokenStr string) (*User, error) {
 	claims := &EmailClaims{}
 	tkn, err := jwt.ParseWithClaims(tokenStr, claims, func(token *jwt.Token) (interface{}, error) {
 		return []byte(os.Getenv("JWT_SECRET")), nil
@@ -52,7 +52,7 @@ func CreateUser(repo UserRepo, tokenStr string) (*User, error) {
 		UpdatedAt:         time.Now().UTC(),
 	}
 
-	id, err := repo.CreateUser(user)
+	id, err := u.UserRepo.CreateUser(user)
 	if err != nil {
 		return nil, err
 	}
@@ -60,15 +60,15 @@ func CreateUser(repo UserRepo, tokenStr string) (*User, error) {
 	return user, nil
 }
 
-func LoginUser(repo UserRepo, email, password string) (string, string, int, error) {
-	userID, hashedPassword, err := repo.GetPasswordandID(email)
+func (u *UserService) LoginUser(email, password string) (string, string, int, error) {
+	userID, hashedPassword, err := u.UserRepo.GetPasswordandID(email)
 	if err != nil {
 		return "", "", 0, err
 	}
 
-	user, err := repo.GetUser(userID)
+	user, err := u.UserRepo.GetUser(userID)
 	if err != nil {
-		log.Printf("repo.GetUser failed: %v", err)
+		log.Printf("u.UserRepo.GetUser failed: %v", err)
 		return "", "", 0, err
 	}
 
@@ -90,8 +90,8 @@ func LoginUser(repo UserRepo, email, password string) (string, string, int, erro
 	return jwToken, user.Username, userID, nil
 }
 
-func GetUser(repo UserRepo, userID int) (*User, error) {
-	userReturned, err := repo.GetUser(userID)
+func (u *UserService) GetUser(userID int) (*User, error) {
+	userReturned, err := u.UserRepo.GetUser(userID)
 	if err != nil {
 		log.Printf("GetUser failed: %v", err)
 		return nil, err
@@ -99,28 +99,28 @@ func GetUser(repo UserRepo, userID int) (*User, error) {
 	return userReturned, nil
 }
 
-func MarkUserDeleted(repo UserRepo, userId int) error {
-	err := repo.MarkUserDeleted(userId)
+func (u *UserService) MarkUserDeleted(userId int) error {
+	err := u.UserRepo.MarkUserDeleted(userId)
 	if err != nil {
-		log.Printf("repo.DeleteUser failed: %v", err)
+		log.Printf("u.UserRepo.DeleteUser failed: %v", err)
 		return err
 	}
 
 	return nil
 }
 
-func GetUserByEmail(repo UserRepo, email string) error {
-	_, err := repo.GetUserByEmail(email)
+func (u *UserService) GetUserByEmail(email string) error {
+	_, err := u.UserRepo.GetUserByEmail(email)
 	if err != nil {
-		log.Printf("repo.GetUserByEmail failed: %v", err)
+		log.Printf("u.UserRepo.GetUserByEmail failed: %v", err)
 		return err
 	}
 
 	return nil
 }
 
-func RequestPasswordReset(repo UserRepo, email string) (string, error) {
-	user, err := repo.GetUserByEmail(email)
+func (u *UserService) RequestPasswordReset(email string) (string, error) {
+	user, err := u.UserRepo.GetUserByEmail(email)
 	if err != nil {
 		log.Printf("GetUserByEmail failed: %v", err)
 		return "", err
@@ -135,7 +135,7 @@ func RequestPasswordReset(repo UserRepo, email string) (string, error) {
 	return resetJWT, nil
 }
 
-func ResetPassword(repo UserRepo, newPassword string, resetJWT string) error {
+func (u *UserService) ResetPassword(newPassword string, resetJWT string) error {
 	email, err := verifyResetToken(resetJWT)
 	if err != nil {
 		return err
@@ -147,13 +147,39 @@ func ResetPassword(repo UserRepo, newPassword string, resetJWT string) error {
 		return err
 	}
 
-	err = repo.UpdatePasswordByEmail(email, passwordHashed)
+	err = u.UserRepo.UpdatePasswordByEmail(email, passwordHashed)
 	if err != nil {
 		log.Printf("UpdatePasswordByEmail failed: %v", err)
 		return err
 	}
 
 	return nil
+}
+
+func (u *UserService) GetOrCreateByEmail(email, username string) (*User, error) {
+	user, err := u.UserRepo.GetUserByEmail(email)
+	if err == nil {
+		return user, nil
+	}
+
+	newUser := &User{
+		Email:             email,
+		Username:          username,
+		Password:          []byte("github_login"),
+		AccountStatus:     "active",
+		IndividualCredits: 1,
+		CreatedAt:         time.Now().UTC(),
+		UpdatedAt:         time.Now().UTC(),
+	}
+
+	id, err := u.UserRepo.CreateUser(newUser)
+	if err != nil {
+		log.Printf("CreateUser failed: %v", err)
+		return nil, err
+	}
+
+	newUser.ID = id
+	return newUser, nil
 }
 
 func verifyResetToken(tokenString string) (string, error) {
@@ -175,30 +201,4 @@ func verifyResetToken(tokenString string) (string, error) {
 	} else {
 		return "", errors.New("Invalid token")
 	}
-}
-
-func GetOrCreateByEmail(repo UserRepo, email, username string) (*User, error) {
-	user, err := repo.GetUserByEmail(email)
-	if err == nil {
-		return user, nil
-	}
-
-	newUser := &User{
-		Email:             email,
-		Username:          username,
-		Password:          []byte("github_login"),
-		AccountStatus:     "active",
-		IndividualCredits: 1,
-		CreatedAt:         time.Now().UTC(),
-		UpdatedAt:         time.Now().UTC(),
-	}
-
-	id, err := repo.CreateUser(newUser)
-	if err != nil {
-		log.Printf("CreateUser failed: %v", err)
-		return nil, err
-	}
-
-	newUser.ID = id
-	return newUser, nil
 }

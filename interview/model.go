@@ -37,10 +37,10 @@ type Summary struct {
 }
 
 type InterviewService struct {
-	InterviewRepo InterviewRepo       `json:"interview_repo,omitempty"`
-	UserRepo      user.UserRepo       `json:"user_repo,omitempty"`
-	BillingRepo   billing.BillingRepo `json:"billing_repo,omitempty"`
-	AI            chatgpt.AIClient    `jaon:"ai,omitempty"`
+	InterviewRepo InterviewRepo
+	UserRepo      user.UserRepo
+	BillingRepo   billing.BillingRepo
+	AI            chatgpt.AIClient
 	Logger        *slog.Logger
 }
 
