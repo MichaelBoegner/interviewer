@@ -53,7 +53,7 @@ type ReturnVals struct {
 }
 
 type Handler struct {
-	UserService      user.UserService
+	UserService      *user.UserService
 	InterviewService *interview.InterviewService
 	ConversationRepo conversation.ConversationRepo
 	TokenRepo        token.TokenRepo
@@ -67,7 +67,7 @@ type Handler struct {
 
 func NewHandler(
 	interviewService *interview.InterviewService,
-	userService user.UserService,
+	userService *user.UserService,
 	tokenRepo token.TokenRepo,
 	conversationRepo conversation.ConversationRepo,
 	billingRepo billing.BillingRepo,
