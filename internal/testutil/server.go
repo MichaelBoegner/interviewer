@@ -41,12 +41,13 @@ func InitTestServer(logger *slog.Logger) (*handlers.Handler, error) {
 	mailer := mocks.NewMockMailer()
 	billing, err := billing.NewBilling(logger)
 	interviewService := interview.NewInterview(interviewRepo, userRepo, billingRepo, openAI, logger)
+	userService := user.NewUserService(userRepo, logger)
 	if err != nil {
 		logger.Error("billing.NewBilling failed", "error", err)
 		return nil, err
 	}
 
-	handler := handlers.NewHandler(interviewService, userRepo, tokenRepo, conversationRepo, billingRepo, billing, mailer, openAI, db, logger)
+	handler := handlers.NewHandler(interviewService, userService, tokenRepo, conversationRepo, billingRepo, billing, mailer, openAI, db, logger)
 
 	TestMux = http.NewServeMux()
 	TestMux.Handle("/api/users", http.HandlerFunc(handler.CreateUsersHandler))

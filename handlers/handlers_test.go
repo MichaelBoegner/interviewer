@@ -178,7 +178,7 @@ func Test_RequestVerificationHandler_Integration(t *testing.T) {
 
 			// Assert Database
 			if tc.DBCheck {
-				user, err := user.GetUser(Handler.UserRepo, got.UserID)
+				user, err := Handler.UserService.GetUser(got.UserID)
 				if err != nil {
 					t.Fatalf("Assert Database: GetUser failed: %v", err)
 				}
@@ -227,7 +227,7 @@ func Test_CreateUsersHandler_Integration(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			verificationJWT, err := user.VerificationToken(tc.email, tc.username, tc.password)
+			verificationJWT, err := Handler.UserService.VerificationToken(tc.email, tc.username, tc.password)
 			if err != nil {
 				t.Fatalf("GenerateEmailVerificationToken failed: %v", err)
 			}
@@ -269,7 +269,7 @@ func Test_CreateUsersHandler_Integration(t *testing.T) {
 
 			// Assert Database
 			if tc.DBCheck {
-				user, err := user.GetUser(Handler.UserRepo, got.UserID)
+				user, err := Handler.UserService.GetUser(got.UserID)
 				if err != nil {
 					t.Fatalf("Assert Database: GetUser failed: %v", err)
 				}
@@ -288,7 +288,7 @@ func Test_CreateUsersHandler_Integration(t *testing.T) {
 func Test_GetUsersHandler_Integration(t *testing.T) {
 	cleanDBOrFail(t)
 
-	jwtoken, userID := testutil.CreateTestUserAndJWT(logger)
+	jwtoken, userID := testutil.CreateTestUserAndJWT(Handler.UserService, logger)
 
 	tests := []TestCase{
 		{
@@ -359,7 +359,7 @@ func Test_GetUsersHandler_Integration(t *testing.T) {
 
 			// Assert Database
 			if tc.DBCheck {
-				user, err := user.GetUser(Handler.UserRepo, got.UserID)
+				user, err := Handler.UserService.GetUser(got.UserID)
 				if err != nil {
 					t.Fatalf("Assert Database: GetUser failed: %v", err)
 				}
@@ -378,7 +378,7 @@ func Test_GetUsersHandler_Integration(t *testing.T) {
 func Test_LoginHandler_Integration(t *testing.T) {
 	cleanDBOrFail(t)
 
-	_, _ = testutil.CreateTestUserAndJWT(logger)
+	_, _ = testutil.CreateTestUserAndJWT(Handler.UserService, logger)
 
 	tests := []TestCase{
 		{
@@ -499,7 +499,7 @@ func Test_LoginHandler_Integration(t *testing.T) {
 func Test_RefreshTokensHandler_Integration(t *testing.T) {
 	cleanDBOrFail(t)
 
-	_, userID := testutil.CreateTestUserAndJWT(logger)
+	_, userID := testutil.CreateTestUserAndJWT(Handler.UserService, logger)
 	refreshToken, err := token.GetStoredRefreshToken(Handler.TokenRepo, userID)
 	if err != nil {
 		t.Fatalf("TC GetStoredRefreshToken failed: %v", err)
@@ -630,7 +630,7 @@ func Test_RefreshTokensHandler_Integration(t *testing.T) {
 func Test_InterviewsHandler_Integration(t *testing.T) {
 	cleanDBOrFail(t)
 
-	jwtoken, userID := testutil.CreateTestUserAndJWT(logger)
+	jwtoken, userID := testutil.CreateTestUserAndJWT(Handler.UserService, logger)
 	expiredJWT := testutil.CreateTestExpiredJWT(userID, -1, logger)
 
 	tests := []TestCase{
@@ -768,7 +768,7 @@ func Test_InterviewsHandler_Integration(t *testing.T) {
 func Test_CreateConversationsHandler_Integration(t *testing.T) {
 	cleanDBOrFail(t)
 
-	jwtoken, _ := testutil.CreateTestUserAndJWT(logger)
+	jwtoken, _ := testutil.CreateTestUserAndJWT(Handler.UserService, logger)
 	mockAI.Scenario = mocks.ScenarioInterview
 	interviewID := testutil.CreateTestInterview(jwtoken, logger)
 	conversationsURL := testutil.TestServerURL + fmt.Sprintf("/api/conversations/create/%d", interviewID)
@@ -878,7 +878,7 @@ func Test_CreateConversationsHandler_Integration(t *testing.T) {
 
 func Test_AppendConversationsHandler_Integration(t *testing.T) {
 	cleanDBOrFail(t)
-	jwtoken, _ := testutil.CreateTestUserAndJWT(logger)
+	jwtoken, _ := testutil.CreateTestUserAndJWT(Handler.UserService, logger)
 	mockAI.Scenario = mocks.ScenarioInterview
 
 	interviewID := testutil.CreateTestInterview(jwtoken, logger)
