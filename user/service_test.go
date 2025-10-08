@@ -3,6 +3,7 @@ package user
 import (
 	"fmt"
 	"log"
+	"log/slog"
 	"os"
 	"strings"
 	"testing"
@@ -49,17 +50,16 @@ func TestCreateUser(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			var buf strings.Builder
-			log.SetOutput(&buf)
-			defer showLogsIfFail(t, tc.name, buf)
+			logger := slog.New(slog.NewTextHandler(&buf, &slog.HandlerOptions{Level: slog.LevelDebug, AddSource: true}))
+			userRepo := NewMockRepo()
+			userService := NewUserService(userRepo, logger)
+			userRepo.failRepo = tc.failRepo
 
-			repo := NewMockRepo()
-			repo.failRepo = tc.failRepo
-
-			jwt, err := VerificationToken(tc.email, tc.username, tc.password)
+			jwt, err := userService.VerificationToken(tc.email, tc.username, tc.password)
 			if err != nil {
 				t.Fatalf("VerificationToken failed: %v", err)
 			}
-			user, err := CreateUser(repo, jwt)
+			user, err := userService.CreateUser(jwt)
 
 			if tc.expectError && err == nil {
 				t.Fatalf("expected error but got nil")
@@ -115,13 +115,12 @@ func TestLoginUser(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			var buf strings.Builder
-			log.SetOutput(&buf)
-			defer showLogsIfFail(t, tc.name, buf)
+			logger := slog.New(slog.NewTextHandler(&buf, &slog.HandlerOptions{Level: slog.LevelDebug, AddSource: true}))
+			userRepo := NewMockRepo()
+			userService := NewUserService(userRepo, logger)
+			userRepo.failRepo = tc.failRepo
 
-			repo := NewMockRepo()
-			repo.failRepo = tc.failRepo
-
-			jwtoken, username, userID, err := LoginUser(repo, tc.email, tc.password)
+			jwtoken, username, userID, err := userService.LoginUser(tc.email, tc.password)
 
 			if tc.expectError && err == nil {
 				t.Fatalf("expected error but got nil")
@@ -178,13 +177,12 @@ func TestGetUser(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			var buf strings.Builder
-			log.SetOutput(&buf)
-			defer showLogsIfFail(t, tc.name, buf)
+			logger := slog.New(slog.NewTextHandler(&buf, &slog.HandlerOptions{Level: slog.LevelDebug, AddSource: true}))
+			userRepo := NewMockRepo()
+			userService := NewUserService(userRepo, logger)
+			userRepo.failRepo = tc.failRepo
 
-			repo := NewMockRepo()
-			repo.failRepo = tc.failRepo
-
-			user, err := GetUser(repo, tc.userID)
+			user, err := userService.GetUser(tc.userID)
 
 			if tc.expectError && err == nil {
 				t.Fatalf("expected error but got nil")
@@ -231,13 +229,12 @@ func TestUpdateSubscription(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			var buf strings.Builder
-			log.SetOutput(&buf)
-			defer showLogsIfFail(t, tc.name, buf)
+			logger := slog.New(slog.NewTextHandler(&buf, &slog.HandlerOptions{Level: slog.LevelDebug, AddSource: true}))
+			userRepo := NewMockRepo()
+			userService := NewUserService(userRepo, logger)
+			userRepo.failRepo = tc.failRepo
 
-			repo := NewMockRepo()
-			repo.failRepo = tc.failRepo
-
-			user, err := GetUser(repo, tc.userID)
+			user, err := userService.GetUser(tc.userID)
 
 			if tc.expectError && err == nil {
 				t.Fatalf("expected error but got nil")
