@@ -40,12 +40,13 @@ func NewServer(logger *slog.Logger) (*Server, error) {
 	userService := user.NewUserService(userRepo, logger)
 	mailer := mailer.NewMailer(logger)
 	billing, err := billing.NewBilling(billingRepo, userRepo, logger)
+	tokenService := token.NewTokenService(tokenRepo, logger)
 	if err != nil {
 		logger.Error("billing.NewBilling failed", "error", err)
 		return nil, err
 	}
 
-	handler := handlers.NewHandler(interviewService, userService, tokenRepo, conversationRepo, billingRepo, billing, mailer, openAI, db, logger)
+	handler := handlers.NewHandler(interviewService, userService, tokenService, conversationRepo, billing, mailer, openAI, db, logger)
 
 	mux.Handle("/api/users", http.HandlerFunc(handler.CreateUsersHandler))
 	mux.Handle("/api/auth/login", http.HandlerFunc(handler.LoginHandler))

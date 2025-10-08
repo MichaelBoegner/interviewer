@@ -56,8 +56,7 @@ type Handler struct {
 	UserService      *user.UserService
 	InterviewService *interview.InterviewService
 	ConversationRepo conversation.ConversationRepo
-	TokenRepo        token.TokenRepo
-	BillingRepo      billing.BillingRepo
+	TokenService     *token.TokenService
 	Billing          *billing.Billing
 	Mailer           mailer.MailerClient
 	OpenAI           chatgpt.AIClient
@@ -68,9 +67,8 @@ type Handler struct {
 func NewHandler(
 	interviewService *interview.InterviewService,
 	userService *user.UserService,
-	tokenRepo token.TokenRepo,
+	tokenService *token.TokenService,
 	conversationRepo conversation.ConversationRepo,
-	billingRepo billing.BillingRepo,
 	billing *billing.Billing,
 	mailer mailer.MailerClient,
 	openAI chatgpt.AIClient,
@@ -79,9 +77,8 @@ func NewHandler(
 	return &Handler{
 		InterviewService: interviewService,
 		UserService:      userService,
-		TokenRepo:        tokenRepo,
+		TokenService:     tokenService,
 		ConversationRepo: conversationRepo,
-		BillingRepo:      billingRepo,
 		Billing:          billing,
 		Mailer:           mailer,
 		OpenAI:           openAI,
