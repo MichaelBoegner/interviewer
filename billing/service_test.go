@@ -102,7 +102,7 @@ func TestApplyCredits(t *testing.T) {
 
 			b := NewTestBilling()
 
-			err := b.ApplyCredits(userRepo, billingRepo, "test@example.com", tc.variantID)
+			err := b.ApplyCredits("test@example.com", tc.variantID)
 			if tc.expectErr && err == nil {
 				t.Fatal("expected error but got nil")
 			}
@@ -188,7 +188,7 @@ func TestDeductCredits(t *testing.T) {
 				},
 			}
 
-			err := b.DeductCredits(userRepo, billingRepo, attrs)
+			err := b.DeductCredits(attrs)
 			if tc.expectErr && err == nil {
 				t.Fatal("expected error but got nil")
 			}
