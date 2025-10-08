@@ -18,7 +18,7 @@ import (
 	"github.com/michaelboegner/interviewer/user"
 )
 
-func CreateTestUserAndJWT(userService *user.UserService, logger *slog.Logger) (string, int) {
+func CreateTestUserAndJWT(userService *user.UserService, tokenService *token.TokenService, logger *slog.Logger) (string, int) {
 	var (
 		jwt    string
 		userID int
@@ -61,7 +61,7 @@ func CreateTestUserAndJWT(userService *user.UserService, logger *slog.Logger) (s
 	jwt = returnVals.JWToken
 
 	//test userID extract
-	userID, err = token.ExtractUserIDFromToken(jwt)
+	userID, err = tokenService.ExtractUserIDFromToken(jwt)
 	if err != nil {
 		logger.Error("CreateTestUserandJWT userID extraction failed", "error", err)
 	}

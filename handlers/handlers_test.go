@@ -288,7 +288,7 @@ func Test_CreateUsersHandler_Integration(t *testing.T) {
 func Test_GetUsersHandler_Integration(t *testing.T) {
 	cleanDBOrFail(t)
 
-	jwtoken, userID := testutil.CreateTestUserAndJWT(Handler.UserService, logger)
+	jwtoken, userID := testutil.CreateTestUserAndJWT(Handler.UserService, Handler.TokenService, logger)
 
 	tests := []TestCase{
 		{
@@ -378,7 +378,7 @@ func Test_GetUsersHandler_Integration(t *testing.T) {
 func Test_LoginHandler_Integration(t *testing.T) {
 	cleanDBOrFail(t)
 
-	_, _ = testutil.CreateTestUserAndJWT(Handler.UserService, logger)
+	_, _ = testutil.CreateTestUserAndJWT(Handler.UserService, Handler.TokenService, logger)
 
 	tests := []TestCase{
 		{
@@ -499,8 +499,8 @@ func Test_LoginHandler_Integration(t *testing.T) {
 func Test_RefreshTokensHandler_Integration(t *testing.T) {
 	cleanDBOrFail(t)
 
-	_, userID := testutil.CreateTestUserAndJWT(Handler.UserService, logger)
-	refreshToken, err := token.GetStoredRefreshToken(Handler.TokenRepo, userID)
+	_, userID := testutil.CreateTestUserAndJWT(Handler.UserService, Handler.TokenService, logger)
+	refreshToken, err := Handler.TokenService.GetStoredRefreshToken(userID)
 	if err != nil {
 		t.Fatalf("TC GetStoredRefreshToken failed: %v", err)
 	}
@@ -630,7 +630,7 @@ func Test_RefreshTokensHandler_Integration(t *testing.T) {
 func Test_InterviewsHandler_Integration(t *testing.T) {
 	cleanDBOrFail(t)
 
-	jwtoken, userID := testutil.CreateTestUserAndJWT(Handler.UserService, logger)
+	jwtoken, userID := testutil.CreateTestUserAndJWT(Handler.UserService, Handler.TokenService, logger)
 	expiredJWT := testutil.CreateTestExpiredJWT(userID, -1, logger)
 
 	tests := []TestCase{
@@ -768,7 +768,7 @@ func Test_InterviewsHandler_Integration(t *testing.T) {
 func Test_CreateConversationsHandler_Integration(t *testing.T) {
 	cleanDBOrFail(t)
 
-	jwtoken, _ := testutil.CreateTestUserAndJWT(Handler.UserService, logger)
+	jwtoken, _ := testutil.CreateTestUserAndJWT(Handler.UserService, Handler.TokenService, logger)
 	mockAI.Scenario = mocks.ScenarioInterview
 	interviewID := testutil.CreateTestInterview(jwtoken, logger)
 	conversationsURL := testutil.TestServerURL + fmt.Sprintf("/api/conversations/create/%d", interviewID)
@@ -878,7 +878,7 @@ func Test_CreateConversationsHandler_Integration(t *testing.T) {
 
 func Test_AppendConversationsHandler_Integration(t *testing.T) {
 	cleanDBOrFail(t)
-	jwtoken, _ := testutil.CreateTestUserAndJWT(Handler.UserService, logger)
+	jwtoken, _ := testutil.CreateTestUserAndJWT(Handler.UserService, Handler.TokenService, logger)
 	mockAI.Scenario = mocks.ScenarioInterview
 
 	interviewID := testutil.CreateTestInterview(jwtoken, logger)
