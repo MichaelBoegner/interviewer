@@ -39,7 +39,7 @@ func NewServer(logger *slog.Logger) (*Server, error) {
 	interviewService := interview.NewInterview(interviewRepo, userRepo, billingRepo, openAI, logger)
 	userService := user.NewUserService(userRepo, logger)
 	mailer := mailer.NewMailer(logger)
-	billing, err := billing.NewBilling(logger)
+	billing, err := billing.NewBilling(billingRepo, userRepo, logger)
 	if err != nil {
 		logger.Error("billing.NewBilling failed", "error", err)
 		return nil, err
