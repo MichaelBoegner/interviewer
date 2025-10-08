@@ -52,7 +52,7 @@ func (h *Handler) RequestVerificationHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	verificationJWT, err := user.VerificationToken(req.Email, req.Username, req.Password)
+	verificationJWT, err := h.UserService.VerificationToken(req.Email, req.Username, req.Password)
 	if err != nil {
 		h.Logger.Error("GenerateEmailVerificationToken failed", "error", err)
 		RespondWithError(w, http.StatusInternalServerError, "Failed to create token")
@@ -93,7 +93,7 @@ func (h *Handler) CheckEmailHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := user.GetUserByEmail(h.UserRepo, req.Email)
+	err := h.UserService.GetUserByEmail(req.Email)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			RespondWithJSON(w, http.StatusOK, map[string]bool{"exists": false})
@@ -123,7 +123,7 @@ func (h *Handler) CreateUsersHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userCreated, err := user.CreateUser(h.UserRepo, req.Token)
+	userCreated, err := h.UserService.CreateUser(req.Token)
 	if err != nil {
 		h.Logger.Error("CreateUser error", "error", err)
 		RespondWithError(w, http.StatusInternalServerError, "Internal server error")
@@ -177,7 +177,7 @@ func (h *Handler) GetUsersHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userReturned, err := user.GetUser(h.UserRepo, userID)
+	userReturned, err := h.UserService.GetUser(userID)
 	if err != nil {
 		h.Logger.Error("GetUsers error", "error", err)
 		return
@@ -217,7 +217,7 @@ func (h *Handler) DeleteUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userReturned, err := user.GetUser(h.UserRepo, userID)
+	userReturned, err := h.UserService.GetUser(userID)
 	if err != nil {
 		h.Logger.Error("GetUser error", "error", err)
 		RespondWithError(w, http.StatusInternalServerError, "Failed to find user")
@@ -231,7 +231,7 @@ func (h *Handler) DeleteUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = user.MarkUserDeleted(h.UserRepo, userID)
+	err = h.UserService.MarkUserDeleted(userID)
 	if err != nil {
 		h.Logger.Error("DeleteUser failed", "error", err)
 		RespondWithError(w, http.StatusInternalServerError, "Failed to delete user")
@@ -276,7 +276,7 @@ func (h *Handler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 	}
 
-	jwToken, username, userID, err := user.LoginUser(h.UserRepo, params.Email, params.Password)
+	jwToken, username, userID, err := h.UserService.LoginUser(params.Email, params.Password)
 	if err != nil {
 		h.Logger.Error("LoginUser error", "error", err)
 		if errors.Is(err, user.ErrAccountDeleted) {
@@ -407,7 +407,7 @@ func (h *Handler) GithubLoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := user.GetOrCreateByEmail(h.UserRepo, githubUser.Email, githubUser.Login)
+	user, err := h.UserService.GetOrCreateByEmail(githubUser.Email, githubUser.Login)
 	if err != nil {
 		RespondWithError(w, http.StatusInternalServerError, "User creation failed")
 		return
@@ -482,7 +482,7 @@ func (h *Handler) RefreshTokensHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := h.UserRepo.GetUser(params.UserID)
+	user, err := h.UserService.UserRepo.GetUser(params.UserID)
 	if err != nil {
 		h.Logger.Error("h.UserRepo.GetUser error", "error", err)
 		RespondWithError(w, http.StatusUnauthorized, "Account deactivated")
@@ -529,7 +529,7 @@ func (h *Handler) InterviewsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userReturned, err := user.GetUser(h.UserRepo, userID)
+	userReturned, err := h.UserService.GetUser(userID)
 	if err != nil {
 		h.Logger.Error("GetUser error", "error", err)
 		RespondWithError(w, http.StatusInternalServerError, "Failed to find user")
@@ -889,7 +889,7 @@ func (h *Handler) RequestResetHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resetJWT, err := user.RequestPasswordReset(h.UserRepo, params.Email)
+	resetJWT, err := h.UserService.RequestPasswordReset(params.Email)
 	if err != nil {
 		h.Logger.Error("Error generating reset token for email", "error", err)
 		w.WriteHeader(http.StatusOK)
@@ -923,7 +923,7 @@ func (h *Handler) ResetPasswordHandler(w http.ResponseWriter, r *http.Request) {
 		RespondWithError(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
-	err := user.ResetPassword(h.UserRepo, params.NewPassword, params.Token)
+	err := h.UserService.ResetPassword(params.NewPassword, params.Token)
 	if err != nil {
 		h.Logger.Error("ResetPasswordHandler failed", "error", err)
 		RespondWithError(w, http.StatusUnauthorized, "Invalid or expired token")
@@ -954,7 +954,7 @@ func (h *Handler) CreateCheckoutSessionHandler(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	user, err := user.GetUser(h.UserRepo, userID)
+	user, err := h.UserService.GetUser(userID)
 	if err != nil {
 		RespondWithError(w, http.StatusInternalServerError, "Could not find user")
 		return
@@ -1002,7 +1002,7 @@ func (h *Handler) CancelSubscriptionHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	userReturned, err := user.GetUser(h.UserRepo, userID)
+	userReturned, err := h.UserService.GetUser(userID)
 	if err != nil {
 		h.Logger.Error("GetUser failed", "error", err)
 		RespondWithError(w, http.StatusInternalServerError, "Could not retrieve user")
@@ -1031,7 +1031,7 @@ func (h *Handler) ResumeSubscriptionHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	userReturned, err := user.GetUser(h.UserRepo, userID)
+	userReturned, err := h.UserService.GetUser(userID)
 	if err != nil {
 		h.Logger.Error("GetUser failed", "error", err)
 		RespondWithError(w, http.StatusInternalServerError, "Could not retrieve user")
@@ -1067,7 +1067,7 @@ func (h *Handler) ChangePlanHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := user.GetUser(h.UserRepo, userID)
+	user, err := h.UserService.GetUser(userID)
 	if err != nil {
 		RespondWithError(w, http.StatusInternalServerError, "Could not find user")
 		return
@@ -1159,7 +1159,7 @@ func (h *Handler) BillingWebhookHandler(w http.ResponseWriter, r *http.Request) 
 			return
 		}
 
-		err = h.Billing.ApplyCredits(h.UserRepo, h.BillingRepo, orderAttrs.UserEmail, orderAttrs.FirstOrderItem.VariantID)
+		err = h.Billing.ApplyCredits(h.BillingRepo, orderAttrs.UserEmail, orderAttrs.FirstOrderItem.VariantID)
 		if err != nil {
 			h.Logger.Error("h.Billing.ApplyCredits failed", "error", err)
 			RespondWithError(w, http.StatusInternalServerError, "Failed to update user")
