@@ -19,7 +19,6 @@ import (
 	"github.com/michaelboegner/interviewer/internal/mocks"
 	"github.com/michaelboegner/interviewer/internal/testutil"
 	"github.com/michaelboegner/interviewer/interview"
-	"github.com/michaelboegner/interviewer/token"
 	"github.com/michaelboegner/interviewer/user"
 )
 
@@ -480,7 +479,7 @@ func Test_LoginHandler_Integration(t *testing.T) {
 
 			// Assert Database
 			if tc.DBCheck {
-				refreshToken, err := token.GetStoredRefreshToken(Handler.TokenRepo, respUnmarshalled.UserID)
+				refreshToken, err := Handler.TokenService.GetStoredRefreshToken(respUnmarshalled.UserID)
 				if err != nil {
 					t.Fatalf("Assert Database: GetUser failed: %v", err)
 				}
@@ -611,7 +610,7 @@ func Test_RefreshTokensHandler_Integration(t *testing.T) {
 
 			// Assert Database
 			if tc.DBCheck {
-				refreshToken, err := token.GetStoredRefreshToken(Handler.TokenRepo, userID)
+				refreshToken, err := Handler.TokenService.GetStoredRefreshToken(userID)
 				if err != nil {
 					t.Fatalf("Assert Database: GetUser failed: %v", err)
 				}

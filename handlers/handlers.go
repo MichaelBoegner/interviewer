@@ -17,7 +17,6 @@ import (
 	"github.com/michaelboegner/interviewer/dashboard"
 	"github.com/michaelboegner/interviewer/interview"
 	"github.com/michaelboegner/interviewer/middleware"
-	"github.com/michaelboegner/interviewer/token"
 	"github.com/michaelboegner/interviewer/user"
 )
 
@@ -130,9 +129,9 @@ func (h *Handler) CreateUsersHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	jwt, err := token.CreateJWT(strconv.Itoa(userCreated.ID), 0)
+	jwt, err := h.TokenService.CreateJWT(strconv.Itoa(userCreated.ID), 0)
 	if err != nil {
-		h.Logger.Error("token.CreateJWT failed", "error", err)
+		h.Logger.Error("h.TokenService.CreateJWT failed", "error", err)
 		RespondWithError(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
@@ -238,7 +237,7 @@ func (h *Handler) DeleteUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = token.DeleteRefreshToken(h.TokenRepo, userID)
+	err = h.TokenService.DeleteRefreshToken(userID)
 	if err != nil {
 		h.Logger.Error("DeleteRefreshTokensForUser failed", "error", err)
 		RespondWithError(w, http.StatusInternalServerError, "Internal server error")
@@ -287,7 +286,7 @@ func (h *Handler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	refreshToken, err := token.CreateRefreshToken(h.TokenRepo, userID)
+	refreshToken, err := h.TokenService.CreateRefreshToken(userID)
 	if err != nil {
 		h.Logger.Error("RefreshToken error", "error", err)
 		RespondWithError(w, http.StatusUnauthorized, "")
@@ -413,15 +412,15 @@ func (h *Handler) GithubLoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	jwt, err := token.CreateJWT(strconv.Itoa(user.ID), 0)
+	jwt, err := h.TokenService.CreateJWT(strconv.Itoa(user.ID), 0)
 	if err != nil {
-		h.Logger.Error("token.CreateJWT failed", "error", err)
+		h.Logger.Error("h.TokenService.CreateJWT failed", "error", err)
 		RespondWithError(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
-	refreshToken, err := token.CreateRefreshToken(h.TokenRepo, user.ID)
+	refreshToken, err := h.TokenService.CreateRefreshToken(user.ID)
 	if err != nil {
-		h.Logger.Error("token.CreateRefreshToken failed", "error", err)
+		h.Logger.Error("h.TokenService.CreateRefreshToken failed", "error", err)
 		RespondWithError(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
@@ -461,21 +460,21 @@ func (h *Handler) RefreshTokensHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	storedToken, err := token.GetStoredRefreshToken(h.TokenRepo, params.UserID)
+	storedToken, err := h.TokenService.GetStoredRefreshToken(params.UserID)
 	if err != nil {
 		h.Logger.Error("GetStoredRefreshToken error", "error", err)
 		RespondWithError(w, http.StatusBadRequest, "Invalid user_id")
 		return
 	}
 
-	ok := token.VerifyRefreshToken(storedToken, providedToken)
+	ok := h.TokenService.VerifyRefreshToken(storedToken, providedToken)
 	if !ok {
 		h.Logger.Error("VerifyRefreshToken error")
 		RespondWithError(w, http.StatusUnauthorized, "Refresh token is invalid")
 		return
 	}
 
-	refreshToken, err := token.CreateRefreshToken(h.TokenRepo, params.UserID)
+	refreshToken, err := h.TokenService.CreateRefreshToken(params.UserID)
 	if err != nil {
 		h.Logger.Error("CreateRefreshToken error", "error", err)
 		RespondWithError(w, http.StatusUnauthorized, "")
@@ -494,7 +493,7 @@ func (h *Handler) RefreshTokensHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	jwToken, err := token.CreateJWT(strconv.Itoa(params.UserID), 0)
+	jwToken, err := h.TokenService.CreateJWT(strconv.Itoa(params.UserID), 0)
 	if err != nil {
 		h.Logger.Error("JWT creation failed", "error", err)
 		RespondWithError(w, http.StatusInternalServerError, "")
