@@ -5,11 +5,13 @@ import (
 	"log"
 	"log/slog"
 	"os"
+	"strconv"
 	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/michaelboegner/interviewer/token"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -114,13 +116,26 @@ func TestLoginUser(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			var buf strings.Builder
+			var (
+				buf     strings.Builder
+				jwToken string
+			)
 			logger := slog.New(slog.NewTextHandler(&buf, &slog.HandlerOptions{Level: slog.LevelDebug, AddSource: true}))
 			userRepo := NewMockRepo()
+			tokenRepo := token.NewMockRepo()
 			userService := NewUserService(userRepo, logger)
+			tokenService := token.NewTokenService(tokenRepo, logger)
 			userRepo.failRepo = tc.failRepo
 
-			jwtoken, username, userID, err := userService.LoginUser(tc.email, tc.password)
+			username, userID, err := userService.LoginUser(tc.email, tc.password)
+			if err != nil {
+				t.Fatalf("userService.LoginUser failed: %v", err)
+			}
+
+			jwToken, err = tokenService.CreateJWT(strconv.Itoa(userID), 0)
+			if err != nil {
+				t.Fatalf("JWT creation failed: %v", err)
+			}
 
 			if tc.expectError && err == nil {
 				t.Fatalf("expected error but got nil")
@@ -136,7 +151,7 @@ func TestLoginUser(t *testing.T) {
 				if diff := cmp.Diff(expected, got); diff != "" {
 					t.Errorf("User mismatch (-want +got):\n%s", diff)
 				}
-				if jwtoken == "" {
+				if jwToken == "" {
 					t.Errorf("Expected jwtoken but got empty string")
 				}
 				if username == "" {

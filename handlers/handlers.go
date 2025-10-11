@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -275,7 +276,7 @@ func (h *Handler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 	}
 
-	jwToken, username, userID, err := h.UserService.LoginUser(params.Email, params.Password)
+	username, userID, err := h.UserService.LoginUser(params.Email, params.Password)
 	if err != nil {
 		h.Logger.Error("LoginUser error", "error", err)
 		if errors.Is(err, user.ErrAccountDeleted) {
@@ -284,6 +285,12 @@ func (h *Handler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		RespondWithError(w, http.StatusUnauthorized, "Authentication failed.")
 		return
+	}
+
+	jwToken, err := h.TokenService.CreateJWT(strconv.Itoa(userID), 0)
+	if err != nil {
+		log.Printf("JWT creation failed: %v", err)
+		return "", "", 0, err
 	}
 
 	refreshToken, err := h.TokenService.CreateRefreshToken(userID)
@@ -888,7 +895,13 @@ func (h *Handler) RequestResetHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resetJWT, err := h.UserService.RequestPasswordReset(params.Email)
+	err = h.UserService.GetUserByEmail(params.Email)
+	if err != nil {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+
+	resetJWT, err := h.TokenService.CreateJWT(params.Email, 900)
 	if err != nil {
 		h.Logger.Error("Error generating reset token for email", "error", err)
 		w.WriteHeader(http.StatusOK)

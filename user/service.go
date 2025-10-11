@@ -4,11 +4,9 @@ import (
 	"errors"
 	"log"
 	"os"
-	"strconv"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/michaelboegner/interviewer/token"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -60,34 +58,28 @@ func (u *UserService) CreateUser(tokenStr string) (*User, error) {
 	return user, nil
 }
 
-func (u *UserService) LoginUser(email, password string) (string, string, int, error) {
+func (u *UserService) LoginUser(email, password string) (string, int, error) {
 	userID, hashedPassword, err := u.UserRepo.GetPasswordandID(email)
 	if err != nil {
-		return "", "", 0, err
+		return "", 0, err
 	}
 
 	user, err := u.UserRepo.GetUser(userID)
 	if err != nil {
 		log.Printf("u.UserRepo.GetUser failed: %v", err)
-		return "", "", 0, err
+		return "", 0, err
 	}
 
 	if user.AccountStatus != "active" {
-		return "", "", 0, ErrAccountDeleted
+		return "", 0, ErrAccountDeleted
 	}
 
 	err = bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
 	if err != nil {
-		return "", "", 0, err
+		return "", 0, err
 	}
 
-	jwToken, err := token.CreateJWT(strconv.Itoa(userID), 0)
-	if err != nil {
-		log.Printf("JWT creation failed: %v", err)
-		return "", "", 0, err
-	}
-
-	return jwToken, user.Username, userID, nil
+	return user.Username, userID, nil
 }
 
 func (u *UserService) GetUser(userID int) (*User, error) {
@@ -117,22 +109,6 @@ func (u *UserService) GetUserByEmail(email string) error {
 	}
 
 	return nil
-}
-
-func (u *UserService) RequestPasswordReset(email string) (string, error) {
-	user, err := u.UserRepo.GetUserByEmail(email)
-	if err != nil {
-		log.Printf("GetUserByEmail failed: %v", err)
-		return "", err
-	}
-
-	resetJWT, err := token.CreateJWT(user.Email, 900)
-	if err != nil {
-		log.Printf("CreateJWT failed: %v", err)
-		return "", err
-	}
-
-	return resetJWT, nil
 }
 
 func (u *UserService) ResetPassword(newPassword string, resetJWT string) error {
