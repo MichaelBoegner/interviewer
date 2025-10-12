@@ -46,7 +46,7 @@ type TestCase struct {
 var (
 	Handler             *handlers.Handler
 	conversationBuilder *testutil.ConversationBuilder
-	mockAI              *mocks.MockOpenAIClient
+	mockAI              *mocks.MockOpenAIService
 )
 
 var logger *slog.Logger
@@ -78,7 +78,7 @@ func TestMain(m *testing.M) {
 
 	logger.Info("Test server started", "url", testutil.TestServerURL)
 
-	mockAI = Handler.OpenAI.(*mocks.MockOpenAIClient)
+	mockAI = Handler.OpenAI.(*mocks.MockOpenAIService)
 	conversationBuilder = testutil.NewConversationBuilder()
 
 	code := m.Run()

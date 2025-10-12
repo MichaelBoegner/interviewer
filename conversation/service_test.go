@@ -15,7 +15,7 @@ import (
 )
 
 func TestCreateConversation(t *testing.T) {
-	ai := &mocks.MockOpenAIClient{}
+	ai := &mocks.MockOpenAIService{}
 
 	tests := []struct {
 		name           string
@@ -126,7 +126,7 @@ func TestCreateConversation(t *testing.T) {
 }
 
 func TestAppendConversation(t *testing.T) {
-	ai := &mocks.MockOpenAIClient{}
+	ai := &mocks.MockOpenAIService{}
 
 	tests := []struct {
 		name        string
