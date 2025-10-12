@@ -37,7 +37,7 @@ func InitTestServer(logger *slog.Logger) (*handlers.Handler, error) {
 	tokenRepo := token.NewRepository(db)
 	conversationRepo := conversation.NewRepository(db)
 	billingRepo := billing.NewRepository(db)
-	openAI := mocks.NewMockOpenAIService()
+	openAI := mocks.NewMockAIService()
 	mailer := mocks.NewMockMailer()
 	billing, err := billing.NewBilling(billingRepo, userRepo, logger)
 	interviewService := interview.NewInterview(interviewRepo, userRepo, billingRepo, openAI, logger)

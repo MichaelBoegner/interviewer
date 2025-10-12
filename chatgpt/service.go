@@ -11,7 +11,7 @@ import (
 	"strings"
 )
 
-func (c *OpenAIService) GetChatGPTResponse(prompt string) (*ChatGPTResponse, error) {
+func (c *AIService) GetChatGPTResponse(prompt string) (*ChatGPTResponse, error) {
 	ctx := context.Background()
 
 	var messagesArray []map[string]string
@@ -84,7 +84,7 @@ func (c *OpenAIService) GetChatGPTResponse(prompt string) (*ChatGPTResponse, err
 	return &chatGPTResponse, nil
 }
 
-func (c *OpenAIService) GetChatGPTResponseConversation(conversationHistory []map[string]string) (*ChatGPTResponse, error) {
+func (c *AIService) GetChatGPTResponseConversation(conversationHistory []map[string]string) (*ChatGPTResponse, error) {
 	ctx := context.Background()
 
 	requestBody, err := json.Marshal(map[string]interface{}{
@@ -151,7 +151,7 @@ func (c *OpenAIService) GetChatGPTResponseConversation(conversationHistory []map
 	return &chatGPTResponse, nil
 }
 
-func (c *OpenAIService) GetChatGPT35Response(prompt string) (*ChatGPTResponse, error) {
+func (c *AIService) GetChatGPT35Response(prompt string) (*ChatGPTResponse, error) {
 	ctx := context.Background()
 
 	var messagesArray []map[string]string
@@ -224,7 +224,7 @@ func (c *OpenAIService) GetChatGPT35Response(prompt string) (*ChatGPTResponse, e
 	return &chatGPTResponse, nil
 }
 
-func (c *OpenAIService) ExtractJDInput(jd string) (*JDParsedOutput, error) {
+func (c *AIService) ExtractJDInput(jd string) (*JDParsedOutput, error) {
 	systemPrompt := BuildJDPromptInput(jd)
 	response, err := c.GetChatGPT35Response(systemPrompt)
 	if err != nil {
@@ -239,7 +239,7 @@ func (c *OpenAIService) ExtractJDInput(jd string) (*JDParsedOutput, error) {
 	}, nil
 }
 
-func (c *OpenAIService) ExtractJDSummary(jdInput *JDParsedOutput) (string, error) {
+func (c *AIService) ExtractJDSummary(jdInput *JDParsedOutput) (string, error) {
 	jdJSON, err := json.MarshalIndent(jdInput, "", "  ")
 	if err != nil {
 		return "", fmt.Errorf("failed to marshal JDParsedOutput: %w", err)

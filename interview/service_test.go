@@ -22,7 +22,7 @@ func TestStartInterview(t *testing.T) {
 		length       int
 		numQuestions int
 		difficulty   string
-		aiClient     *mocks.MockOpenAIService
+		aiClient     *mocks.MockAIService
 		failRepo     bool
 		expected     *interview.Interview
 		expectError  bool
@@ -39,7 +39,7 @@ func TestStartInterview(t *testing.T) {
 			length:       30,
 			numQuestions: 3,
 			difficulty:   "easy",
-			aiClient:     &mocks.MockOpenAIService{},
+			aiClient:     &mocks.MockAIService{},
 			expected: &interview.Interview{
 				UserId:          1,
 				Length:          30,
@@ -65,7 +65,7 @@ func TestStartInterview(t *testing.T) {
 			length:       30,
 			numQuestions: 3,
 			difficulty:   "easy",
-			aiClient:     &mocks.MockOpenAIService{},
+			aiClient:     &mocks.MockAIService{},
 			failRepo:     true,
 			expectError:  true,
 			jdSummary:    "",
@@ -166,7 +166,7 @@ func TestGetInterview(t *testing.T) {
 			repo := interview.NewMockRepo()
 			userRepo := user.NewMockRepo()
 			billingRepo := billing.NewMockRepo()
-			interviewService := interview.NewInterview(repo, userRepo, billingRepo, &mocks.MockOpenAIService{}, logger)
+			interviewService := interview.NewInterview(repo, userRepo, billingRepo, &mocks.MockAIService{}, logger)
 			repo.FailRepo = tc.failRepo
 
 			if tc.setup != nil {

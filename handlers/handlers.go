@@ -224,7 +224,7 @@ func (h *Handler) DeleteUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.Billing.CancelSubscription(h.UserRepo, userReturned.Email)
+	err = h.Billing.CancelSubscription(userReturned.Email)
 	if err != nil {
 		h.Logger.Error("h.Billing.CancelSubscription failed", "error", err)
 		RespondWithError(w, http.StatusInternalServerError, "Failed to update user")
@@ -729,7 +729,7 @@ func (h *Handler) CreateConversationsHandler(w http.ResponseWriter, r *http.Requ
 	conversationCreated, err := conversation.CreateConversation(
 		h.ConversationRepo,
 		h.InterviewRepo,
-		h.OpenAI,
+		h.AIService,
 		conversationReturned,
 		interviewID,
 		interviewReturned.Prompt,
@@ -813,7 +813,7 @@ func (h *Handler) AppendConversationsHandler(w http.ResponseWriter, r *http.Requ
 	conversationReturned, err = conversation.AppendConversation(
 		h.ConversationRepo,
 		h.InterviewRepo,
-		h.OpenAI,
+		h.AIService,
 		interviewID,
 		userID,
 		conversationReturned,
@@ -1371,7 +1371,7 @@ func (h *Handler) JDInputHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	jdInput, err := h.OpenAI.ExtractJDInput(input.JobDescription)
+	jdInput, err := h.AIService.ExtractJDInput(input.JobDescription)
 	if err != nil {
 		var openaiErr *chatgpt.OpenAIError
 		if errors.As(err, &openaiErr) {
@@ -1384,7 +1384,7 @@ func (h *Handler) JDInputHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	jdSummary, err := h.OpenAI.ExtractJDSummary(jdInput)
+	jdSummary, err := h.AIService.ExtractJDSummary(jdInput)
 	if err != nil {
 		var openaiErr *chatgpt.OpenAIError
 		if errors.As(err, &openaiErr) {

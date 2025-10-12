@@ -7,7 +7,7 @@ import (
 	"net/http"
 )
 
-func (m *Mailer) SendPasswordReset(email, resetURL string) error {
+func (m *MailerService) SendPasswordReset(email, resetURL string) error {
 	payload := map[string]any{
 		"from":    "Interviewer Support <support@mail.interviewer.dev>",
 		"to":      email,
@@ -48,7 +48,7 @@ func (m *Mailer) SendPasswordReset(email, resetURL string) error {
 	return nil
 }
 
-func (m *Mailer) SendVerificationEmail(email, verifyURL string) error {
+func (m *MailerService) SendVerificationEmail(email, verifyURL string) error {
 
 	payload := map[string]any{
 		"from":    "Interviewer Support <support@mail.interviewer.dev>",
@@ -79,7 +79,7 @@ func (m *Mailer) SendVerificationEmail(email, verifyURL string) error {
 	return nil
 }
 
-func (m *Mailer) SendWelcome(email string) error {
+func (m *MailerService) SendWelcome(email string) error {
 	payload := map[string]any{
 		"from":    "Interviewer Support <support@mail.interviewer.dev>",
 		"to":      email,
@@ -128,7 +128,7 @@ func (m *Mailer) SendWelcome(email string) error {
 	return nil
 }
 
-func (m *Mailer) SendDeletionConfirmation(email string) error {
+func (m *MailerService) SendDeletionConfirmation(email string) error {
 	payload := map[string]any{
 		"from":    "Interviewer Support <support@mail.interviewer.dev>",
 		"to":      email,
