@@ -54,23 +54,23 @@ type ReturnVals struct {
 }
 
 type Handler struct {
-	UserService      *user.UserService
-	InterviewService *interview.InterviewService
-	ConversationRepo conversation.ConversationRepo
-	TokenService     *token.TokenService
-	BillingService   *billing.BillingService
-	Mailer           mailer.MailerClient
-	AIService        chatgpt.AIClient
-	DashboardService *dashboard.DashboardService
-	DB               *sql.DB
-	Logger           *slog.Logger
+	UserService         *user.UserService
+	InterviewService    *interview.InterviewService
+	ConversationService *conversation.ConversationService
+	TokenService        *token.TokenService
+	BillingService      *billing.BillingService
+	Mailer              mailer.MailerClient
+	AIService           chatgpt.AIClient
+	DashboardService    *dashboard.DashboardService
+	DB                  *sql.DB
+	Logger              *slog.Logger
 }
 
 func NewHandler(
 	interviewService *interview.InterviewService,
 	userService *user.UserService,
 	tokenService *token.TokenService,
-	conversationRepo conversation.ConversationRepo,
+	conversationService *conversation.ConversationService,
 	billingService *billing.BillingService,
 	mailer mailer.MailerClient,
 	aiService chatgpt.AIClient,
@@ -78,15 +78,15 @@ func NewHandler(
 	db *sql.DB,
 	logger *slog.Logger) *Handler {
 	return &Handler{
-		InterviewService: interviewService,
-		UserService:      userService,
-		TokenService:     tokenService,
-		ConversationRepo: conversationRepo,
-		BillingService:   billingService,
-		Mailer:           mailer,
-		AIService:        aiService,
-		DashboardService: dashboardService,
-		DB:               db,
-		Logger:           logger,
+		InterviewService:    interviewService,
+		UserService:         userService,
+		TokenService:        tokenService,
+		ConversationService: conversationService,
+		BillingService:      billingService,
+		Mailer:              mailer,
+		AIService:           aiService,
+		DashboardService:    dashboardService,
+		DB:                  db,
+		Logger:              logger,
 	}
 }

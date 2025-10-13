@@ -725,9 +725,7 @@ func (h *Handler) CreateConversationsHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	conversationCreated, err := conversation.CreateConversation(
-		h.ConversationRepo,
-		h.InterviewRepo,
+	conversationCreated, err := h.ConversationService.CreateConversation(
 		h.AIService,
 		conversationReturned,
 		interviewID,

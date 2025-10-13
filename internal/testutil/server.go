@@ -44,6 +44,7 @@ func InitTestServer(logger *slog.Logger) (*handlers.Handler, error) {
 	interviewService := interview.NewInterviewService(interviewRepo, userRepo, billingRepo, mockAIService, logger)
 	userService := user.NewUserService(userRepo, logger)
 	tokenSerice := token.NewTokenService(tokenRepo, logger)
+	conversationService := conversation.NewConvesationService(conversationRepo, interviewRepo, logger)
 	dashboardService := dashboard.NewDashboardService(userRepo, interviewRepo, logger)
 	billingService, err := billing.NewBillingService(billingRepo, userRepo, logger)
 	if err != nil {
@@ -51,7 +52,7 @@ func InitTestServer(logger *slog.Logger) (*handlers.Handler, error) {
 		return nil, err
 	}
 
-	handler := handlers.NewHandler(interviewService, userService, tokenSerice, conversationRepo, billingService, mockMailerService, mockAIService, dashboardService, db, logger)
+	handler := handlers.NewHandler(interviewService, userService, tokenSerice, conversationService, billingService, mockMailerService, mockAIService, dashboardService, db, logger)
 
 	TestMux = http.NewServeMux()
 	TestMux.Handle("/api/users", http.HandlerFunc(handler.CreateUsersHandler))

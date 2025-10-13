@@ -41,6 +41,7 @@ func NewServer(logger *slog.Logger) (*Server, error) {
 	interviewService := interview.NewInterviewService(interviewRepo, userRepo, billingRepo, aiService, logger)
 	userService := user.NewUserService(userRepo, logger)
 	tokenService := token.NewTokenService(tokenRepo, logger)
+	conversationService := conversation.NewConvesationService(conversationRepo, interviewRepo, logger)
 	mailerService := mailer.NewMailerService(logger)
 	dashboardService := dashboard.NewDashboardService(userRepo, interviewRepo, logger)
 	billingService, err := billing.NewBillingService(billingRepo, userRepo, logger)
@@ -49,7 +50,7 @@ func NewServer(logger *slog.Logger) (*Server, error) {
 		return nil, err
 	}
 
-	handler := handlers.NewHandler(interviewService, userService, tokenService, conversationRepo, billingService, mailerService, aiService, dashboardService, db, logger)
+	handler := handlers.NewHandler(interviewService, userService, tokenService, conversationService, billingService, mailerService, aiService, dashboardService, db, logger)
 
 	mux.Handle("/api/users", http.HandlerFunc(handler.CreateUsersHandler))
 	mux.Handle("/api/auth/login", http.HandlerFunc(handler.LoginHandler))

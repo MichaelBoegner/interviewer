@@ -5,14 +5,13 @@ import (
 	"log"
 
 	"github.com/michaelboegner/interviewer/chatgpt"
-	"github.com/michaelboegner/interviewer/interview"
 )
 
-func CheckForConversation(repo ConversationRepo, interviewID int) (bool, error) {
-	return repo.CheckForConversation(interviewID)
+func (c *ConversationService) CheckForConversation(interviewID int) (bool, error) {
+	return c.ConversationRepo.CheckForConversation(interviewID)
 }
 
-func CreateEmptyConversation(repo ConversationRepo, interviewID int, subTopic string) (int, error) {
+func (c *ConversationService) CreateEmptyConversation(interviewID int, subTopic string) (int, error) {
 	conversation := &Conversation{
 		Topics:                ClonePredefinedTopics(),
 		CurrentTopic:          1,
@@ -20,7 +19,7 @@ func CreateEmptyConversation(repo ConversationRepo, interviewID int, subTopic st
 		CurrentQuestionNumber: 1,
 	}
 
-	conversationID, err := repo.CreateConversation(interviewID, conversation)
+	conversationID, err := c.ConversationRepo.CreateConversation(interviewID, conversation)
 	if err != nil {
 		log.Printf("CreateConversation failed: %v", err)
 		return 0, err
@@ -29,9 +28,7 @@ func CreateEmptyConversation(repo ConversationRepo, interviewID int, subTopic st
 	return conversationID, nil
 }
 
-func CreateConversation(
-	repo ConversationRepo,
-	interviewRepo interview.InterviewRepo,
+func (c *ConversationService) CreateConversation(
 	openAI chatgpt.AIClient,
 	conversation *Conversation,
 	interviewID int,
@@ -44,7 +41,7 @@ func CreateConversation(
 	topicID := conversation.CurrentTopic
 	questionNumber := conversation.CurrentQuestionNumber
 
-	_, err := repo.CreateQuestion(conversation, firstQuestion)
+	_, err := c.ConversationRepo.CreateQuestion(conversation, firstQuestion)
 	if err != nil {
 		log.Printf("CreateQuestion failed: %v", err)
 		return nil, err
@@ -60,19 +57,19 @@ func CreateConversation(
 	topic.Questions = make(map[int]*Question)
 	topic.Questions[questionNumber] = NewQuestion(conversationID, topicID, questionNumber, firstQuestion, messages)
 
-	err = repo.CreateMessages(conversation, messages)
+	err = c.ConversationRepo.CreateMessages(conversation, messages)
 	if err != nil {
 		log.Printf("repo.CreateMessages failed: %v", err)
 		return nil, err
 	}
 
-	chatGPTResponse, chatGPTResponseString, err := GetChatGPTResponses(conversation, openAI, interviewRepo)
+	chatGPTResponse, chatGPTResponseString, err := GetChatGPTResponses(conversation, openAI, c.InterviewRepo)
 	if err != nil {
 		log.Printf("getChatGPTResponses failed: %v", err)
 		return nil, err
 	}
 
-	err = interviewRepo.UpdateScore(interviewID, chatGPTResponse.Score)
+	err = c.InterviewRepo.UpdateScore(interviewID, chatGPTResponse.Score)
 	if err != nil {
 		log.Printf("interviewRepo.UpdateScore failed: %v", err)
 		return nil, err
@@ -81,7 +78,7 @@ func CreateConversation(
 	conversation.CurrentQuestionNumber++
 	conversation.CurrentSubtopic = chatGPTResponse.NextSubtopic
 	questionNumber++
-	_, err = repo.UpdateConversationCurrents(conversationID, topicID, questionNumber, chatGPTResponse.NextSubtopic)
+	_, err = c.ConversationRepo.UpdateConversationCurrents(conversationID, topicID, questionNumber, chatGPTResponse.NextSubtopic)
 	if err != nil {
 		log.Printf("UpdateConversationTopic error: %v", err)
 		return nil, err
@@ -92,12 +89,12 @@ func CreateConversation(
 	}
 	conversation.Topics[topicID].Questions[questionNumber] = NewQuestion(conversationID, topicID, questionNumber, chatGPTResponse.NextQuestion, messagesQ2)
 
-	_, err = repo.AddQuestion(conversation.Topics[topicID].Questions[questionNumber])
+	_, err = c.ConversationRepo.AddQuestion(conversation.Topics[topicID].Questions[questionNumber])
 	if err != nil {
 		log.Printf("AddQuestion in CreateConversation err: %v", err)
 		return nil, err
 	}
-	_, err = repo.AddMessage(conversationID, topicID, questionNumber, messagesQ2[0])
+	_, err = c.ConversationRepo.AddMessage(conversationID, topicID, questionNumber, messagesQ2[0])
 	if err != nil {
 		log.Printf("AddMessage in CreateConversation err: %v", err)
 		return nil, err
@@ -106,9 +103,7 @@ func CreateConversation(
 	return conversation, nil
 }
 
-func AppendConversation(
-	repo ConversationRepo,
-	interviewRepo interview.InterviewRepo,
+func (c *ConversationService) AppendConversation(
 	openAI chatgpt.AIClient,
 	interviewID,
 	userID int,
@@ -124,19 +119,19 @@ func AppendConversation(
 	}
 
 	messageUser := NewMessage(conversationID, topicID, questionNumber, User, message)
-	_, err := repo.AddMessage(conversationID, topicID, questionNumber, messageUser)
+	_, err := c.ConversationRepo.AddMessage(conversationID, topicID, questionNumber, messageUser)
 	if err != nil {
 		return nil, err
 	}
 	conversation.Topics[topicID].Questions[questionNumber].Messages = append(conversation.Topics[topicID].Questions[questionNumber].Messages, messageUser)
 
-	chatGPTResponse, chatGPTResponseString, err := GetChatGPTResponses(conversation, openAI, interviewRepo)
+	chatGPTResponse, chatGPTResponseString, err := GetChatGPTResponses(conversation, openAI, c.InterviewRepo)
 	if err != nil {
 		log.Printf("getChatGPTResponses failed: %v", err)
 		return nil, err
 	}
 
-	err = interviewRepo.UpdateScore(interviewID, chatGPTResponse.Score)
+	err = c.InterviewRepo.UpdateScore(interviewID, chatGPTResponse.Score)
 	if err != nil {
 		log.Printf("interviewRepo.UpdateScore failed: %v", err)
 		return nil, err
@@ -153,20 +148,20 @@ func AppendConversation(
 		conversation.CurrentSubtopic = "finished"
 		conversation.CurrentQuestionNumber = 0
 
-		err := interviewRepo.UpdateStatus(interviewID, userID, "finished")
+		err := c.InterviewRepo.UpdateStatus(interviewID, userID, "finished")
 		if err != nil {
 			log.Printf("interviewRepo.UpdateStatus failed: %v", err)
 			return nil, err
 		}
 
-		_, err = repo.UpdateConversationCurrents(conversationID, conversation.CurrentTopic, 0, conversation.CurrentSubtopic)
+		_, err = c.ConversationRepo.UpdateConversationCurrents(conversationID, conversation.CurrentTopic, 0, conversation.CurrentSubtopic)
 		if err != nil {
 			log.Printf("UpdateConversationTopic error: %v", err)
 			return nil, err
 		}
 
 		messageFinal := NewMessage(conversationID, topicID, questionNumber, Interviewer, chatGPTResponseString)
-		_, err = repo.AddMessage(conversationID, topicID, questionNumber, messageFinal)
+		_, err = c.ConversationRepo.AddMessage(conversationID, topicID, questionNumber, messageFinal)
 		if err != nil {
 			return nil, err
 		}
@@ -183,7 +178,7 @@ func AppendConversation(
 		conversation.CurrentSubtopic = chatGPTResponse.NextSubtopic
 		conversation.CurrentQuestionNumber = resetQuestionNumber
 
-		_, err := repo.UpdateConversationCurrents(conversationID, nextTopicID, resetQuestionNumber, chatGPTResponse.NextSubtopic)
+		_, err := c.ConversationRepo.UpdateConversationCurrents(conversationID, nextTopicID, resetQuestionNumber, chatGPTResponse.NextSubtopic)
 		if err != nil {
 			log.Printf("UpdateConversationTopic error: %v", err)
 			return nil, err
@@ -198,11 +193,11 @@ func AppendConversation(
 		topic.Questions = make(map[int]*Question)
 		topic.Questions[resetQuestionNumber] = question
 
-		_, err = repo.AddQuestion(question)
+		_, err = c.ConversationRepo.AddQuestion(question)
 		if err != nil {
 			log.Printf("AddQuestion in AppendConversation err: %v", err)
 		}
-		_, err = repo.AddMessage(conversationID, nextTopicID, resetQuestionNumber, messages[0])
+		_, err = c.ConversationRepo.AddMessage(conversationID, nextTopicID, resetQuestionNumber, messages[0])
 		if err != nil {
 			return nil, err
 		}
@@ -213,7 +208,7 @@ func AppendConversation(
 	if incrementQuestion {
 		conversation.CurrentQuestionNumber++
 		questionNumber++
-		_, err := repo.UpdateConversationCurrents(conversationID, topicID, questionNumber, chatGPTResponse.NextSubtopic)
+		_, err := c.ConversationRepo.UpdateConversationCurrents(conversationID, topicID, questionNumber, chatGPTResponse.NextSubtopic)
 		if err != nil {
 			log.Printf("UpdateConversationTopic error: %v", err)
 			return nil, err
@@ -225,12 +220,12 @@ func AppendConversation(
 	messageInterviewer := NewMessage(conversationID, topicID, questionNumber, Interviewer, chatGPTResponseString)
 	conversation.Topics[topicID].Questions[questionNumber].Messages = append(conversation.Topics[topicID].Questions[questionNumber].Messages, messageInterviewer)
 
-	_, err = repo.AddQuestion(conversation.Topics[topicID].Questions[questionNumber])
+	_, err = c.ConversationRepo.AddQuestion(conversation.Topics[topicID].Questions[questionNumber])
 	if err != nil {
 		log.Printf("AddQuestion in AppendConversation failed: %v", err)
 		return nil, err
 	}
-	_, err = repo.AddMessage(conversationID, topicID, questionNumber, messageInterviewer)
+	_, err = c.ConversationRepo.AddMessage(conversationID, topicID, questionNumber, messageInterviewer)
 	if err != nil {
 		log.Printf("AddMessage in AppendConversation failed: %v", err)
 		return nil, err
@@ -239,15 +234,15 @@ func AppendConversation(
 	return conversation, nil
 }
 
-func GetConversation(repo ConversationRepo, interviewID int) (*Conversation, error) {
-	conversation, err := repo.GetConversation(interviewID)
+func (c *ConversationService) GetConversation(interviewID int) (*Conversation, error) {
+	conversation, err := c.ConversationRepo.GetConversation(interviewID)
 	if err != nil {
 		return nil, err
 	}
 
 	conversation.Topics = ClonePredefinedTopics()
 
-	questionsReturned, err := repo.GetQuestions(conversation)
+	questionsReturned, err := c.ConversationRepo.GetQuestions(conversation)
 	if err != nil {
 		return nil, err
 	}
@@ -263,9 +258,9 @@ func GetConversation(repo ConversationRepo, interviewID int) (*Conversation, err
 
 		topic.Questions[question.QuestionNumber] = question
 
-		messagesReturned, err := repo.GetMessages(conversation.ID, topicID, question.QuestionNumber)
+		messagesReturned, err := c.ConversationRepo.GetMessages(conversation.ID, topicID, question.QuestionNumber)
 		if err != nil {
-			log.Printf("repo.GetMessages failed: %v\n", err)
+			log.Printf("c.ConversationRepo.GetMessages failed: %v\n", err)
 			return nil, err
 		}
 
