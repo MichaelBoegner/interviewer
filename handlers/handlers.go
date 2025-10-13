@@ -14,7 +14,6 @@ import (
 
 	"github.com/michaelboegner/interviewer/billing"
 	"github.com/michaelboegner/interviewer/chatgpt"
-	"github.com/michaelboegner/interviewer/conversation"
 	"github.com/michaelboegner/interviewer/interview"
 	"github.com/michaelboegner/interviewer/middleware"
 	"github.com/michaelboegner/interviewer/user"
@@ -563,7 +562,7 @@ func (h *Handler) InterviewsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	conversationID, err := conversation.CreateEmptyConversation(h.ConversationRepo, interviewStarted.Id, interviewStarted.Subtopic)
+	conversationID, err := h.ConversationService.CreateEmptyConversation(interviewStarted.Id, interviewStarted.Subtopic)
 	if err != nil {
 		h.Logger.Error("conversation.CreateEmptyConversation failed", "error", err)
 		RespondWithError(w, http.StatusInternalServerError, "Internal server error")
@@ -718,7 +717,7 @@ func (h *Handler) CreateConversationsHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	conversationReturned, err := conversation.GetConversation(h.ConversationRepo, interviewID)
+	conversationReturned, err := h.ConversationService.GetConversation(interviewID)
 	if err != nil {
 		h.Logger.Error("conversation.GetConversation failed", "error", err)
 		RespondWithError(w, http.StatusBadRequest, "Invalid ID")
@@ -800,16 +799,14 @@ func (h *Handler) AppendConversationsHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	conversationReturned, err := conversation.GetConversation(h.ConversationRepo, interviewID)
+	conversationReturned, err := h.ConversationService.GetConversation(interviewID)
 	if err != nil {
 		h.Logger.Error("GetConversation error", "error", err)
 		RespondWithError(w, http.StatusBadRequest, "Invalid ID.")
 		return
 	}
 
-	conversationReturned, err = conversation.AppendConversation(
-		h.ConversationRepo,
-		h.InterviewRepo,
+	conversationReturned, err = h.ConversationService.AppendConversation(
 		h.AIService,
 		interviewID,
 		userID,
@@ -865,7 +862,7 @@ func (h *Handler) GetConversationHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	conversationReturned, err := conversation.GetConversation(h.ConversationRepo, interviewID)
+	conversationReturned, err := h.ConversationService.GetConversation(interviewID)
 	if err != nil {
 		h.Logger.Error("GetConversation error", "error", err)
 		RespondWithError(w, http.StatusBadRequest, "Invalid ID.")
