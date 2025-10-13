@@ -224,9 +224,9 @@ func (h *Handler) DeleteUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.Billing.CancelSubscription(userReturned.Email)
+	err = h.BillingService.CancelSubscription(userReturned.Email)
 	if err != nil {
-		h.Logger.Error("h.Billing.CancelSubscription failed", "error", err)
+		h.Logger.Error("h.BillingService.CancelSubscription failed", "error", err)
 		RespondWithError(w, http.StatusInternalServerError, "Failed to update user")
 		return
 	}
@@ -290,7 +290,7 @@ func (h *Handler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	jwToken, err := h.TokenService.CreateJWT(strconv.Itoa(userID), 0)
 	if err != nil {
 		log.Printf("JWT creation failed: %v", err)
-		return "", "", 0, err
+		RespondWithError(w, http.StatusInternalServerError, "Internal server error")
 	}
 
 	refreshToken, err := h.TokenService.CreateRefreshToken(userID)
@@ -992,7 +992,7 @@ func (h *Handler) CreateCheckoutSessionHandler(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	url, err := h.Billing.RequestCheckoutSession(user.Email, priceIDInt)
+	url, err := h.BillingService.RequestCheckoutSession(user.Email, priceIDInt)
 	if err != nil {
 		h.Logger.Error("billing.CreateCheckoutSession failed", "error", err)
 		RespondWithError(w, http.StatusInternalServerError, "Could not start checkout")
@@ -1021,7 +1021,7 @@ func (h *Handler) CancelSubscriptionHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	err = h.Billing.RequestDeleteSubscription(userReturned.SubscriptionID)
+	err = h.BillingService.RequestDeleteSubscription(userReturned.SubscriptionID)
 	if err != nil {
 		h.Logger.Error("DeleteSubscription failed", "error", err)
 		RespondWithError(w, http.StatusInternalServerError, "Could not cancel subscription")
@@ -1050,7 +1050,7 @@ func (h *Handler) ResumeSubscriptionHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	err = h.Billing.RequestResumeSubscription(userReturned.SubscriptionID)
+	err = h.BillingService.RequestResumeSubscription(userReturned.SubscriptionID)
 	if err != nil {
 		h.Logger.Error("DeleteSubscription failed", "error", err)
 		RespondWithError(w, http.StatusInternalServerError, "Could not cancel subscription")
@@ -1103,7 +1103,7 @@ func (h *Handler) ChangePlanHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.Billing.RequestUpdateSubscriptionVariant(user.SubscriptionID, priceIDInt); err != nil {
+	if err := h.BillingService.RequestUpdateSubscriptionVariant(user.SubscriptionID, priceIDInt); err != nil {
 		h.Logger.Error("UpdateLemonSubscriptionVariant failed", "error", err)
 		RespondWithError(w, http.StatusInternalServerError, "Failed to update subscription")
 		return
@@ -1127,7 +1127,7 @@ func (h *Handler) BillingWebhookHandler(w http.ResponseWriter, r *http.Request) 
 	defer r.Body.Close()
 
 	signature := r.Header.Get("X-Signature")
-	if !h.Billing.VerifyBillingSignature(signature, body, os.Getenv("LEMON_WEBHOOK_SECRET")) {
+	if !h.BillingService.VerifyBillingSignature(signature, body, os.Getenv("LEMON_WEBHOOK_SECRET")) {
 		h.Logger.Error("Invalid billing event signature")
 		RespondWithError(w, http.StatusUnauthorized, "Invalid signature")
 		return
@@ -1142,9 +1142,9 @@ func (h *Handler) BillingWebhookHandler(w http.ResponseWriter, r *http.Request) 
 	}
 	subscriptionID := webhookPayload.Data.SubscriptionID
 	webhookID := webhookPayload.Meta.WebhookID
-	exists, err := h.BillingRepo.HasWebhookBeenProcessed(webhookID)
+	exists, err := h.BillingService.BillingRepo.HasWebhookBeenProcessed(webhookID)
 	if err != nil {
-		h.Logger.Error("h.BillingRepo.HasWebhookBeenProcessed failed", "error", err)
+		h.Logger.Error("h.BillingService.BillingRepo.HasWebhookBeenProcessed failed", "error", err)
 		RespondWithError(w, http.StatusInternalServerError, "Error checking webhook")
 		return
 	}
@@ -1171,9 +1171,9 @@ func (h *Handler) BillingWebhookHandler(w http.ResponseWriter, r *http.Request) 
 			return
 		}
 
-		err = h.Billing.ApplyCredits(h.BillingRepo, orderAttrs.UserEmail, orderAttrs.FirstOrderItem.VariantID)
+		err = h.BillingService.ApplyCredits(orderAttrs.UserEmail, orderAttrs.FirstOrderItem.VariantID)
 		if err != nil {
-			h.Logger.Error("h.Billing.ApplyCredits failed", "error", err)
+			h.Logger.Error("h.BillingService.ApplyCredits failed", "error", err)
 			RespondWithError(w, http.StatusInternalServerError, "Failed to update user")
 			return
 		}
@@ -1185,7 +1185,7 @@ func (h *Handler) BillingWebhookHandler(w http.ResponseWriter, r *http.Request) 
 			return
 		}
 
-		exists, err := h.UserRepo.HasActiveOrCancelledSubscription(SubCreatedAttrs.UserEmail)
+		exists, err := h.UserService.UserRepo.HasActiveOrCancelledSubscription(SubCreatedAttrs.UserEmail)
 		if err != nil {
 			h.Logger.Error("Subscription duplicate check failed", "error", err)
 			RespondWithError(w, http.StatusInternalServerError, "Subscription check failed")
@@ -1196,7 +1196,7 @@ func (h *Handler) BillingWebhookHandler(w http.ResponseWriter, r *http.Request) 
 			return
 		}
 
-		err = h.Billing.CreateSubscription(h.UserRepo, SubCreatedAttrs, subscriptionID)
+		err = h.BillingService.CreateSubscription(SubCreatedAttrs, subscriptionID)
 		if err != nil {
 			h.Logger.Error("h.Billing.CreateSubscription failed", "error", err)
 			RespondWithError(w, http.StatusInternalServerError, "Failed to update user")
@@ -1209,9 +1209,9 @@ func (h *Handler) BillingWebhookHandler(w http.ResponseWriter, r *http.Request) 
 			return
 		}
 
-		err = h.Billing.CancelSubscription(h.UserRepo, emailAttribute.UserEmail)
+		err = h.BillingService.CancelSubscription(emailAttribute.UserEmail)
 		if err != nil {
-			h.Logger.Error("h.Billing.CancelSubscription failed", "error", err)
+			h.Logger.Error("h.BillingService.CancelSubscription failed", "error", err)
 			RespondWithError(w, http.StatusInternalServerError, "Failed to update user")
 			return
 		}
@@ -1222,9 +1222,9 @@ func (h *Handler) BillingWebhookHandler(w http.ResponseWriter, r *http.Request) 
 			return
 		}
 
-		err = h.Billing.ResumeSubscription(h.UserRepo, emailAttribute.UserEmail)
+		err = h.BillingService.ResumeSubscription(emailAttribute.UserEmail)
 		if err != nil {
-			h.Logger.Error("h.Billing.ResumeSubscription failed", "error", err)
+			h.Logger.Error("h.BillingService.ResumeSubscription failed", "error", err)
 			RespondWithError(w, http.StatusInternalServerError, "Failed to update user")
 			return
 		}
@@ -1235,7 +1235,7 @@ func (h *Handler) BillingWebhookHandler(w http.ResponseWriter, r *http.Request) 
 			return
 		}
 
-		err = h.Billing.ExpireSubscription(h.UserRepo, h.BillingRepo, emailAttribute.UserEmail)
+		err = h.BillingService.ExpireSubscription(emailAttribute.UserEmail)
 		if err != nil {
 			h.Logger.Error("h.Billing.ExpireSubscription failed", "error", err)
 			RespondWithError(w, http.StatusInternalServerError, "Failed to update user")
@@ -1321,7 +1321,7 @@ func (h *Handler) BillingWebhookHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	err = h.BillingRepo.MarkWebhookProcessed(webhookID, eventType)
+	err = h.BillingService.BillingRepo.MarkWebhookProcessed(webhookID, eventType)
 	if err != nil {
 		h.Logger.Error("MarkWebhookProcessed failed", "error", err)
 		w.WriteHeader(http.StatusOK)
