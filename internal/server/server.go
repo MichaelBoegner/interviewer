@@ -35,18 +35,19 @@ func NewServer(logger *slog.Logger) (*Server, error) {
 	tokenRepo := token.NewRepository(db)
 	conversationRepo := conversation.NewRepository(db)
 	billingRepo := billing.NewRepository(db)
+
 	aiService := chatgpt.NewAIService(logger)
-	interviewService := interview.NewInterview(interviewRepo, userRepo, billingRepo, aiService, logger)
+	interviewService := interview.NewInterviewService(interviewRepo, userRepo, billingRepo, aiService, logger)
 	userService := user.NewUserService(userRepo, logger)
-	mailerService := mailer.NewMailerService(logger)
-	billing, err := billing.NewBilling(billingRepo, userRepo, logger)
 	tokenService := token.NewTokenService(tokenRepo, logger)
+	mailerService := mailer.NewMailerService(logger)
+	billingService, err := billing.NewBillingService(billingRepo, userRepo, logger)
 	if err != nil {
 		logger.Error("billing.NewBilling failed", "error", err)
 		return nil, err
 	}
 
-	handler := handlers.NewHandler(interviewService, userService, tokenService, conversationRepo, billing, mailerService, aiService, db, logger)
+	handler := handlers.NewHandler(interviewService, userService, tokenService, conversationRepo, billingService, mailerService, aiService, db, logger)
 
 	mux.Handle("/api/users", http.HandlerFunc(handler.CreateUsersHandler))
 	mux.Handle("/api/auth/login", http.HandlerFunc(handler.LoginHandler))

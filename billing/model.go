@@ -11,7 +11,7 @@ import (
 	"github.com/michaelboegner/interviewer/user"
 )
 
-type Billing struct {
+type BillingService struct {
 	BillingRepo         BillingRepo
 	UserRepo            user.UserRepo
 	APIKey              string
@@ -106,7 +106,7 @@ type BillingRepo interface {
 	MarkWebhookProcessed(id string, event string) error
 }
 
-func NewBilling(billingRepo BillingRepo, userRepo user.UserRepo, logger *slog.Logger) (*Billing, error) {
+func NewBillingService(billingRepo BillingRepo, userRepo user.UserRepo, logger *slog.Logger) (*BillingService, error) {
 	individualID, err := strconv.Atoi(os.Getenv("LEMON_VARIANT_ID_INDIVIDUAL"))
 	if err != nil {
 		return nil, fmt.Errorf("invalid INDIVIDUAL ID: %w", err)
@@ -119,7 +119,7 @@ func NewBilling(billingRepo BillingRepo, userRepo user.UserRepo, logger *slog.Lo
 	if err != nil {
 		return nil, fmt.Errorf("invalid PREMIUM ID: %w", err)
 	}
-	return &Billing{
+	return &BillingService{
 		BillingRepo:         billingRepo,
 		UserRepo:            userRepo,
 		APIKey:              os.Getenv("LEMON_API_KEY"),

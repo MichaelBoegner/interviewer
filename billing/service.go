@@ -14,7 +14,7 @@ import (
 	"time"
 )
 
-func (b *Billing) RequestCheckoutSession(userEmail string, variantID int) (string, error) {
+func (b *BillingService) RequestCheckoutSession(userEmail string, variantID int) (string, error) {
 	payload := CheckoutPayload{
 		Data: CheckoutData{
 			Type: "checkouts",
@@ -81,7 +81,7 @@ func (b *Billing) RequestCheckoutSession(userEmail string, variantID int) (strin
 	return result.Data.Attributes.URL, nil
 }
 
-func (b *Billing) RequestDeleteSubscription(subscriptionID string) error {
+func (b *BillingService) RequestDeleteSubscription(subscriptionID string) error {
 	client := &http.Client{Timeout: 10 * time.Second}
 
 	req, err := http.NewRequest("DELETE", "https://api.lemonsqueezy.com/v1/subscriptions/"+subscriptionID, nil)
@@ -106,7 +106,7 @@ func (b *Billing) RequestDeleteSubscription(subscriptionID string) error {
 	return nil
 }
 
-func (b *Billing) RequestResumeSubscription(subscriptionID string) error {
+func (b *BillingService) RequestResumeSubscription(subscriptionID string) error {
 	client := &http.Client{Timeout: 10 * time.Second}
 
 	payload := map[string]interface{}{
@@ -146,7 +146,7 @@ func (b *Billing) RequestResumeSubscription(subscriptionID string) error {
 	return nil
 }
 
-func (b *Billing) RequestUpdateSubscriptionVariant(subscriptionID string, newVariantID int) error {
+func (b *BillingService) RequestUpdateSubscriptionVariant(subscriptionID string, newVariantID int) error {
 	payload := map[string]interface{}{
 		"data": map[string]interface{}{
 			"type": "subscriptions",
@@ -177,14 +177,14 @@ func (b *Billing) RequestUpdateSubscriptionVariant(subscriptionID string, newVar
 	return nil
 }
 
-func (b *Billing) VerifyBillingSignature(signature string, body []byte, secret string) bool {
+func (b *BillingService) VerifyBillingSignature(signature string, body []byte, secret string) bool {
 	mac := hmac.New(sha256.New, []byte(secret))
 	mac.Write(body)
 	expected := hex.EncodeToString(mac.Sum(nil))
 	return hmac.Equal([]byte(expected), []byte(signature))
 }
 
-func (b *Billing) ApplyCredits(email string, variantID int) error {
+func (b *BillingService) ApplyCredits(email string, variantID int) error {
 	user, err := b.UserRepo.GetUserByEmail(email)
 	if err != nil {
 		b.Logger.Error("repo.GetUserByEmail failed", "error", err)
@@ -233,7 +233,7 @@ func (b *Billing) ApplyCredits(email string, variantID int) error {
 	return nil
 }
 
-func (b *Billing) DeductCredits(orderAttrs OrderAttributes) error {
+func (b *BillingService) DeductCredits(orderAttrs OrderAttributes) error {
 	user, err := b.UserRepo.GetUserByEmail(orderAttrs.UserEmail)
 	if err != nil {
 		b.Logger.Error("repo.GetUserByEmail failed", "error", err)
@@ -284,7 +284,7 @@ func (b *Billing) DeductCredits(orderAttrs OrderAttributes) error {
 	return nil
 }
 
-func (b *Billing) CreateSubscription(subCreatedAttrs SubscriptionAttributes, subscriptionID string) error {
+func (b *BillingService) CreateSubscription(subCreatedAttrs SubscriptionAttributes, subscriptionID string) error {
 	user, err := b.UserRepo.GetUserByEmail(subCreatedAttrs.UserEmail)
 	if err != nil {
 		b.Logger.Error("repo.GetUserByEmail failed", "error", err)
@@ -318,7 +318,7 @@ func (b *Billing) CreateSubscription(subCreatedAttrs SubscriptionAttributes, sub
 	return nil
 }
 
-func (b *Billing) CancelSubscription(email string) error {
+func (b *BillingService) CancelSubscription(email string) error {
 	user, err := b.UserRepo.GetUserByEmail(email)
 	if err != nil {
 		b.Logger.Error("repo.GetUserByEmail failed", "error", err)
@@ -337,7 +337,7 @@ func (b *Billing) CancelSubscription(email string) error {
 	return nil
 }
 
-func (b *Billing) ResumeSubscription(email string) error {
+func (b *BillingService) ResumeSubscription(email string) error {
 	user, err := b.UserRepo.GetUserByEmail(email)
 	if err != nil {
 		b.Logger.Error("repo.GetUserByEmail failed", "error", err)
@@ -356,7 +356,7 @@ func (b *Billing) ResumeSubscription(email string) error {
 	return nil
 }
 
-func (b *Billing) ExpireSubscription(email string) error {
+func (b *BillingService) ExpireSubscription(email string) error {
 	user, err := b.UserRepo.GetUserByEmail(email)
 	if err != nil {
 		b.Logger.Error("repo.GetUserByEmail failed", "error", err)
@@ -393,7 +393,7 @@ func (b *Billing) ExpireSubscription(email string) error {
 	return nil
 }
 
-func (b *Billing) RenewSubscription(subRenewAttrs SubscriptionRenewAttributes) error {
+func (b *BillingService) RenewSubscription(subRenewAttrs SubscriptionRenewAttributes) error {
 	user, err := b.UserRepo.GetUserByEmail(subRenewAttrs.UserEmail)
 	if err != nil {
 		b.Logger.Error("repo.GetUserByEmail failed", "error", err)
@@ -439,7 +439,7 @@ func (b *Billing) RenewSubscription(subRenewAttrs SubscriptionRenewAttributes) e
 	return nil
 }
 
-func (b *Billing) ChangeSubscription(subChangedAttrs SubscriptionAttributes) error {
+func (b *BillingService) ChangeSubscription(subChangedAttrs SubscriptionAttributes) error {
 	user, err := b.UserRepo.GetUserByEmail(subChangedAttrs.UserEmail)
 	if err != nil {
 		b.Logger.Error("repo.GetUserByEmail failed", "error", err)
@@ -488,7 +488,7 @@ func (b *Billing) ChangeSubscription(subChangedAttrs SubscriptionAttributes) err
 	return nil
 }
 
-func (b *Billing) UpdateSubscription(subUpdatedAttrs SubscriptionAttributes, subscriptionID string) error {
+func (b *BillingService) UpdateSubscription(subUpdatedAttrs SubscriptionAttributes, subscriptionID string) error {
 	user, err := b.UserRepo.GetUserByEmail(subUpdatedAttrs.UserEmail)
 	if err != nil {
 		b.Logger.Error("repo.GetUserByEmail failed", "error", err)

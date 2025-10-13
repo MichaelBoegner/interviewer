@@ -14,13 +14,13 @@ import (
 	"github.com/michaelboegner/interviewer/user"
 )
 
-func NewTestBilling() *billing.Billing {
+func NewTestBilling() *billing.BillingService {
 	handler := slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
 		Level: slog.LevelDebug,
 	})
 	logger := slog.New(handler)
 
-	return &billing.Billing{
+	return &billing.BillingService{
 		VariantIDIndividual: 1,
 		VariantIDPro:        2,
 		VariantIDPremium:    3,

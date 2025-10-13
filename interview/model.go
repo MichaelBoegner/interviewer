@@ -46,7 +46,7 @@ type InterviewService struct {
 
 var ErrNoValidCredits = errors.New("no valid credits")
 
-func NewInterview(interviewRepo InterviewRepo, userRepo user.UserRepo, billingRepo billing.BillingRepo, ai chatgpt.AIClient, logger *slog.Logger) *InterviewService {
+func NewInterviewService(interviewRepo InterviewRepo, userRepo user.UserRepo, billingRepo billing.BillingRepo, ai chatgpt.AIClient, logger *slog.Logger) *InterviewService {
 	return &InterviewService{
 		InterviewRepo: interviewRepo,
 		UserRepo:      userRepo,

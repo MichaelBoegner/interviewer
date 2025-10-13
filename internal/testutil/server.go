@@ -37,18 +37,19 @@ func InitTestServer(logger *slog.Logger) (*handlers.Handler, error) {
 	tokenRepo := token.NewRepository(db)
 	conversationRepo := conversation.NewRepository(db)
 	billingRepo := billing.NewRepository(db)
-	openAI := mocks.NewMockAIService()
-	mailer := mocks.NewMockMailer()
-	billing, err := billing.NewBilling(billingRepo, userRepo, logger)
-	interviewService := interview.NewInterview(interviewRepo, userRepo, billingRepo, openAI, logger)
+
+	mockAIService := mocks.NewMockAIService()
+	mockMailerService := mocks.NewMockMailerService()
+	interviewService := interview.NewInterviewService(interviewRepo, userRepo, billingRepo, mockAIService, logger)
 	userService := user.NewUserService(userRepo, logger)
 	tokenSerice := token.NewTokenService(tokenRepo, logger)
+	billingService, err := billing.NewBillingService(billingRepo, userRepo, logger)
 	if err != nil {
 		logger.Error("billing.NewBilling failed", "error", err)
 		return nil, err
 	}
 
-	handler := handlers.NewHandler(interviewService, userService, tokenSerice, conversationRepo, billing, mailer, openAI, db, logger)
+	handler := handlers.NewHandler(interviewService, userService, tokenSerice, conversationRepo, billingService, mockMailerService, mockAIService, db, logger)
 
 	TestMux = http.NewServeMux()
 	TestMux.Handle("/api/users", http.HandlerFunc(handler.CreateUsersHandler))

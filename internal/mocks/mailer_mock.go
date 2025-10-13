@@ -1,25 +1,23 @@
 package mocks
 
-type MockMailer struct{}
+type MockMailerService struct{}
 
-func NewMockMailer() *MockMailer {
-	mockMailer := &MockMailer{}
-
-	return mockMailer
+func NewMockMailerService() *MockMailerService {
+	return &MockMailerService{}
 }
 
-func (m *MockMailer) SendPasswordReset(email, resetURL string) error {
+func (m *MockMailerService) SendPasswordReset(email, resetURL string) error {
 	return nil
 }
 
-func (m *MockMailer) SendVerificationEmail(email, verifyURL string) error {
+func (m *MockMailerService) SendVerificationEmail(email, verifyURL string) error {
 	return nil
 }
 
-func (m *MockMailer) SendWelcome(email string) error {
+func (m *MockMailerService) SendWelcome(email string) error {
 	return nil
 }
 
-func (m *MockMailer) SendDeletionConfirmation(email string) error {
+func (m *MockMailerService) SendDeletionConfirmation(email string) error {
 	return nil
 }

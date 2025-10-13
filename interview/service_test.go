@@ -79,7 +79,7 @@ func TestStartInterview(t *testing.T) {
 			repo := interview.NewMockRepo()
 			userRepo := user.NewMockRepo()
 			billingRepo := billing.NewMockRepo()
-			interviewService := interview.NewInterview(repo, userRepo, billingRepo, tc.aiClient, logger)
+			interviewService := interview.NewInterviewService(repo, userRepo, billingRepo, tc.aiClient, logger)
 			repo.FailRepo = tc.failRepo
 
 			interviewStarted, err := interviewService.StartInterview(
@@ -166,7 +166,7 @@ func TestGetInterview(t *testing.T) {
 			repo := interview.NewMockRepo()
 			userRepo := user.NewMockRepo()
 			billingRepo := billing.NewMockRepo()
-			interviewService := interview.NewInterview(repo, userRepo, billingRepo, &mocks.MockAIService{}, logger)
+			interviewService := interview.NewInterviewService(repo, userRepo, billingRepo, &mocks.MockAIService{}, logger)
 			repo.FailRepo = tc.failRepo
 
 			if tc.setup != nil {
