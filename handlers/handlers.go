@@ -1254,7 +1254,7 @@ func (h *Handler) BillingWebhookHandler(w http.ResponseWriter, r *http.Request) 
 			return
 		}
 
-		err = h.Billing.RenewSubscription(h.UserRepo, h.BillingRepo, SubRenewAttrs)
+		err = h.BillingService.RenewSubscription(SubRenewAttrs)
 		if err != nil {
 			h.Logger.Error("h.Billing.RenewSubscription failed", "error", err)
 			RespondWithError(w, http.StatusInternalServerError, "Failed to update user")
@@ -1268,7 +1268,7 @@ func (h *Handler) BillingWebhookHandler(w http.ResponseWriter, r *http.Request) 
 			return
 		}
 
-		err = h.Billing.ChangeSubscription(h.UserRepo, h.BillingRepo, SubChangedAttrs)
+		err = h.BillingService.ChangeSubscription(SubChangedAttrs)
 		if err != nil {
 			h.Logger.Error("h.Billing.ChangeSubscription failed", "error", err)
 			RespondWithError(w, http.StatusInternalServerError, "Failed to update user")
@@ -1282,7 +1282,7 @@ func (h *Handler) BillingWebhookHandler(w http.ResponseWriter, r *http.Request) 
 			return
 		}
 
-		err = h.Billing.UpdateSubscription(h.UserRepo, SubChangedAttrs, subscriptionID)
+		err = h.BillingService.UpdateSubscription(SubChangedAttrs, subscriptionID)
 		if err != nil {
 			h.Logger.Error("h.Billing.UpdateSubscription failed", "error", err)
 			RespondWithError(w, http.StatusInternalServerError, "Failed to update user")
@@ -1296,7 +1296,7 @@ func (h *Handler) BillingWebhookHandler(w http.ResponseWriter, r *http.Request) 
 			return
 		}
 
-		err = h.Billing.DeductCredits(h.UserRepo, h.BillingRepo, orderAttrs)
+		err = h.BillingService.DeductCredits(orderAttrs)
 		if err != nil {
 			h.Logger.Error("h.Billing.DeductCredits failed", "error", err)
 			RespondWithError(w, http.StatusInternalServerError, "Failed to update user")
