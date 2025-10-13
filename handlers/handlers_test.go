@@ -859,7 +859,7 @@ func Test_CreateConversationsHandler_Integration(t *testing.T) {
 
 			// Assert Database
 			if tc.DBCheck {
-				conversation, err := conversation.GetConversation(Handler.ConversationRepo, got.Conversation.ID)
+				conversation, err := Handler.ConversationService.GetConversation(got.Conversation.ID)
 				if err != nil {
 					t.Fatalf("Assert Database: GetConversation failed: %v", err)
 				}
@@ -999,7 +999,7 @@ func Test_AppendConversationsHandler_Integration(t *testing.T) {
 
 			// DB validation
 			if tc.DBCheck {
-				gotDB, err := conversation.GetConversation(Handler.ConversationRepo, respUnmarshalled.Conversation.ID)
+				gotDB, err := Handler.ConversationService.GetConversation(respUnmarshalled.Conversation.ID)
 				if err != nil {
 					t.Fatalf("DB check failed: %v", err)
 				}
