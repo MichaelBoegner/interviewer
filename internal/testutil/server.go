@@ -7,6 +7,7 @@ import (
 
 	"github.com/michaelboegner/interviewer/billing"
 	"github.com/michaelboegner/interviewer/conversation"
+	"github.com/michaelboegner/interviewer/dashboard"
 	"github.com/michaelboegner/interviewer/database"
 	"github.com/michaelboegner/interviewer/handlers"
 	"github.com/michaelboegner/interviewer/internal/mocks"
@@ -43,13 +44,14 @@ func InitTestServer(logger *slog.Logger) (*handlers.Handler, error) {
 	interviewService := interview.NewInterviewService(interviewRepo, userRepo, billingRepo, mockAIService, logger)
 	userService := user.NewUserService(userRepo, logger)
 	tokenSerice := token.NewTokenService(tokenRepo, logger)
+	dashboardService := dashboard.NewDashboardService(userRepo, interviewRepo, logger)
 	billingService, err := billing.NewBillingService(billingRepo, userRepo, logger)
 	if err != nil {
 		logger.Error("billing.NewBilling failed", "error", err)
 		return nil, err
 	}
 
-	handler := handlers.NewHandler(interviewService, userService, tokenSerice, conversationRepo, billingService, mockMailerService, mockAIService, db, logger)
+	handler := handlers.NewHandler(interviewService, userService, tokenSerice, conversationRepo, billingService, mockMailerService, mockAIService, dashboardService, db, logger)
 
 	TestMux = http.NewServeMux()
 	TestMux.Handle("/api/users", http.HandlerFunc(handler.CreateUsersHandler))

@@ -7,6 +7,7 @@ import (
 	"github.com/michaelboegner/interviewer/billing"
 	"github.com/michaelboegner/interviewer/chatgpt"
 	"github.com/michaelboegner/interviewer/conversation"
+	"github.com/michaelboegner/interviewer/dashboard"
 	"github.com/michaelboegner/interviewer/interview"
 	"github.com/michaelboegner/interviewer/mailer"
 	"github.com/michaelboegner/interviewer/token"
@@ -60,6 +61,7 @@ type Handler struct {
 	BillingService   *billing.BillingService
 	Mailer           mailer.MailerClient
 	AIService        chatgpt.AIClient
+	DashboardService *dashboard.DashboardService
 	DB               *sql.DB
 	Logger           *slog.Logger
 }
@@ -72,6 +74,7 @@ func NewHandler(
 	billingService *billing.BillingService,
 	mailer mailer.MailerClient,
 	aiService chatgpt.AIClient,
+	dashboardService *dashboard.DashboardService,
 	db *sql.DB,
 	logger *slog.Logger) *Handler {
 	return &Handler{
@@ -82,6 +85,7 @@ func NewHandler(
 		BillingService:   billingService,
 		Mailer:           mailer,
 		AIService:        aiService,
+		DashboardService: dashboardService,
 		DB:               db,
 		Logger:           logger,
 	}

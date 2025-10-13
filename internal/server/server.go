@@ -9,6 +9,7 @@ import (
 	"github.com/michaelboegner/interviewer/billing"
 	"github.com/michaelboegner/interviewer/chatgpt"
 	"github.com/michaelboegner/interviewer/conversation"
+	"github.com/michaelboegner/interviewer/dashboard"
 	"github.com/michaelboegner/interviewer/database"
 	"github.com/michaelboegner/interviewer/handlers"
 	"github.com/michaelboegner/interviewer/interview"
@@ -41,13 +42,14 @@ func NewServer(logger *slog.Logger) (*Server, error) {
 	userService := user.NewUserService(userRepo, logger)
 	tokenService := token.NewTokenService(tokenRepo, logger)
 	mailerService := mailer.NewMailerService(logger)
+	dashboardService := dashboard.NewDashboardService(userRepo, interviewRepo, logger)
 	billingService, err := billing.NewBillingService(billingRepo, userRepo, logger)
 	if err != nil {
 		logger.Error("billing.NewBilling failed", "error", err)
 		return nil, err
 	}
 
-	handler := handlers.NewHandler(interviewService, userService, tokenService, conversationRepo, billingService, mailerService, aiService, db, logger)
+	handler := handlers.NewHandler(interviewService, userService, tokenService, conversationRepo, billingService, mailerService, aiService, dashboardService, db, logger)
 
 	mux.Handle("/api/users", http.HandlerFunc(handler.CreateUsersHandler))
 	mux.Handle("/api/auth/login", http.HandlerFunc(handler.LoginHandler))

@@ -15,7 +15,6 @@ import (
 	"github.com/michaelboegner/interviewer/billing"
 	"github.com/michaelboegner/interviewer/chatgpt"
 	"github.com/michaelboegner/interviewer/conversation"
-	"github.com/michaelboegner/interviewer/dashboard"
 	"github.com/michaelboegner/interviewer/interview"
 	"github.com/michaelboegner/interviewer/middleware"
 	"github.com/michaelboegner/interviewer/user"
@@ -1343,7 +1342,7 @@ func (h *Handler) DashboardHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dashboardData, err := dashboard.GetDashboardData(userID, h.UserRepo, h.InterviewRepo)
+	dashboardData, err := h.DashboardService.GetDashboardData(userID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			RespondWithError(w, http.StatusUnauthorized, "User not found")
