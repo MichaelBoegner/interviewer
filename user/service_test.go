@@ -55,7 +55,7 @@ func TestCreateUser(t *testing.T) {
 			logger := slog.New(slog.NewTextHandler(&buf, &slog.HandlerOptions{Level: slog.LevelDebug, AddSource: true}))
 			userRepo := NewMockRepo()
 			userService := NewUserService(userRepo, logger)
-			userRepo.failRepo = tc.failRepo
+			userRepo.FailRepo = tc.failRepo
 
 			jwt, err := userService.VerificationToken(tc.email, tc.username, tc.password)
 			if err != nil {
@@ -125,7 +125,7 @@ func TestLoginUser(t *testing.T) {
 			tokenRepo := token.NewMockRepo()
 			userService := NewUserService(userRepo, logger)
 			tokenService := token.NewTokenService(tokenRepo, logger)
-			userRepo.failRepo = tc.failRepo
+			userRepo.FailRepo = tc.failRepo
 
 			username, userID, err := userService.LoginUser(tc.email, tc.password)
 			if err != nil {
@@ -195,7 +195,7 @@ func TestGetUser(t *testing.T) {
 			logger := slog.New(slog.NewTextHandler(&buf, &slog.HandlerOptions{Level: slog.LevelDebug, AddSource: true}))
 			userRepo := NewMockRepo()
 			userService := NewUserService(userRepo, logger)
-			userRepo.failRepo = tc.failRepo
+			userRepo.FailRepo = tc.failRepo
 
 			user, err := userService.GetUser(tc.userID)
 
@@ -247,7 +247,7 @@ func TestUpdateSubscription(t *testing.T) {
 			logger := slog.New(slog.NewTextHandler(&buf, &slog.HandlerOptions{Level: slog.LevelDebug, AddSource: true}))
 			userRepo := NewMockRepo()
 			userService := NewUserService(userRepo, logger)
-			userRepo.failRepo = tc.failRepo
+			userRepo.FailRepo = tc.failRepo
 
 			user, err := userService.GetUser(tc.userID)
 
