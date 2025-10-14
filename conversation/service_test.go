@@ -1,23 +1,19 @@
 package conversation_test
 
 import (
-	"fmt"
-	"log"
 	"log/slog"
-	"os"
 	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-	"github.com/michaelboegner/interviewer/chatgpt"
 	"github.com/michaelboegner/interviewer/conversation"
 	"github.com/michaelboegner/interviewer/internal/mocks"
 	"github.com/michaelboegner/interviewer/interview"
 )
 
 func TestCreateConversation(t *testing.T) {
-	ai := &mocks.MockAIService{}
+	mockAIService := &mocks.MockAIService{}
 
 	tests := []struct {
 		name           string
@@ -59,7 +55,7 @@ func TestCreateConversation(t *testing.T) {
 				CurrentQuestionNumber: 3,
 			},
 			setup: func() {
-				ai.Scenario = mocks.ScenarioCreated
+				mockAIService.Scenario = mocks.ScenarioCreated
 			},
 		},
 		{
@@ -85,12 +81,14 @@ func TestCreateConversation(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
+			if tc.setup != nil {
+				tc.setup()
+			}
 			var buf strings.Builder
 			logger := slog.New(slog.NewTextHandler(&buf, &slog.HandlerOptions{Level: slog.LevelDebug, AddSource: true}))
 			conversationRepo := conversation.NewMockRepo()
 			interviewRepo := interview.NewMockRepo()
-			aiService := chatgpt.NewAIService(logger)
-			conversationService := conversation.NewConvesationService(conversationRepo, interviewRepo, aiService, logger)
+			conversationService := conversation.NewConvesationService(conversationRepo, interviewRepo, mockAIService, logger)
 			conversationRepo.FailRepo = tc.failRepo
 
 			convo, err := conversationService.CreateConversation(
@@ -122,8 +120,7 @@ func TestCreateConversation(t *testing.T) {
 }
 
 func TestAppendConversation(t *testing.T) {
-	ai := &mocks.MockAIService{}
-
+	mockAIService := &mocks.MockAIService{}
 	tests := []struct {
 		name        string
 		message     string
@@ -152,7 +149,7 @@ func TestAppendConversation(t *testing.T) {
 			failRepo:    false,
 			expectError: false,
 			setup: func() {
-				ai.Scenario = mocks.ScenarioAppended1
+				mockAIService.Scenario = mocks.ScenarioAppended1
 			},
 		},
 		{
@@ -176,12 +173,14 @@ func TestAppendConversation(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
+			if tc.setup != nil {
+				tc.setup()
+			}
 			var buf strings.Builder
 			logger := slog.New(slog.NewTextHandler(&buf, &slog.HandlerOptions{Level: slog.LevelDebug, AddSource: true}))
 			conversationRepo := conversation.NewMockRepo()
 			interviewRepo := interview.NewMockRepo()
-			aiService := chatgpt.NewAIService(logger)
-			conversationService := conversation.NewConvesationService(conversationRepo, interviewRepo, aiService, logger)
+			conversationService := conversation.NewConvesationService(conversationRepo, interviewRepo, mockAIService, logger)
 			conversationRepo.FailRepo = tc.failRepo
 
 			convo, err := conversationService.CreateConversation(
@@ -218,12 +217,5 @@ func TestAppendConversation(t *testing.T) {
 				}
 			}
 		})
-	}
-}
-
-func showLogsIfFail(t *testing.T, name string, buf strings.Builder) {
-	log.SetOutput(os.Stderr)
-	if t.Failed() {
-		fmt.Printf("---- logs for test: %s ----\n%s\n", name, buf.String())
 	}
 }
