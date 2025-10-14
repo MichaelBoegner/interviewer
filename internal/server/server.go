@@ -41,7 +41,7 @@ func NewServer(logger *slog.Logger) (*Server, error) {
 	interviewService := interview.NewInterviewService(interviewRepo, userRepo, billingRepo, aiService, logger)
 	userService := user.NewUserService(userRepo, logger)
 	tokenService := token.NewTokenService(tokenRepo, logger)
-	conversationService := conversation.NewConvesationService(conversationRepo, interviewRepo, logger)
+	conversationService := conversation.NewConvesationService(conversationRepo, interviewRepo, aiService, logger)
 	mailerService := mailer.NewMailerService(logger)
 	dashboardService := dashboard.NewDashboardService(userRepo, interviewRepo, logger)
 	billingService, err := billing.NewBillingService(billingRepo, userRepo, logger)

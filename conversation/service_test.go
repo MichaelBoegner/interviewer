@@ -10,6 +10,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/michaelboegner/interviewer/chatgpt"
 	"github.com/michaelboegner/interviewer/conversation"
 	"github.com/michaelboegner/interviewer/internal/mocks"
 	"github.com/michaelboegner/interviewer/interview"
@@ -88,11 +89,11 @@ func TestCreateConversation(t *testing.T) {
 			logger := slog.New(slog.NewTextHandler(&buf, &slog.HandlerOptions{Level: slog.LevelDebug, AddSource: true}))
 			conversationRepo := conversation.NewMockRepo()
 			interviewRepo := interview.NewMockRepo()
-			conversationService := conversation.NewConvesationService(conversationRepo, interviewRepo, logger)
+			aiService := chatgpt.NewAIService(logger)
+			conversationService := conversation.NewConvesationService(conversationRepo, interviewRepo, aiService, logger)
 			conversationRepo.FailRepo = tc.failRepo
 
 			convo, err := conversationService.CreateConversation(
-				ai,
 				tc.convo,
 				tc.interviewID,
 				tc.prompt,
@@ -179,11 +180,11 @@ func TestAppendConversation(t *testing.T) {
 			logger := slog.New(slog.NewTextHandler(&buf, &slog.HandlerOptions{Level: slog.LevelDebug, AddSource: true}))
 			conversationRepo := conversation.NewMockRepo()
 			interviewRepo := interview.NewMockRepo()
-			conversationService := conversation.NewConvesationService(conversationRepo, interviewRepo, logger)
+			aiService := chatgpt.NewAIService(logger)
+			conversationService := conversation.NewConvesationService(conversationRepo, interviewRepo, aiService, logger)
 			conversationRepo.FailRepo = tc.failRepo
 
 			convo, err := conversationService.CreateConversation(
-				ai,
 				tc.convo,
 				tc.interviewID,
 				"Prompt",
@@ -199,7 +200,6 @@ func TestAppendConversation(t *testing.T) {
 			}
 
 			updatedConvo, err := conversationService.AppendConversation(
-				ai,
 				tc.interviewID,
 				tc.userID,
 				convo,

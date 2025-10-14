@@ -4,6 +4,7 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/michaelboegner/interviewer/chatgpt"
 	"github.com/michaelboegner/interviewer/interview"
 )
 
@@ -72,13 +73,15 @@ type Message struct {
 type ConversationService struct {
 	ConversationRepo ConversationRepo
 	InterviewRepo    interview.InterviewRepo
+	AIService        chatgpt.AIClient
 	Logger           *slog.Logger
 }
 
-func NewConvesationService(conversationRepo ConversationRepo, interviewRepo interview.InterviewRepo, logger *slog.Logger) *ConversationService {
+func NewConvesationService(conversationRepo ConversationRepo, interviewRepo interview.InterviewRepo, aiService chatgpt.AIClient, logger *slog.Logger) *ConversationService {
 	return &ConversationService{
 		ConversationRepo: conversationRepo,
 		InterviewRepo:    interviewRepo,
+		AIService:        aiService,
 		Logger:           logger,
 	}
 }

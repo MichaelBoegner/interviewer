@@ -44,7 +44,7 @@ func InitTestServer(logger *slog.Logger) (*handlers.Handler, error) {
 	interviewService := interview.NewInterviewService(interviewRepo, userRepo, billingRepo, mockAIService, logger)
 	userService := user.NewUserService(userRepo, logger)
 	tokenSerice := token.NewTokenService(tokenRepo, logger)
-	conversationService := conversation.NewConvesationService(conversationRepo, interviewRepo, logger)
+	conversationService := conversation.NewConvesationService(conversationRepo, interviewRepo, mockAIService, logger)
 	dashboardService := dashboard.NewDashboardService(userRepo, interviewRepo, logger)
 	billingService, err := billing.NewBillingService(billingRepo, userRepo, logger)
 	if err != nil {

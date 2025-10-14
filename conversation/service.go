@@ -3,8 +3,6 @@ package conversation
 import (
 	"errors"
 	"log"
-
-	"github.com/michaelboegner/interviewer/chatgpt"
 )
 
 func (c *ConversationService) CheckForConversation(interviewID int) (bool, error) {
@@ -29,7 +27,6 @@ func (c *ConversationService) CreateEmptyConversation(interviewID int, subTopic 
 }
 
 func (c *ConversationService) CreateConversation(
-	openAI chatgpt.AIClient,
 	conversation *Conversation,
 	interviewID int,
 	prompt,
@@ -63,7 +60,7 @@ func (c *ConversationService) CreateConversation(
 		return nil, err
 	}
 
-	chatGPTResponse, chatGPTResponseString, err := GetChatGPTResponses(conversation, openAI, c.InterviewRepo)
+	chatGPTResponse, chatGPTResponseString, err := GetChatGPTResponses(conversation, c.AIService, c.InterviewRepo)
 	if err != nil {
 		log.Printf("getChatGPTResponses failed: %v", err)
 		return nil, err
@@ -104,7 +101,6 @@ func (c *ConversationService) CreateConversation(
 }
 
 func (c *ConversationService) AppendConversation(
-	openAI chatgpt.AIClient,
 	interviewID,
 	userID int,
 	conversation *Conversation,
@@ -125,7 +121,7 @@ func (c *ConversationService) AppendConversation(
 	}
 	conversation.Topics[topicID].Questions[questionNumber].Messages = append(conversation.Topics[topicID].Questions[questionNumber].Messages, messageUser)
 
-	chatGPTResponse, chatGPTResponseString, err := GetChatGPTResponses(conversation, openAI, c.InterviewRepo)
+	chatGPTResponse, chatGPTResponseString, err := GetChatGPTResponses(conversation, c.AIService, c.InterviewRepo)
 	if err != nil {
 		log.Printf("getChatGPTResponses failed: %v", err)
 		return nil, err
