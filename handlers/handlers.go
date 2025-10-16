@@ -52,7 +52,6 @@ func (h *Handler) RequestVerificationHandler(w http.ResponseWriter, r *http.Requ
 
 	verificationJWT, err := h.UserService.VerificationToken(req.Email, req.Username, req.Password)
 	if err != nil {
-		h.Logger.Error("GenerateEmailVerificationToken failed", "error", err)
 		RespondWithError(w, http.StatusInternalServerError, "Failed to create token")
 		return
 	}
@@ -61,7 +60,6 @@ func (h *Handler) RequestVerificationHandler(w http.ResponseWriter, r *http.Requ
 
 	go func(email, url string) {
 		if err := h.Mailer.SendVerificationEmail(email, url); err != nil {
-			h.Logger.Error("SendVerificationEmail failed", "error", err)
 		}
 	}(req.Email, verifyURL)
 
@@ -82,7 +80,6 @@ func (h *Handler) CheckEmailHandler(w http.ResponseWriter, r *http.Request) {
 		Email string `json:"email"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		h.Logger.Error("Decoding check-email body failed", "error", err)
 		RespondWithError(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
@@ -97,7 +94,6 @@ func (h *Handler) CheckEmailHandler(w http.ResponseWriter, r *http.Request) {
 			RespondWithJSON(w, http.StatusOK, map[string]bool{"exists": false})
 			return
 		}
-		h.Logger.Error("CheckEmailHandler internal error", "error", err)
 		RespondWithError(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
@@ -116,14 +112,12 @@ func (h *Handler) CreateUsersHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
-		h.Logger.Error("Decoding params failed", "error", err)
 		RespondWithError(w, http.StatusInternalServerError, "Internal Server Error")
 		return
 	}
 
 	userCreated, err := h.UserService.CreateUser(req.Token)
 	if err != nil {
-		h.Logger.Error("CreateUser error", "error", err)
 		RespondWithError(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
@@ -137,7 +131,6 @@ func (h *Handler) CreateUsersHandler(w http.ResponseWriter, r *http.Request) {
 
 	go func(email string) {
 		if err := h.Mailer.SendWelcome(email); err != nil {
-			h.Logger.Error("SendWelcome failed", "error", err)
 		}
 	}(userCreated.Email)
 
@@ -162,22 +155,19 @@ func (h *Handler) GetUsersHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userIDParam, err := GetPathID(r, "/api/users/", h.Logger)
+	userIDParam, err := GetPathID(r, "/api/users/")
 	if err != nil {
-		h.Logger.Error("GetPathID error", "error", err)
 		RespondWithError(w, http.StatusBadRequest, "UserID required")
 		return
 	}
 
 	if userID != userIDParam {
-		h.Logger.Error("UserID mismatch", "got", userIDParam, "want", userID)
 		RespondWithError(w, http.StatusUnauthorized, "Invalid ID")
 		return
 	}
 
 	userReturned, err := h.UserService.GetUser(userID)
 	if err != nil {
-		h.Logger.Error("GetUsers error", "error", err)
 		return
 	}
 
@@ -202,22 +192,19 @@ func (h *Handler) DeleteUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userIDParam, err := GetPathID(r, "/api/users/delete/", h.Logger)
+	userIDParam, err := GetPathID(r, "/api/users/delete/")
 	if err != nil {
-		h.Logger.Error("GetPathID error", "error", err)
 		RespondWithError(w, http.StatusBadRequest, "UserID required")
 		return
 	}
 
 	if userID != userIDParam {
-		h.Logger.Error("UserID mismatch", "got", userIDParam, "want", userID)
 		RespondWithError(w, http.StatusUnauthorized, "Invalid ID")
 		return
 	}
 
 	userReturned, err := h.UserService.GetUser(userID)
 	if err != nil {
-		h.Logger.Error("GetUser error", "error", err)
 		RespondWithError(w, http.StatusInternalServerError, "Failed to find user")
 		return
 	}
@@ -231,21 +218,18 @@ func (h *Handler) DeleteUserHandler(w http.ResponseWriter, r *http.Request) {
 
 	err = h.UserService.MarkUserDeleted(userID)
 	if err != nil {
-		h.Logger.Error("DeleteUser failed", "error", err)
 		RespondWithError(w, http.StatusInternalServerError, "Failed to delete user")
 		return
 	}
 
 	err = h.TokenService.DeleteRefreshToken(userID)
 	if err != nil {
-		h.Logger.Error("DeleteRefreshTokensForUser failed", "error", err)
 		RespondWithError(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
 
 	err = h.Mailer.SendDeletionConfirmation(userReturned.Email)
 	if err != nil {
-		h.Logger.Error("h.Mailer.SendDeletionConfirmation failed", "error", err)
 		RespondWithError(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
@@ -262,13 +246,11 @@ func (h *Handler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	params := &middleware.AcceptedVals{}
 	err := json.NewDecoder(r.Body).Decode(params)
 	if err != nil {
-		h.Logger.Error("Decoding params failed", "error", err)
 		RespondWithError(w, http.StatusInternalServerError, "Internal Server Error")
 		return
 	}
 
 	if params.Email == "" || params.Password == "" {
-		h.Logger.Error("Invalid username or password.")
 		RespondWithError(w, http.StatusBadRequest, "Authentication failed.")
 		return
 
@@ -276,7 +258,6 @@ func (h *Handler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 	username, userID, err := h.UserService.LoginUser(params.Email, params.Password)
 	if err != nil {
-		h.Logger.Error("LoginUser error", "error", err)
 		if errors.Is(err, user.ErrAccountDeleted) {
 			RespondWithError(w, http.StatusUnauthorized, user.ErrAccountDeleted.Error())
 			return
@@ -293,7 +274,6 @@ func (h *Handler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 	refreshToken, err := h.TokenService.CreateRefreshToken(userID)
 	if err != nil {
-		h.Logger.Error("RefreshToken error", "error", err)
 		RespondWithError(w, http.StatusUnauthorized, "")
 		return
 	}
@@ -355,14 +335,12 @@ func (h *Handler) GithubLoginHandler(w http.ResponseWriter, r *http.Request) {
 	client = &http.Client{}
 	req, err = http.NewRequest("GET", "https://api.github.com/user", nil)
 	if err != nil {
-		h.Logger.Error("http.NewRequest failed", "error", err)
 		RespondWithError(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
 	req.Header.Set("Authorization", "Bearer "+tokenResp.AccessToken)
 	githubResp, err := client.Do(req)
 	if err != nil {
-		h.Logger.Error("GET api.github.com/user failed", "error", err)
 		RespondWithError(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
@@ -377,14 +355,12 @@ func (h *Handler) GithubLoginHandler(w http.ResponseWriter, r *http.Request) {
 	if githubUser.Email == "" {
 		req, err := http.NewRequest("GET", "https://api.github.com/user/emails", nil)
 		if err != nil {
-			h.Logger.Error("http.NewRequest failed", "error", err)
 			RespondWithError(w, http.StatusInternalServerError, "Internal server error")
 			return
 		}
 		req.Header.Set("Authorization", "Bearer "+tokenResp.AccessToken)
 		emailResp, err := client.Do(req)
 		if err != nil {
-			h.Logger.Error("GET api.github.com/user/emails failed", "error", err)
 			RespondWithError(w, http.StatusInternalServerError, "Internal server error")
 			return
 		}
@@ -406,7 +382,6 @@ func (h *Handler) GithubLoginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if githubUser.Email == "" {
-		h.Logger.Error("GitHub login failed: no verified email found for user", "userEmail", githubUser.Login)
 		RespondWithError(w, http.StatusUnauthorized, "We couldn’t retrieve a valid email address from GitHub. Please check your GitHub email settings and try again.")
 		return
 	}
@@ -454,53 +429,45 @@ func (h *Handler) RefreshTokensHandler(w http.ResponseWriter, r *http.Request) {
 
 	err := json.NewDecoder(r.Body).Decode(params)
 	if err != nil {
-		h.Logger.Error("Decoding params failed", "error", err)
 		RespondWithError(w, http.StatusInternalServerError, "Internal Server Error")
 		return
 	}
 
 	if params.UserID == 0 {
-		h.Logger.Error("Invalid userID")
 		RespondWithError(w, http.StatusBadRequest, "Authentication failed")
 		return
 	}
 
 	storedToken, err := h.TokenService.GetStoredRefreshToken(params.UserID)
 	if err != nil {
-		h.Logger.Error("GetStoredRefreshToken error", "error", err)
 		RespondWithError(w, http.StatusBadRequest, "Invalid user_id")
 		return
 	}
 
 	ok := h.TokenService.VerifyRefreshToken(storedToken, providedToken)
 	if !ok {
-		h.Logger.Error("VerifyRefreshToken error")
 		RespondWithError(w, http.StatusUnauthorized, "Refresh token is invalid")
 		return
 	}
 
 	refreshToken, err := h.TokenService.CreateRefreshToken(params.UserID)
 	if err != nil {
-		h.Logger.Error("CreateRefreshToken error", "error", err)
 		RespondWithError(w, http.StatusUnauthorized, "")
 		return
 	}
 
 	user, err := h.UserService.UserRepo.GetUser(params.UserID)
 	if err != nil {
-		h.Logger.Error("h.UserRepo.GetUser error", "error", err)
 		RespondWithError(w, http.StatusUnauthorized, "Account deactivated")
 		return
 	}
 	if user.AccountStatus == "deleted" {
-		h.Logger.Error("Refresh attempt for deleted account ID", "userID", params.UserID)
 		RespondWithError(w, http.StatusUnauthorized, "Account deactivated")
 		return
 	}
 
 	jwToken, err := h.TokenService.CreateJWT(strconv.Itoa(params.UserID), 0)
 	if err != nil {
-		h.Logger.Error("JWT creation failed", "error", err)
 		RespondWithError(w, http.StatusInternalServerError, "")
 		return
 	}
@@ -528,14 +495,12 @@ func (h *Handler) InterviewsHandler(w http.ResponseWriter, r *http.Request) {
 	params := &middleware.AcceptedVals{}
 	err := json.NewDecoder(r.Body).Decode(params)
 	if err != nil {
-		h.Logger.Error("Decoding params failed", "error", err)
 		RespondWithError(w, http.StatusInternalServerError, "Internal Server Error")
 		return
 	}
 
 	userReturned, err := h.UserService.GetUser(userID)
 	if err != nil {
-		h.Logger.Error("GetUser error", "error", err)
 		RespondWithError(w, http.StatusInternalServerError, "Failed to find user")
 		return
 	}
@@ -549,7 +514,6 @@ func (h *Handler) InterviewsHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		var openaiErr *chatgpt.OpenAIError
 		if errors.As(err, &openaiErr) {
-			h.Logger.Error("OpenAI error", "error", openaiErr)
 			RespondWithError(w, openaiErr.StatusCode, openaiErr.Message)
 			return
 		}
@@ -557,21 +521,18 @@ func (h *Handler) InterviewsHandler(w http.ResponseWriter, r *http.Request) {
 			RespondWithError(w, http.StatusPaymentRequired, "You do not have enough credits to start a new interview or your subscription has expired.")
 			return
 		}
-		h.Logger.Error("Interview failed to start", "error", err)
 		RespondWithError(w, http.StatusInternalServerError, "Failed to start interview.")
 		return
 	}
 
 	conversationID, err := h.ConversationService.CreateEmptyConversation(interviewStarted.Id, interviewStarted.Subtopic)
 	if err != nil {
-		h.Logger.Error("conversation.CreateEmptyConversation failed", "error", err)
 		RespondWithError(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
 
 	err = h.InterviewService.LinkConversation(interviewStarted.Id, conversationID)
 	if err != nil {
-		h.Logger.Error("interview.LinkConversation failed", "error", err)
 		RespondWithError(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
@@ -597,21 +558,18 @@ func (h *Handler) GetInterviewHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	interviewID, err := GetPathID(r, "/api/interviews/", h.Logger)
+	interviewID, err := GetPathID(r, "/api/interviews/")
 	if err != nil {
-		h.Logger.Error("GetPathID failed", "error", err)
 		RespondWithError(w, http.StatusBadRequest, "Invalid interview ID")
 		return
 	}
 
 	interviewReturned, err := h.InterviewService.GetInterview(interviewID)
 	if err != nil {
-		h.Logger.Error("GetInterview failed", "error", err)
 		RespondWithError(w, http.StatusNotFound, "Interview not found")
 		return
 	}
 	if interviewReturned.UserId != userID {
-		h.Logger.Error("User ID mismatch on interview fetch", "got", userID, "want", interviewReturned.UserId)
 		RespondWithError(w, http.StatusUnauthorized, "Unauthorized")
 		return
 	}
@@ -635,7 +593,7 @@ func (h *Handler) UpdateInterviewStatusHandler(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	interviewID, err := GetPathID(r, "/api/interviews/", h.Logger)
+	interviewID, err := GetPathID(r, "/api/interviews/")
 	if err != nil {
 		RespondWithError(w, http.StatusBadRequest, "Invalid interview ID")
 		return
@@ -651,21 +609,18 @@ func (h *Handler) UpdateInterviewStatusHandler(w http.ResponseWriter, r *http.Re
 
 	interviewReturned, err := h.InterviewService.GetInterview(interviewID)
 	if err != nil {
-		h.Logger.Error("GetInterview error", "error", err)
 		RespondWithError(w, http.StatusBadRequest, "Invalid ID")
 		return
 	}
 
 	err = ValidateInterviewStatusTransition(interviewReturned.Status, payload.Status)
 	if err != nil {
-		h.Logger.Error("ValidateInterviewStatusTransition failed", "error", err)
 		RespondWithError(w, http.StatusBadRequest, "Invalid status transition")
 		return
 	}
 
 	err = h.InterviewService.InterviewRepo.UpdateStatus(interviewID, userID, payload.Status)
 	if err != nil {
-		h.Logger.Error("UpdateInterviewStatus failed", "error", err)
 		RespondWithError(w, http.StatusInternalServerError, "Could not update status")
 		return
 	}
@@ -688,27 +643,23 @@ func (h *Handler) CreateConversationsHandler(w http.ResponseWriter, r *http.Requ
 	params := &middleware.AcceptedVals{}
 	err := json.NewDecoder(r.Body).Decode(params)
 	if err != nil {
-		h.Logger.Error("Decoding params failed", "error", err)
 		RespondWithError(w, http.StatusInternalServerError, "Internal Server Error")
 		return
 	}
 
-	interviewID, err := GetPathID(r, "/api/conversations/create/", h.Logger)
+	interviewID, err := GetPathID(r, "/api/conversations/create/")
 
 	if err != nil {
-		h.Logger.Error("PathID error", "error", err)
 		RespondWithError(w, http.StatusBadRequest, "Missing ID")
 		return
 	}
 
 	interviewReturned, err := h.InterviewService.GetInterview(interviewID)
 	if err != nil {
-		h.Logger.Error("GetInterview error", "error", err)
 		RespondWithError(w, http.StatusBadRequest, "Invalid ID")
 		return
 	}
 	if interviewReturned.UserId != userID {
-		h.Logger.Error("userID does not exist", "got", userID, "want", interviewReturned.UserId)
 		RespondWithError(w, http.StatusUnauthorized, "Unauthorized")
 		return
 	}
@@ -719,7 +670,6 @@ func (h *Handler) CreateConversationsHandler(w http.ResponseWriter, r *http.Requ
 
 	conversationReturned, err := h.ConversationService.GetConversation(interviewID)
 	if err != nil {
-		h.Logger.Error("conversation.GetConversation failed", "error", err)
 		RespondWithError(w, http.StatusBadRequest, "Invalid ID")
 		return
 	}
@@ -734,11 +684,9 @@ func (h *Handler) CreateConversationsHandler(w http.ResponseWriter, r *http.Requ
 	if err != nil {
 		var openaiErr *chatgpt.OpenAIError
 		if errors.As(err, &openaiErr) {
-			h.Logger.Error("OpenAI error", "error", openaiErr)
 			RespondWithError(w, openaiErr.StatusCode, openaiErr.Message)
 			return
 		}
-		h.Logger.Error("CreateConversation error", "error", err)
 		RespondWithError(w, http.StatusBadRequest, "Invalid interview_id")
 		return
 	}
@@ -764,32 +712,27 @@ func (h *Handler) AppendConversationsHandler(w http.ResponseWriter, r *http.Requ
 	params := &middleware.AcceptedVals{}
 	err := json.NewDecoder(r.Body).Decode(params)
 	if err != nil {
-		h.Logger.Error("Decoding params failed", "error", err)
 		RespondWithError(w, http.StatusInternalServerError, "Internal Server Error")
 		return
 	}
 
 	if params.Message == "" {
-		h.Logger.Error("messageUserResponse is nil")
 		RespondWithError(w, http.StatusBadRequest, "Missing message")
 		return
 	}
 
-	interviewID, err := GetPathID(r, "/api/conversations/append/", h.Logger)
+	interviewID, err := GetPathID(r, "/api/conversations/append/")
 	if err != nil {
-		h.Logger.Error("PathID error", "error", err)
 		RespondWithError(w, http.StatusBadRequest, "Missing ID")
 		return
 	}
 
 	interviewReturned, err := h.InterviewService.GetInterview(interviewID)
 	if err != nil {
-		h.Logger.Error("GetInterview error", "error", err)
 		RespondWithError(w, http.StatusBadRequest, "Invalid ID")
 		return
 	}
 	if interviewReturned.UserId != userID {
-		h.Logger.Error("incorrect userID", "got", userID, "want", interviewReturned.UserId)
 		RespondWithError(w, http.StatusUnauthorized, "Unauthorized")
 		return
 	}
@@ -800,7 +743,6 @@ func (h *Handler) AppendConversationsHandler(w http.ResponseWriter, r *http.Requ
 
 	conversationReturned, err := h.ConversationService.GetConversation(interviewID)
 	if err != nil {
-		h.Logger.Error("GetConversation error", "error", err)
 		RespondWithError(w, http.StatusBadRequest, "Invalid ID.")
 		return
 	}
@@ -814,11 +756,9 @@ func (h *Handler) AppendConversationsHandler(w http.ResponseWriter, r *http.Requ
 	if err != nil {
 		var openaiErr *chatgpt.OpenAIError
 		if errors.As(err, &openaiErr) {
-			h.Logger.Error("OpenAI error", "error", openaiErr)
 			RespondWithError(w, openaiErr.StatusCode, openaiErr.Message)
 			return
 		}
-		h.Logger.Error("AppendConversation error", "error", err)
 		RespondWithError(w, http.StatusBadRequest, "Invalid ID.")
 		return
 	}
@@ -841,28 +781,24 @@ func (h *Handler) GetConversationHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	interviewID, err := GetPathID(r, "/api/conversations/", h.Logger)
+	interviewID, err := GetPathID(r, "/api/conversations/")
 	if err != nil {
-		h.Logger.Error("PathID error", "error", err)
 		RespondWithError(w, http.StatusBadRequest, "Missing ID")
 		return
 	}
 
 	interviewReturned, err := h.InterviewService.GetInterview(interviewID)
 	if err != nil {
-		h.Logger.Error("GetInterview error", "error", err)
 		RespondWithError(w, http.StatusBadRequest, "Invalid ID")
 		return
 	}
 	if interviewReturned.UserId != userID {
-		h.Logger.Error("incorrect userID", "got", userID, "want", interviewReturned.UserId)
 		RespondWithError(w, http.StatusUnauthorized, "Unauthorized")
 		return
 	}
 
 	conversationReturned, err := h.ConversationService.GetConversation(interviewID)
 	if err != nil {
-		h.Logger.Error("GetConversation error", "error", err)
 		RespondWithError(w, http.StatusBadRequest, "Invalid ID.")
 		return
 	}
@@ -882,7 +818,6 @@ func (h *Handler) RequestResetHandler(w http.ResponseWriter, r *http.Request) {
 	var params PasswordResetRequest
 	err := json.NewDecoder(r.Body).Decode(&params)
 	if err != nil {
-		h.Logger.Error("Decoding request failed", "error", err)
 		RespondWithError(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
@@ -895,7 +830,6 @@ func (h *Handler) RequestResetHandler(w http.ResponseWriter, r *http.Request) {
 
 	resetJWT, err := h.TokenService.CreateJWT(params.Email, 900)
 	if err != nil {
-		h.Logger.Error("Error generating reset token for email", "error", err)
 		w.WriteHeader(http.StatusOK)
 		return
 	}
@@ -906,7 +840,6 @@ func (h *Handler) RequestResetHandler(w http.ResponseWriter, r *http.Request) {
 	go func(email, resetURL string) {
 		err := h.Mailer.SendPasswordReset(email, resetURL)
 		if err != nil {
-			h.Logger.Error("SendPasswordReset error", "error", err)
 			return
 		}
 	}(params.Email, resetURL)
@@ -923,13 +856,11 @@ func (h *Handler) ResetPasswordHandler(w http.ResponseWriter, r *http.Request) {
 
 	var params PasswordResetPayload
 	if err := json.NewDecoder(r.Body).Decode(&params); err != nil {
-		h.Logger.Error("Decoding payload failed", "error", err)
 		RespondWithError(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 	err := h.UserService.ResetPassword(params.NewPassword, params.Token)
 	if err != nil {
-		h.Logger.Error("ResetPasswordHandler failed", "error", err)
 		RespondWithError(w, http.StatusUnauthorized, "Invalid or expired token")
 		return
 	}
@@ -946,14 +877,12 @@ func (h *Handler) CreateCheckoutSessionHandler(w http.ResponseWriter, r *http.Re
 
 	userID, ok := r.Context().Value(middleware.ContextKeyTokenParams).(int)
 	if !ok {
-		h.Logger.Error("r.Context().Value() error")
 		RespondWithError(w, http.StatusUnauthorized, "Unauthorized")
 		return
 	}
 
 	var params CheckoutRequest
 	if err := json.NewDecoder(r.Body).Decode(&params); err != nil || params.Tier == "" {
-		h.Logger.Error("jsonNewDecoder failed", "error", err)
 		RespondWithError(w, http.StatusBadRequest, "Missing or invalid tier")
 		return
 	}
@@ -979,14 +908,12 @@ func (h *Handler) CreateCheckoutSessionHandler(w http.ResponseWriter, r *http.Re
 
 	priceIDInt, err := strconv.Atoi(priceID)
 	if err != nil {
-		h.Logger.Error("strconv.Atoi() failed", "error", err)
 		RespondWithError(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
 
 	url, err := h.BillingService.RequestCheckoutSession(user.Email, priceIDInt)
 	if err != nil {
-		h.Logger.Error("billing.CreateCheckoutSession failed", "error", err)
 		RespondWithError(w, http.StatusInternalServerError, "Could not start checkout")
 		return
 	}
@@ -1008,14 +935,12 @@ func (h *Handler) CancelSubscriptionHandler(w http.ResponseWriter, r *http.Reque
 
 	userReturned, err := h.UserService.GetUser(userID)
 	if err != nil {
-		h.Logger.Error("GetUser failed", "error", err)
 		RespondWithError(w, http.StatusInternalServerError, "Could not retrieve user")
 		return
 	}
 
 	err = h.BillingService.RequestDeleteSubscription(userReturned.SubscriptionID)
 	if err != nil {
-		h.Logger.Error("DeleteSubscription failed", "error", err)
 		RespondWithError(w, http.StatusInternalServerError, "Could not cancel subscription")
 		return
 	}
@@ -1037,14 +962,12 @@ func (h *Handler) ResumeSubscriptionHandler(w http.ResponseWriter, r *http.Reque
 
 	userReturned, err := h.UserService.GetUser(userID)
 	if err != nil {
-		h.Logger.Error("GetUser failed", "error", err)
 		RespondWithError(w, http.StatusInternalServerError, "Could not retrieve user")
 		return
 	}
 
 	err = h.BillingService.RequestResumeSubscription(userReturned.SubscriptionID)
 	if err != nil {
-		h.Logger.Error("DeleteSubscription failed", "error", err)
 		RespondWithError(w, http.StatusInternalServerError, "Could not cancel subscription")
 		return
 	}
@@ -1066,7 +989,6 @@ func (h *Handler) ChangePlanHandler(w http.ResponseWriter, r *http.Request) {
 
 	var params CheckoutRequest
 	if err := json.NewDecoder(r.Body).Decode(&params); err != nil || params.Tier == "" {
-		h.Logger.Error("jsonNewDecoder failed", "error", err)
 		RespondWithError(w, http.StatusBadRequest, "Missing or invalid tier")
 		return
 	}
@@ -1090,7 +1012,6 @@ func (h *Handler) ChangePlanHandler(w http.ResponseWriter, r *http.Request) {
 
 	priceIDInt, err := strconv.Atoi(priceID)
 	if err != nil {
-		h.Logger.Error("strconv.Atoi() failed", "error", err)
 		RespondWithError(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
@@ -1112,7 +1033,6 @@ func (h *Handler) BillingWebhookHandler(w http.ResponseWriter, r *http.Request) 
 
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		h.Logger.Error("io.ReadAll failed", "error", err)
 		RespondWithError(w, http.StatusBadRequest, "Bad Request")
 		return
 	}
@@ -1128,7 +1048,6 @@ func (h *Handler) BillingWebhookHandler(w http.ResponseWriter, r *http.Request) 
 	var webhookPayload billing.BillingWebhookPayload
 	err = json.Unmarshal(body, &webhookPayload)
 	if err != nil {
-		h.Logger.Error("json.Unmarshal failed", "error", err)
 		RespondWithError(w, http.StatusBadRequest, "Invalid JSON")
 		return
 	}
@@ -1136,12 +1055,11 @@ func (h *Handler) BillingWebhookHandler(w http.ResponseWriter, r *http.Request) 
 	webhookID := webhookPayload.Meta.WebhookID
 	exists, err := h.BillingService.BillingRepo.HasWebhookBeenProcessed(webhookID)
 	if err != nil {
-		h.Logger.Error("h.BillingService.BillingRepo.HasWebhookBeenProcessed failed", "error", err)
+		h.Logger.Error("h.BillingRepo.HasWebhookBeenProcessed failed", "error", err)
 		RespondWithError(w, http.StatusInternalServerError, "Error checking webhook")
 		return
 	}
 	if exists {
-		h.Logger.Info("Webhook already processed", "webhookID", webhookID)
 		w.WriteHeader(http.StatusOK)
 		return
 	}
@@ -1152,170 +1070,146 @@ func (h *Handler) BillingWebhookHandler(w http.ResponseWriter, r *http.Request) 
 
 	eventType := webhookPayload.Meta.EventName
 
-	h.Logger.Info("Received webhook", "eventType", eventType, "webhookID", webhookID, "subscriptionID", subscriptionID)
-
 	switch eventType {
 	case "order_created":
 		var orderAttrs billing.OrderAttributes
 		if err := json.Unmarshal(webhookPayload.Data.Attributes, &orderAttrs); err != nil {
-			h.Logger.Error("Unmarshal order_created failed", "error", err)
 			RespondWithError(w, http.StatusBadRequest, "Invalid order_created payload")
 			return
 		}
 
 		err = h.BillingService.ApplyCredits(orderAttrs.UserEmail, orderAttrs.FirstOrderItem.VariantID)
 		if err != nil {
-			h.Logger.Error("h.BillingService.ApplyCredits failed", "error", err)
+			h.Logger.Error("h.Billing.ApplyCredits failed", "error", err)
 			RespondWithError(w, http.StatusInternalServerError, "Failed to update user")
 			return
 		}
 	case "subscription_created":
 		var SubCreatedAttrs billing.SubscriptionAttributes
 		if err := json.Unmarshal(webhookPayload.Data.Attributes, &SubCreatedAttrs); err != nil {
-			h.Logger.Error("Unmarshal subscription_created failed", "error", err)
 			RespondWithError(w, http.StatusBadRequest, "Invalid subscription_created payload")
 			return
 		}
 
 		exists, err := h.UserService.UserRepo.HasActiveOrCancelledSubscription(SubCreatedAttrs.UserEmail)
 		if err != nil {
-			h.Logger.Error("Subscription duplicate check failed", "error", err)
 			RespondWithError(w, http.StatusInternalServerError, "Subscription check failed")
 			return
 		}
 		if exists {
-			h.Logger.Info("Duplicate subscription attempt blocked", "userEmail", SubCreatedAttrs.UserEmail)
 			return
 		}
 
 		err = h.BillingService.CreateSubscription(SubCreatedAttrs, subscriptionID)
 		if err != nil {
-			h.Logger.Error("h.Billing.CreateSubscription failed", "error", err)
 			RespondWithError(w, http.StatusInternalServerError, "Failed to update user")
 			return
 		}
 	case "subscription_cancelled":
 		if err := json.Unmarshal(webhookPayload.Data.Attributes, &emailAttribute); err != nil {
-			h.Logger.Error("Unmarshal subscription_cancelled failed", "error", err)
 			RespondWithError(w, http.StatusBadRequest, "Invalid subscription_cancelled payload")
 			return
 		}
 
 		err = h.BillingService.CancelSubscription(emailAttribute.UserEmail)
 		if err != nil {
-			h.Logger.Error("h.BillingService.CancelSubscription failed", "error", err)
+			h.Logger.Error("h.Billing.CancelSubscription failed", "error", err)
 			RespondWithError(w, http.StatusInternalServerError, "Failed to update user")
 			return
 		}
 	case "subscription_resumed":
 		if err := json.Unmarshal(webhookPayload.Data.Attributes, &emailAttribute); err != nil {
-			h.Logger.Error("Unmarshal subscription_resumed failed", "error", err)
 			RespondWithError(w, http.StatusBadRequest, "Invalid subscription_resumed payload")
 			return
 		}
 
 		err = h.BillingService.ResumeSubscription(emailAttribute.UserEmail)
 		if err != nil {
-			h.Logger.Error("h.BillingService.ResumeSubscription failed", "error", err)
+			h.Logger.Error("h.Billing.ResumeSubscription failed", "error", err)
 			RespondWithError(w, http.StatusInternalServerError, "Failed to update user")
 			return
 		}
 	case "subscription_expired":
 		if err := json.Unmarshal(webhookPayload.Data.Attributes, &emailAttribute); err != nil {
-			h.Logger.Error("Unmarshal subscription_expired failed", "error", err)
 			RespondWithError(w, http.StatusBadRequest, "Invalid subscription_expired payload")
 			return
 		}
 
 		err = h.BillingService.ExpireSubscription(emailAttribute.UserEmail)
 		if err != nil {
-			h.Logger.Error("h.Billing.ExpireSubscription failed", "error", err)
 			RespondWithError(w, http.StatusInternalServerError, "Failed to update user")
 			return
 		}
 	case "subscription_payment_success":
 		var SubRenewAttrs billing.SubscriptionRenewAttributes
 		if err := json.Unmarshal(webhookPayload.Data.Attributes, &SubRenewAttrs); err != nil {
-			h.Logger.Error("Unmarshal subscription_payment_success failed", "error", err)
 			RespondWithError(w, http.StatusBadRequest, "Invalid subscription_payment_success payload")
 			return
 		}
 
 		if SubRenewAttrs.BillingReason == "initial" {
-			h.Logger.Info("Skipping credits on initial charge (already granted via order_created)")
 			return
 		}
 
 		err = h.BillingService.RenewSubscription(SubRenewAttrs)
 		if err != nil {
-			h.Logger.Error("h.Billing.RenewSubscription failed", "error", err)
 			RespondWithError(w, http.StatusInternalServerError, "Failed to update user")
 			return
 		}
 	case "subscription_plan_changed":
 		var SubChangedAttrs billing.SubscriptionAttributes
 		if err := json.Unmarshal(webhookPayload.Data.Attributes, &SubChangedAttrs); err != nil {
-			h.Logger.Error("Unmarshal subscription_plan_changed failed", "error", err)
 			RespondWithError(w, http.StatusBadRequest, "Invalid subscription_plan_changed payload")
 			return
 		}
 
 		err = h.BillingService.ChangeSubscription(SubChangedAttrs)
 		if err != nil {
-			h.Logger.Error("h.Billing.ChangeSubscription failed", "error", err)
 			RespondWithError(w, http.StatusInternalServerError, "Failed to update user")
 			return
 		}
 	case "subscription_updated":
 		var SubChangedAttrs billing.SubscriptionAttributes
 		if err := json.Unmarshal(webhookPayload.Data.Attributes, &SubChangedAttrs); err != nil {
-			h.Logger.Error("Unmarshal subscription_updated failed", "error", err)
 			RespondWithError(w, http.StatusBadRequest, "Invalid subscription_updated payload")
 			return
 		}
 
 		err = h.BillingService.UpdateSubscription(SubChangedAttrs, subscriptionID)
 		if err != nil {
-			h.Logger.Error("h.Billing.UpdateSubscription failed", "error", err)
 			RespondWithError(w, http.StatusInternalServerError, "Failed to update user")
 			return
 		}
 	case "order_refunded":
 		var orderAttrs billing.OrderAttributes
 		if err := json.Unmarshal(webhookPayload.Data.Attributes, &orderAttrs); err != nil {
-			h.Logger.Error("Unmarshal order_created failed", "error", err)
 			RespondWithError(w, http.StatusBadRequest, "Invalid order_created payload")
 			return
 		}
 
 		err = h.BillingService.DeductCredits(orderAttrs)
 		if err != nil {
-			h.Logger.Error("h.Billing.DeductCredits failed", "error", err)
 			RespondWithError(w, http.StatusInternalServerError, "Failed to update user")
 			return
 		}
 	case "subscription_payment_failed", "subscription_payment_recovered":
 		if err := json.Unmarshal(webhookPayload.Data.Attributes, &emailAttribute); err != nil {
-			h.Logger.Error("Unmarshal failed", "eventType", eventType, "error", err)
 			RespondWithError(w, http.StatusBadRequest, "Invalid payment status payload")
 			return
 		}
-		h.Logger.Info("Payment event", "eventType", eventType, "user", emailAttribute.UserEmail)
+
 	default:
-		h.Logger.Info("Unhandled event type", "eventType", eventType)
 		RespondWithError(w, http.StatusNotImplemented, "Unhandled event type")
 		return
 	}
 
 	if err != nil {
-		h.Logger.Error("eventType switch func failed", "error", err)
 		RespondWithError(w, http.StatusInternalServerError, "Failed to update user")
 		return
 	}
 
 	err = h.BillingService.BillingRepo.MarkWebhookProcessed(webhookID, eventType)
 	if err != nil {
-		h.Logger.Error("MarkWebhookProcessed failed", "error", err)
 		w.WriteHeader(http.StatusOK)
 		return
 	}
@@ -1341,7 +1235,6 @@ func (h *Handler) DashboardHandler(w http.ResponseWriter, r *http.Request) {
 			RespondWithError(w, http.StatusUnauthorized, "User not found")
 			return
 		}
-		h.Logger.Error("dashboard.GetDashboardData failed", "error", err)
 		RespondWithError(w, http.StatusInternalServerError, "Could not load dashboard")
 		return
 	}
@@ -1367,11 +1260,9 @@ func (h *Handler) JDInputHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		var openaiErr *chatgpt.OpenAIError
 		if errors.As(err, &openaiErr) {
-			h.Logger.Error("OpenAI error", "error", openaiErr)
 			RespondWithError(w, openaiErr.StatusCode, openaiErr.Message)
 			return
 		}
-		h.Logger.Error("chatgpt.ExtractJDInput failed", "error", err)
 		RespondWithError(w, http.StatusInternalServerError, "Failed to process job description")
 		return
 	}
@@ -1380,11 +1271,9 @@ func (h *Handler) JDInputHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		var openaiErr *chatgpt.OpenAIError
 		if errors.As(err, &openaiErr) {
-			h.Logger.Error("OpenAI error", "error", openaiErr)
 			RespondWithError(w, openaiErr.StatusCode, openaiErr.Message)
 			return
 		}
-		h.Logger.Error("chatgpt.ExtractJDSummary failed", "error", err)
 		RespondWithError(w, http.StatusInternalServerError, "Failed to process job description")
 		return
 

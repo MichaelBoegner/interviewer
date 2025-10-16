@@ -15,7 +15,7 @@ func NewMockRepo() *MockRepo {
 
 func (m *MockRepo) CheckForConversation(interviewID int) (bool, error) {
 	if m.FailRepo {
-		return false, errors.New("Mocked DB failure")
+		return false, errors.New("mocked DB failure")
 	}
 
 	return true, nil
@@ -23,7 +23,7 @@ func (m *MockRepo) CheckForConversation(interviewID int) (bool, error) {
 
 func (m *MockRepo) GetConversation(interviewID int) (*Conversation, error) {
 	if m.FailRepo {
-		return nil, errors.New("Mocked DB failure")
+		return nil, errors.New("mocked DB failure")
 	}
 
 	conversationResponse := &Conversation{
@@ -70,7 +70,7 @@ func (m *MockRepo) GetConversation(interviewID int) (*Conversation, error) {
 
 func (m *MockRepo) CreateConversation(interviewId int, conversation *Conversation) (int, error) {
 	if m.FailRepo {
-		return 0, errors.New("Mocked DB failure")
+		return 0, errors.New("mocked DB failure")
 	}
 
 	return 0, nil
@@ -78,7 +78,7 @@ func (m *MockRepo) CreateConversation(interviewId int, conversation *Conversatio
 
 func (m *MockRepo) CreateQuestion(conversation *Conversation, prompt string) (int, error) {
 	if m.FailRepo {
-		return 0, errors.New("Mocked DB failure")
+		return 0, errors.New("mocked DB failure")
 	}
 
 	return 1, nil
@@ -86,7 +86,7 @@ func (m *MockRepo) CreateQuestion(conversation *Conversation, prompt string) (in
 
 func (m *MockRepo) CreateMessages(conversation *Conversation, messages []Message) error {
 	if m.FailRepo {
-		return errors.New("Mocked DB failure")
+		return errors.New("mocked DB failure")
 	}
 
 	return nil
@@ -94,7 +94,7 @@ func (m *MockRepo) CreateMessages(conversation *Conversation, messages []Message
 
 func (m *MockRepo) AddMessage(conversationID, topic_id, questionNumber int, message Message) (int, error) {
 	if m.FailRepo {
-		return 0, errors.New("Mocked DB failure")
+		return 0, errors.New("mocked DB failure")
 	}
 
 	return 3, nil
@@ -102,7 +102,7 @@ func (m *MockRepo) AddMessage(conversationID, topic_id, questionNumber int, mess
 
 func (m *MockRepo) AddQuestion(question *Question) (int, error) {
 	if m.FailRepo {
-		return 0, errors.New("Mocked DB failure")
+		return 0, errors.New("mocked DB failure")
 	}
 
 	return 2, nil
@@ -110,7 +110,7 @@ func (m *MockRepo) AddQuestion(question *Question) (int, error) {
 
 func (m *MockRepo) GetMessages(conversationID, topic_id, questionNumber int) ([]Message, error) {
 	if m.FailRepo {
-		return nil, errors.New("Mocked DB failure")
+		return nil, errors.New("mocked DB failure")
 	}
 
 	var messages = []Message{}
@@ -119,7 +119,7 @@ func (m *MockRepo) GetMessages(conversationID, topic_id, questionNumber int) ([]
 
 func (m *MockRepo) GetQuestions(Conversation *Conversation) ([]*Question, error) {
 	if m.FailRepo {
-		return nil, errors.New("Mocked DB failure")
+		return nil, errors.New("mocked DB failure")
 	}
 
 	var questions = []*Question{}
@@ -128,7 +128,7 @@ func (m *MockRepo) GetQuestions(Conversation *Conversation) ([]*Question, error)
 
 func (m *MockRepo) UpdateConversationCurrents(conversationID, currentQuestionNumber, topicID int, subtopic string) (int, error) {
 	if m.FailRepo {
-		return 0, errors.New("Mocked DB failure")
+		return 0, errors.New("mocked DB failure")
 	}
 
 	return 1, nil

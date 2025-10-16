@@ -15,7 +15,7 @@ func NewMockRepo() *MockRepo {
 
 func (m *MockRepo) CreateInterview(interview *Interview) (int, error) {
 	if m.FailRepo {
-		return 0, errors.New("Mocked DB failure")
+		return 0, errors.New("mocked DB failure")
 	}
 
 	return 1, nil
@@ -23,7 +23,7 @@ func (m *MockRepo) CreateInterview(interview *Interview) (int, error) {
 
 func (m *MockRepo) GetInterview(interviewID int) (*Interview, error) {
 	if m.FailRepo {
-		return nil, errors.New("Mocked DB failure")
+		return nil, errors.New("mocked DB failure")
 	}
 
 	interview := &Interview{
@@ -45,7 +45,7 @@ func (m *MockRepo) GetInterview(interviewID int) (*Interview, error) {
 
 func (m *MockRepo) GetInterviewSummariesByUserID(userID int) ([]Summary, error) {
 	if m.FailRepo {
-		return nil, errors.New("Mocked DB failure")
+		return nil, errors.New("mocked DB failure")
 	}
 
 	var summaries []Summary
@@ -63,7 +63,7 @@ func (m *MockRepo) GetInterviewSummariesByUserID(userID int) ([]Summary, error) 
 
 func (m *MockRepo) UpdateScore(interviewID, pointsEarned int) error {
 	if m.FailRepo {
-		return errors.New("Mocked DB failure")
+		return errors.New("mocked DB failure")
 	}
 
 	return nil
@@ -71,7 +71,7 @@ func (m *MockRepo) UpdateScore(interviewID, pointsEarned int) error {
 
 func (m *MockRepo) UpdateStatus(interviewID, userID int, status string) error {
 	if m.FailRepo {
-		return errors.New("Mocked DB failure")
+		return errors.New("mocked DB failure")
 	}
 
 	return nil
@@ -79,7 +79,7 @@ func (m *MockRepo) UpdateStatus(interviewID, userID int, status string) error {
 
 func (m *MockRepo) LinkConversation(interviewID, conversationID int) error {
 	if m.FailRepo {
-		return errors.New("Mocked DB failure")
+		return errors.New("mocked DB failure")
 	}
 
 	return nil
@@ -87,7 +87,7 @@ func (m *MockRepo) LinkConversation(interviewID, conversationID int) error {
 
 func (m *MockRepo) UpdateCreatedInterview(interview *Interview) error {
 	if m.FailRepo {
-		return errors.New("Mocked DB failure")
+		return errors.New("mocked DB failure")
 	}
 
 	return nil
