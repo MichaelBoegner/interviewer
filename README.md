@@ -1,4 +1,4 @@
-# Interviewer 
+# Interviewer
 **An intelligent, interactive mock interview platform powered by Go, React, and PostgreSQL, designed to help users confidently prepare for Backend Engineering interviews.**
 
 ![Go Version](https://img.shields.io/badge/Go-1.20+-00ADD8?style=flat&logo=go&logoColor=white)
