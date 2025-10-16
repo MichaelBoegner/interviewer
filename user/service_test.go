@@ -128,20 +128,20 @@ func TestLoginUser(t *testing.T) {
 			userRepo.FailRepo = tc.failRepo
 
 			username, userID, err := userService.LoginUser(tc.email, tc.password)
+			if tc.expectError {
+				if err == nil {
+					t.Fatalf("expected error but got nil")
+				}
+				return
+			}
+
 			if err != nil {
-				t.Fatalf("userService.LoginUser failed: %v", err)
+				t.Fatalf("did not expect error but got: %v", err)
 			}
 
 			jwToken, err = tokenService.CreateJWT(strconv.Itoa(userID), 0)
 			if err != nil {
 				t.Fatalf("JWT creation failed: %v", err)
-			}
-
-			if tc.expectError && err == nil {
-				t.Fatalf("expected error but got nil")
-			}
-			if !tc.expectError && err != nil {
-				t.Fatalf("did not expect error but got: %v", err)
 			}
 
 			if !tc.expectError {
