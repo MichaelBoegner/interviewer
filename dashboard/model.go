@@ -29,5 +29,6 @@ func NewDashboardService(userRepo user.UserRepo, interviewRepo interview.Intervi
 	return &DashboardService{
 		UserRepo:      userRepo,
 		InterviewRepo: interviewRepo,
+		Logger:        logger,
 	}
 }

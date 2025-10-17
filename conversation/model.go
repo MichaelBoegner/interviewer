@@ -77,7 +77,7 @@ type ConversationService struct {
 	Logger           *slog.Logger
 }
 
-func NewConvesationService(conversationRepo ConversationRepo, interviewRepo interview.InterviewRepo, aiService chatgpt.AIClient, logger *slog.Logger) *ConversationService {
+func NewConversationService(conversationRepo ConversationRepo, interviewRepo interview.InterviewRepo, aiService chatgpt.AIClient, logger *slog.Logger) *ConversationService {
 	return &ConversationService{
 		ConversationRepo: conversationRepo,
 		InterviewRepo:    interviewRepo,

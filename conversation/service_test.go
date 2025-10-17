@@ -88,7 +88,7 @@ func TestCreateConversation(t *testing.T) {
 			logger := slog.New(slog.NewTextHandler(&buf, &slog.HandlerOptions{Level: slog.LevelDebug, AddSource: true}))
 			conversationRepo := conversation.NewMockRepo()
 			interviewRepo := interview.NewMockRepo()
-			conversationService := conversation.NewConvesationService(conversationRepo, interviewRepo, mockAIService, logger)
+			conversationService := conversation.NewConversationService(conversationRepo, interviewRepo, mockAIService, logger)
 			conversationRepo.FailRepo = tc.failRepo
 
 			convo, err := conversationService.CreateConversation(
@@ -180,7 +180,7 @@ func TestAppendConversation(t *testing.T) {
 			logger := slog.New(slog.NewTextHandler(&buf, &slog.HandlerOptions{Level: slog.LevelDebug, AddSource: true}))
 			conversationRepo := conversation.NewMockRepo()
 			interviewRepo := interview.NewMockRepo()
-			conversationService := conversation.NewConvesationService(conversationRepo, interviewRepo, mockAIService, logger)
+			conversationService := conversation.NewConversationService(conversationRepo, interviewRepo, mockAIService, logger)
 			conversationRepo.FailRepo = tc.failRepo
 
 			convo, err := conversationService.CreateConversation(

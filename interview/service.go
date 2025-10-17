@@ -101,7 +101,7 @@ func canUseCredit(user *user.User, logger *slog.Logger) (string, error) {
 		user.SubscriptionEndDate.After(now) &&
 		user.SubscriptionStatus != "expired" &&
 		user.SubscriptionCredits > 0:
-		logger.Info("subscrtipion plan in canUseCredit check")
+		logger.Info("subscription plan in canUseCredit check")
 		return "subscription", nil
 	case user.IndividualCredits > 0:
 		logger.Info("individual plan in canUseCredit check")

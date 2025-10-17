@@ -270,6 +270,7 @@ func (h *Handler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("JWT creation failed: %v", err)
 		RespondWithError(w, http.StatusInternalServerError, "Internal server error")
+		return
 	}
 
 	refreshToken, err := h.TokenService.CreateRefreshToken(userID)
