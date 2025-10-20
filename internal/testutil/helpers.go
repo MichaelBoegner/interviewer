@@ -18,7 +18,7 @@ import (
 	"github.com/michaelboegner/interviewer/user"
 )
 
-func CreateTestUserAndJWT(logger *slog.Logger) (string, int) {
+func CreateTestUserAndJWT(userService *user.UserService, tokenService *token.TokenService, logger *slog.Logger) (string, int) {
 	var (
 		jwt    string
 		userID int
@@ -28,7 +28,7 @@ func CreateTestUserAndJWT(logger *slog.Logger) (string, int) {
 	email := "test@test.com"
 	password := "test"
 
-	verificationJWT, err := user.VerificationToken(email, username, password)
+	verificationJWT, err := userService.VerificationToken(email, username, password)
 	if err != nil {
 		logger.Error("GenerateEmailVerificationToken failed", "error", err)
 	}
@@ -61,7 +61,7 @@ func CreateTestUserAndJWT(logger *slog.Logger) (string, int) {
 	jwt = returnVals.JWToken
 
 	//test userID extract
-	userID, err = token.ExtractUserIDFromToken(jwt)
+	userID, err = tokenService.ExtractUserIDFromToken(jwt)
 	if err != nil {
 		logger.Error("CreateTestUserandJWT userID extraction failed", "error", err)
 	}

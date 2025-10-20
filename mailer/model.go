@@ -5,7 +5,7 @@ import (
 	"os"
 )
 
-type Mailer struct {
+type MailerService struct {
 	APIKey  string
 	BaseURL string
 	Logger  *slog.Logger
@@ -23,8 +23,8 @@ const signature = `
 		</p>
 	`
 
-func NewMailer(logger *slog.Logger) *Mailer {
-	return &Mailer{
+func NewMailerService(logger *slog.Logger) *MailerService {
+	return &MailerService{
 		APIKey:  os.Getenv("RESEND_API_KEY"),
 		BaseURL: "https://api.resend.com",
 		Logger:  logger,

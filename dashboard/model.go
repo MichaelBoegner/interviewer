@@ -1,9 +1,11 @@
 package dashboard
 
 import (
+	"log/slog"
 	"time"
 
 	"github.com/michaelboegner/interviewer/interview"
+	"github.com/michaelboegner/interviewer/user"
 )
 
 type DashboardData struct {
@@ -15,4 +17,18 @@ type DashboardData struct {
 	IndividualCredits     int                 `json:"individual_credits"`
 	SubscriptionCredits   int                 `json:"subscription_credits"`
 	PastInterviews        []interview.Summary `json:"past_interviews"`
+}
+
+type DashboardService struct {
+	UserRepo      user.UserRepo
+	InterviewRepo interview.InterviewRepo
+	Logger        *slog.Logger
+}
+
+func NewDashboardService(userRepo user.UserRepo, interviewRepo interview.InterviewRepo, logger *slog.Logger) *DashboardService {
+	return &DashboardService{
+		UserRepo:      userRepo,
+		InterviewRepo: interviewRepo,
+		Logger:        logger,
+	}
 }

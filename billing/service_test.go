@@ -4,23 +4,19 @@ import (
 	"crypto/hmac"
 	"crypto/sha256"
 	"fmt"
-	"log"
 	"log/slog"
 	"os"
-	"strings"
 	"testing"
 
 	"github.com/michaelboegner/interviewer/billing"
 	"github.com/michaelboegner/interviewer/user"
 )
 
-func NewTestBilling() *billing.Billing {
-	handler := slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
-		Level: slog.LevelDebug,
-	})
-	logger := slog.New(handler)
-
-	return &billing.Billing{
+func NewTestBillingService(billingRepo billing.BillingRepo, userRepo user.UserRepo, logger *slog.Logger) *billing.BillingService {
+	return &billing.BillingService{
+		BillingRepo:         billingRepo,
+		UserRepo:            userRepo,
+		APIKey:              "",
 		VariantIDIndividual: 1,
 		VariantIDPro:        2,
 		VariantIDPremium:    3,
@@ -89,20 +85,24 @@ func TestApplyCredits(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			var buf strings.Builder
-			log.SetOutput(&buf)
-			defer showLogsIfFail(t, tc.name, buf)
+			handler := slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug})
+			logger := slog.New(handler)
 
-			userRepo := user.NewMockRepo()
 			billingRepo := billing.NewMockRepo()
+			userRepo := user.NewMockRepo()
 
-			userRepo.FailGetUserByEmail = tc.failUser
-			userRepo.FailAddCredits = tc.failCredit
-			billingRepo.FailLogCreditTransaction = tc.failLog
+			billingService := NewTestBillingService(billingRepo, userRepo, logger)
 
-			b := NewTestBilling()
+			if mockUserRepo, ok := billingService.UserRepo.(*user.MockRepo); ok {
+				mockUserRepo.FailGetUserByEmail = tc.failUser
+				mockUserRepo.FailAddCredits = tc.failCredit
+			}
+			if mockBillingRepo, ok := billingService.BillingRepo.(*billing.MockRepo); ok {
+				mockBillingRepo.FailLogCreditTransaction = tc.failLog
+			}
 
-			err := b.ApplyCredits(userRepo, billingRepo, "test@example.com", tc.variantID)
+			err := billingService.ApplyCredits("test@example.com", tc.variantID)
+
 			if tc.expectErr && err == nil {
 				t.Fatal("expected error but got nil")
 			}
@@ -166,18 +166,21 @@ func TestDeductCredits(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			var buf strings.Builder
-			log.SetOutput(&buf)
-			defer showLogsIfFail(t, tc.name, buf)
+			handler := slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug})
+			logger := slog.New(handler)
 
-			userRepo := user.NewMockRepo()
 			billingRepo := billing.NewMockRepo()
+			userRepo := user.NewMockRepo()
 
-			userRepo.FailGetUserByEmail = tc.failUser
-			userRepo.FailAddCredits = tc.failCredit
-			billingRepo.FailLogCreditTransaction = tc.failLog
+			billingService := NewTestBillingService(billingRepo, userRepo, logger)
 
-			b := NewTestBilling()
+			if mockUserRepo, ok := billingService.UserRepo.(*user.MockRepo); ok {
+				mockUserRepo.FailGetUserByEmail = tc.failUser
+				mockUserRepo.FailAddCredits = tc.failCredit
+			}
+			if mockBillingRepo, ok := billingService.BillingRepo.(*billing.MockRepo); ok {
+				mockBillingRepo.FailLogCreditTransaction = tc.failLog
+			}
 
 			attrs := billing.OrderAttributes{
 				UserEmail: "test@example.com",
@@ -188,7 +191,7 @@ func TestDeductCredits(t *testing.T) {
 				},
 			}
 
-			err := b.DeductCredits(userRepo, billingRepo, attrs)
+			err := billingService.DeductCredits(attrs)
 			if tc.expectErr && err == nil {
 				t.Fatal("expected error but got nil")
 			}
@@ -200,14 +203,21 @@ func TestDeductCredits(t *testing.T) {
 }
 
 func TestVerifyBillingSignature(t *testing.T) {
-	b := NewTestBilling()
+	handler := slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug})
+	logger := slog.New(handler)
+
+	billingRepo := billing.NewMockRepo()
+	userRepo := user.NewMockRepo()
+
+	billingService := NewTestBillingService(billingRepo, userRepo, logger)
+
 	body := []byte(`{"key":"value"}`)
 	secret := "testsecret"
 	mac := hmacSha256(body, secret)
-	if !b.VerifyBillingSignature(mac, body, secret) {
+	if !billingService.VerifyBillingSignature(mac, body, secret) {
 		t.Fatal("expected signature to be valid")
 	}
-	if b.VerifyBillingSignature("invalid", body, secret) {
+	if billingService.VerifyBillingSignature("invalid", body, secret) {
 		t.Fatal("expected signature to be invalid")
 	}
 }
@@ -216,10 +226,4 @@ func hmacSha256(message []byte, secret string) string {
 	mac := hmac.New(sha256.New, []byte(secret))
 	mac.Write(message)
 	return fmt.Sprintf("%x", mac.Sum(nil))
-}
-
-func showLogsIfFail(t *testing.T, name string, buf strings.Builder) {
-	if t.Failed() {
-		t.Logf("---- logs for test: %s ----\n%s\n", name, buf.String())
-	}
 }

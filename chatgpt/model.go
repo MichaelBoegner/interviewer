@@ -23,7 +23,7 @@ type ChatGPTResponse struct {
 	Level            string   `json:"level"`
 }
 
-type OpenAIClient struct {
+type AIService struct {
 	APIKey string
 	Logger *slog.Logger
 }
@@ -45,8 +45,8 @@ func (e *OpenAIError) Error() string {
 	return fmt.Sprintf("OpenAI error %d: %s", e.StatusCode, e.Message)
 }
 
-func NewOpenAI(logger *slog.Logger) *OpenAIClient {
-	return &OpenAIClient{
+func NewAIService(logger *slog.Logger) *AIService {
+	return &AIService{
 		APIKey: os.Getenv("OPENAI_API_KEY"),
 		Logger: logger,
 	}

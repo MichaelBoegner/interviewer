@@ -73,21 +73,21 @@ var responseFixtures = map[string]*chatgpt.ChatGPTResponse{
 	},
 }
 
-type MockOpenAIClient struct {
+type MockAIService struct {
 	Scenario string
 }
 
-func NewMockOpenAIClient() *MockOpenAIClient {
-	mockOpenAIClient := &MockOpenAIClient{}
+func NewMockAIService() *MockAIService {
+	mockAIService := &MockAIService{}
 
-	return mockOpenAIClient
+	return mockAIService
 }
 
-func (m *MockOpenAIClient) GetChatGPTResponse(prompt string) (*chatgpt.ChatGPTResponse, error) {
+func (m *MockAIService) GetChatGPTResponse(prompt string) (*chatgpt.ChatGPTResponse, error) {
 	return responseFixtures[ScenarioInterview], nil
 }
 
-func (m *MockOpenAIClient) GetChatGPTResponseConversation(_ []map[string]string) (*chatgpt.ChatGPTResponse, error) {
+func (m *MockAIService) GetChatGPTResponseConversation(_ []map[string]string) (*chatgpt.ChatGPTResponse, error) {
 	resp, ok := responseFixtures[m.Scenario]
 	if !ok {
 		return nil, fmt.Errorf("invalid scenario: %s", m.Scenario)
@@ -95,15 +95,15 @@ func (m *MockOpenAIClient) GetChatGPTResponseConversation(_ []map[string]string)
 	return resp, nil
 }
 
-func (m *MockOpenAIClient) GetChatGPT35Response(prompt string) (*chatgpt.ChatGPTResponse, error) {
+func (m *MockAIService) GetChatGPT35Response(prompt string) (*chatgpt.ChatGPTResponse, error) {
 	return &chatgpt.ChatGPTResponse{}, nil
 }
 
-func (m *MockOpenAIClient) ExtractJDInput(jd string) (*chatgpt.JDParsedOutput, error) {
+func (m *MockAIService) ExtractJDInput(jd string) (*chatgpt.JDParsedOutput, error) {
 	return &chatgpt.JDParsedOutput{}, nil
 }
 
-func (m *MockOpenAIClient) ExtractJDSummary(jdInput *chatgpt.JDParsedOutput) (string, error) {
+func (m *MockAIService) ExtractJDSummary(jdInput *chatgpt.JDParsedOutput) (string, error) {
 	return "", nil
 }
 

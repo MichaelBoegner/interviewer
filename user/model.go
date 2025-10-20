@@ -2,6 +2,7 @@ package user
 
 import (
 	"errors"
+	"log/slog"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -34,6 +35,18 @@ type EmailClaims struct {
 	PasswordHash string `json:"password_hash"`
 	Purpose      string `json:"purpose"`
 	jwt.RegisteredClaims
+}
+
+type UserService struct {
+	UserRepo UserRepo
+	Logger   *slog.Logger
+}
+
+func NewUserService(userRepo UserRepo, logger *slog.Logger) *UserService {
+	return &UserService{
+		UserRepo: userRepo,
+		Logger:   logger,
+	}
 }
 
 type UserRepo interface {

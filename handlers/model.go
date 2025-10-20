@@ -2,10 +2,12 @@ package handlers
 
 import (
 	"database/sql"
+	"log/slog"
 
 	"github.com/michaelboegner/interviewer/billing"
 	"github.com/michaelboegner/interviewer/chatgpt"
 	"github.com/michaelboegner/interviewer/conversation"
+	"github.com/michaelboegner/interviewer/dashboard"
 	"github.com/michaelboegner/interviewer/interview"
 	"github.com/michaelboegner/interviewer/mailer"
 	"github.com/michaelboegner/interviewer/token"
@@ -52,36 +54,39 @@ type ReturnVals struct {
 }
 
 type Handler struct {
-	UserRepo         user.UserRepo
-	InterviewRepo    interview.InterviewRepo
-	ConversationRepo conversation.ConversationRepo
-	TokenRepo        token.TokenRepo
-	BillingRepo      billing.BillingRepo
-	Billing          *billing.Billing
-	Mailer           mailer.MailerClient
-	OpenAI           chatgpt.AIClient
-	DB               *sql.DB
+	UserService         *user.UserService
+	InterviewService    *interview.InterviewService
+	ConversationService *conversation.ConversationService
+	TokenService        *token.TokenService
+	BillingService      *billing.BillingService
+	Mailer              mailer.MailerClient
+	AIService           chatgpt.AIClient
+	DashboardService    *dashboard.DashboardService
+	DB                  *sql.DB
+	Logger              *slog.Logger
 }
 
 func NewHandler(
-	interviewRepo interview.InterviewRepo,
-	userRepo user.UserRepo,
-	tokenRepo token.TokenRepo,
-	conversationRepo conversation.ConversationRepo,
-	billingRepo billing.BillingRepo,
-	billing *billing.Billing,
+	interviewService *interview.InterviewService,
+	userService *user.UserService,
+	tokenService *token.TokenService,
+	conversationService *conversation.ConversationService,
+	billingService *billing.BillingService,
 	mailer mailer.MailerClient,
-	openAI chatgpt.AIClient,
-	db *sql.DB) *Handler {
+	aiService chatgpt.AIClient,
+	dashboardService *dashboard.DashboardService,
+	db *sql.DB,
+	logger *slog.Logger) *Handler {
 	return &Handler{
-		InterviewRepo:    interviewRepo,
-		UserRepo:         userRepo,
-		TokenRepo:        tokenRepo,
-		ConversationRepo: conversationRepo,
-		BillingRepo:      billingRepo,
-		Billing:          billing,
-		Mailer:           mailer,
-		OpenAI:           openAI,
-		DB:               db,
+		InterviewService:    interviewService,
+		UserService:         userService,
+		TokenService:        tokenService,
+		ConversationService: conversationService,
+		BillingService:      billingService,
+		Mailer:              mailer,
+		AIService:           aiService,
+		DashboardService:    dashboardService,
+		DB:                  db,
+		Logger:              logger,
 	}
 }

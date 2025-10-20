@@ -3,12 +3,15 @@ package user
 import (
 	"fmt"
 	"log"
+	"log/slog"
 	"os"
+	"strconv"
 	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/michaelboegner/interviewer/token"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -49,17 +52,16 @@ func TestCreateUser(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			var buf strings.Builder
-			log.SetOutput(&buf)
-			defer showLogsIfFail(t, tc.name, buf)
+			logger := slog.New(slog.NewTextHandler(&buf, &slog.HandlerOptions{Level: slog.LevelDebug, AddSource: true}))
+			userRepo := NewMockRepo()
+			userService := NewUserService(userRepo, logger)
+			userRepo.FailRepo = tc.failRepo
 
-			repo := NewMockRepo()
-			repo.failRepo = tc.failRepo
-
-			jwt, err := VerificationToken(tc.email, tc.username, tc.password)
+			jwt, err := userService.VerificationToken(tc.email, tc.username, tc.password)
 			if err != nil {
 				t.Fatalf("VerificationToken failed: %v", err)
 			}
-			user, err := CreateUser(repo, jwt)
+			user, err := userService.CreateUser(jwt)
 
 			if tc.expectError && err == nil {
 				t.Fatalf("expected error but got nil")
@@ -114,20 +116,32 @@ func TestLoginUser(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			var buf strings.Builder
-			log.SetOutput(&buf)
-			defer showLogsIfFail(t, tc.name, buf)
+			var (
+				buf     strings.Builder
+				jwToken string
+			)
+			logger := slog.New(slog.NewTextHandler(&buf, &slog.HandlerOptions{Level: slog.LevelDebug, AddSource: true}))
+			userRepo := NewMockRepo()
+			tokenRepo := token.NewMockRepo()
+			userService := NewUserService(userRepo, logger)
+			tokenService := token.NewTokenService(tokenRepo, logger)
+			userRepo.FailRepo = tc.failRepo
 
-			repo := NewMockRepo()
-			repo.failRepo = tc.failRepo
-
-			jwtoken, username, userID, err := LoginUser(repo, tc.email, tc.password)
-
-			if tc.expectError && err == nil {
-				t.Fatalf("expected error but got nil")
+			username, userID, err := userService.LoginUser(tc.email, tc.password)
+			if tc.expectError {
+				if err == nil {
+					t.Fatalf("expected error but got nil")
+				}
+				return
 			}
-			if !tc.expectError && err != nil {
+
+			if err != nil {
 				t.Fatalf("did not expect error but got: %v", err)
+			}
+
+			jwToken, err = tokenService.CreateJWT(strconv.Itoa(userID), 0)
+			if err != nil {
+				t.Fatalf("JWT creation failed: %v", err)
 			}
 
 			if !tc.expectError {
@@ -137,7 +151,7 @@ func TestLoginUser(t *testing.T) {
 				if diff := cmp.Diff(expected, got); diff != "" {
 					t.Errorf("User mismatch (-want +got):\n%s", diff)
 				}
-				if jwtoken == "" {
+				if jwToken == "" {
 					t.Errorf("Expected jwtoken but got empty string")
 				}
 				if username == "" {
@@ -178,13 +192,12 @@ func TestGetUser(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			var buf strings.Builder
-			log.SetOutput(&buf)
-			defer showLogsIfFail(t, tc.name, buf)
+			logger := slog.New(slog.NewTextHandler(&buf, &slog.HandlerOptions{Level: slog.LevelDebug, AddSource: true}))
+			userRepo := NewMockRepo()
+			userService := NewUserService(userRepo, logger)
+			userRepo.FailRepo = tc.failRepo
 
-			repo := NewMockRepo()
-			repo.failRepo = tc.failRepo
-
-			user, err := GetUser(repo, tc.userID)
+			user, err := userService.GetUser(tc.userID)
 
 			if tc.expectError && err == nil {
 				t.Fatalf("expected error but got nil")
@@ -231,13 +244,12 @@ func TestUpdateSubscription(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			var buf strings.Builder
-			log.SetOutput(&buf)
-			defer showLogsIfFail(t, tc.name, buf)
+			logger := slog.New(slog.NewTextHandler(&buf, &slog.HandlerOptions{Level: slog.LevelDebug, AddSource: true}))
+			userRepo := NewMockRepo()
+			userService := NewUserService(userRepo, logger)
+			userRepo.FailRepo = tc.failRepo
 
-			repo := NewMockRepo()
-			repo.failRepo = tc.failRepo
-
-			user, err := GetUser(repo, tc.userID)
+			user, err := userService.GetUser(tc.userID)
 
 			if tc.expectError && err == nil {
 				t.Fatalf("expected error but got nil")

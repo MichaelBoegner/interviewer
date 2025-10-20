@@ -1,6 +1,12 @@
 package conversation
 
-import "time"
+import (
+	"log/slog"
+	"time"
+
+	"github.com/michaelboegner/interviewer/chatgpt"
+	"github.com/michaelboegner/interviewer/interview"
+)
 
 type Author string
 
@@ -62,6 +68,22 @@ type Message struct {
 	CreatedAt      time.Time `json:"created_at"`
 	Author         Author    `json:"author"`
 	Content        string    `json:"content"`
+}
+
+type ConversationService struct {
+	ConversationRepo ConversationRepo
+	InterviewRepo    interview.InterviewRepo
+	AIService        chatgpt.AIClient
+	Logger           *slog.Logger
+}
+
+func NewConversationService(conversationRepo ConversationRepo, interviewRepo interview.InterviewRepo, aiService chatgpt.AIClient, logger *slog.Logger) *ConversationService {
+	return &ConversationService{
+		ConversationRepo: conversationRepo,
+		InterviewRepo:    interviewRepo,
+		AIService:        aiService,
+		Logger:           logger,
+	}
 }
 
 type ConversationRepo interface {

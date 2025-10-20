@@ -1,8 +1,7 @@
 package token
 
 import (
-	"fmt"
-	"log"
+	"log/slog"
 	"os"
 	"strconv"
 	"strings"
@@ -34,15 +33,12 @@ func TestCreateRefreshToken(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			var buf strings.Builder
-			log.SetOutput(&buf)
-			defer showLogsIfFail(t, tc.name, buf)
+			logger := slog.New(slog.NewTextHandler(&buf, &slog.HandlerOptions{Level: slog.LevelDebug, AddSource: true}))
+			tokenRepo := NewMockRepo()
+			tokenService := NewTokenService(tokenRepo, logger)
+			tokenRepo.failRepo = tc.failRepo
 
-			repo := NewMockRepo()
-			if tc.failRepo {
-				repo.failRepo = true
-			}
-
-			token, err := CreateRefreshToken(repo, tc.userID)
+			token, err := tokenService.CreateRefreshToken(tc.userID)
 
 			if tc.expectError && err == nil {
 				t.Fatalf("expected error but got nil")
@@ -88,15 +84,12 @@ func TestGetStoredRefreshToken(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			var buf strings.Builder
-			log.SetOutput(&buf)
-			defer showLogsIfFail(t, tc.name, buf)
+			logger := slog.New(slog.NewTextHandler(&buf, &slog.HandlerOptions{Level: slog.LevelDebug, AddSource: true}))
+			tokenRepo := NewMockRepo()
+			tokenService := NewTokenService(tokenRepo, logger)
+			tokenRepo.failRepo = tc.failRepo
 
-			repo := NewMockRepo()
-			if tc.failRepo {
-				repo.failRepo = true
-			}
-
-			token, err := GetStoredRefreshToken(repo, tc.userID)
+			token, err := tokenService.GetStoredRefreshToken(tc.userID)
 
 			if tc.expectError && err == nil {
 				t.Fatalf("expected error but got nil")
@@ -141,10 +134,11 @@ func TestVerifyRefreshToken(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			var buf strings.Builder
-			log.SetOutput(&buf)
-			defer showLogsIfFail(t, tc.name, buf)
+			logger := slog.New(slog.NewTextHandler(&buf, &slog.HandlerOptions{Level: slog.LevelDebug, AddSource: true}))
+			tokenRepo := NewMockRepo()
+			tokenService := NewTokenService(tokenRepo, logger)
 
-			result := VerifyRefreshToken(tc.storedToken, tc.inputToken)
+			result := tokenService.VerifyRefreshToken(tc.storedToken, tc.inputToken)
 
 			if result != tc.expected {
 				t.Errorf("expected %v but got %v", tc.expected, result)
@@ -178,20 +172,20 @@ func TestExtractUserIDFromToken(t *testing.T) {
 			var buf strings.Builder
 			var token string
 			var err error
-
-			log.SetOutput(&buf)
-			defer showLogsIfFail(t, tc.name, buf)
+			logger := slog.New(slog.NewTextHandler(&buf, &slog.HandlerOptions{Level: slog.LevelDebug, AddSource: true}))
+			tokenRepo := NewMockRepo()
+			tokenService := NewTokenService(tokenRepo, logger)
 
 			if tc.invalid {
 				token = "invalid.token.value"
 			} else {
-				token, err = CreateJWT(strconv.Itoa(tc.userID), 3600)
+				token, err = tokenService.CreateJWT(strconv.Itoa(tc.userID), 3600)
 				if err != nil {
 					t.Fatalf("failed to create JWT: %v", err)
 				}
 			}
 
-			uid, err := ExtractUserIDFromToken(token)
+			uid, err := tokenService.ExtractUserIDFromToken(token)
 
 			if tc.expectError && err == nil {
 				t.Fatalf("expected error but got nil")
@@ -209,12 +203,5 @@ func TestExtractUserIDFromToken(t *testing.T) {
 				}
 			}
 		})
-	}
-}
-
-func showLogsIfFail(t *testing.T, name string, buf strings.Builder) {
-	log.SetOutput(os.Stderr)
-	if t.Failed() {
-		fmt.Printf("---- logs for test: %s ----\n%s\n", name, buf.String())
 	}
 }

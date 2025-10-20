@@ -1,9 +1,7 @@
 package interview_test
 
 import (
-	"fmt"
-	"log"
-	"os"
+	"log/slog"
 	"strings"
 	"testing"
 	"time"
@@ -24,7 +22,7 @@ func TestStartInterview(t *testing.T) {
 		length       int
 		numQuestions int
 		difficulty   string
-		aiClient     *mocks.MockOpenAIClient
+		aiClient     *mocks.MockAIService
 		failRepo     bool
 		expected     *interview.Interview
 		expectError  bool
@@ -41,7 +39,7 @@ func TestStartInterview(t *testing.T) {
 			length:       30,
 			numQuestions: 3,
 			difficulty:   "easy",
-			aiClient:     &mocks.MockOpenAIClient{},
+			aiClient:     &mocks.MockAIService{},
 			expected: &interview.Interview{
 				UserId:          1,
 				Length:          30,
@@ -67,7 +65,7 @@ func TestStartInterview(t *testing.T) {
 			length:       30,
 			numQuestions: 3,
 			difficulty:   "easy",
-			aiClient:     &mocks.MockOpenAIClient{},
+			aiClient:     &mocks.MockAIService{},
 			failRepo:     true,
 			expectError:  true,
 			jdSummary:    "",
@@ -77,19 +75,14 @@ func TestStartInterview(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			var buf strings.Builder
-			log.SetOutput(&buf)
-			defer showLogsIfFail(t, tc.name, buf)
-
+			logger := slog.New(slog.NewTextHandler(&buf, &slog.HandlerOptions{Level: slog.LevelDebug, AddSource: true}))
 			repo := interview.NewMockRepo()
 			userRepo := user.NewMockRepo()
 			billingRepo := billing.NewMockRepo()
+			interviewService := interview.NewInterviewService(repo, userRepo, billingRepo, tc.aiClient, logger)
 			repo.FailRepo = tc.failRepo
 
-			interviewStarted, err := interview.StartInterview(
-				repo,
-				userRepo,
-				billingRepo,
-				tc.aiClient,
+			interviewStarted, err := interviewService.StartInterview(
 				tc.user,
 				tc.length,
 				tc.numQuestions,
@@ -169,10 +162,11 @@ func TestGetInterview(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			var buf strings.Builder
-			log.SetOutput(&buf)
-			defer showLogsIfFail(t, tc.name, buf)
-
+			logger := slog.New(slog.NewTextHandler(&buf, &slog.HandlerOptions{Level: slog.LevelDebug, AddSource: true}))
 			repo := interview.NewMockRepo()
+			userRepo := user.NewMockRepo()
+			billingRepo := billing.NewMockRepo()
+			interviewService := interview.NewInterviewService(repo, userRepo, billingRepo, &mocks.MockAIService{}, logger)
 			repo.FailRepo = tc.failRepo
 
 			if tc.setup != nil {
@@ -182,7 +176,7 @@ func TestGetInterview(t *testing.T) {
 				}
 			}
 
-			got, err := interview.GetInterview(repo, tc.interviewID)
+			got, err := interviewService.GetInterview(tc.interviewID)
 
 			if tc.expectError && err == nil {
 				t.Fatalf("expected error but got nil")
@@ -201,12 +195,5 @@ func TestGetInterview(t *testing.T) {
 				}
 			}
 		})
-	}
-}
-
-func showLogsIfFail(t *testing.T, name string, buf strings.Builder) {
-	log.SetOutput(os.Stderr)
-	if t.Failed() {
-		fmt.Printf("---- logs for test: %s ----\n%s\n", name, buf.String())
 	}
 }

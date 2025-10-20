@@ -1,9 +1,7 @@
 package conversation_test
 
 import (
-	"fmt"
-	"log"
-	"os"
+	"log/slog"
 	"strings"
 	"testing"
 
@@ -15,7 +13,7 @@ import (
 )
 
 func TestCreateConversation(t *testing.T) {
-	ai := &mocks.MockOpenAIClient{}
+	mockAIService := &mocks.MockAIService{}
 
 	tests := []struct {
 		name           string
@@ -57,7 +55,7 @@ func TestCreateConversation(t *testing.T) {
 				CurrentQuestionNumber: 3,
 			},
 			setup: func() {
-				ai.Scenario = mocks.ScenarioCreated
+				mockAIService.Scenario = mocks.ScenarioCreated
 			},
 		},
 		{
@@ -83,21 +81,17 @@ func TestCreateConversation(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			var buf strings.Builder
-			log.SetOutput(&buf)
-			defer showLogsIfFail(t, tc.name, buf)
 			if tc.setup != nil {
 				tc.setup()
 			}
-
-			repo := conversation.NewMockRepo()
+			var buf strings.Builder
+			logger := slog.New(slog.NewTextHandler(&buf, &slog.HandlerOptions{Level: slog.LevelDebug, AddSource: true}))
+			conversationRepo := conversation.NewMockRepo()
 			interviewRepo := interview.NewMockRepo()
-			repo.FailRepo = tc.failRepo
+			conversationService := conversation.NewConversationService(conversationRepo, interviewRepo, mockAIService, logger)
+			conversationRepo.FailRepo = tc.failRepo
 
-			convo, err := conversation.CreateConversation(
-				repo,
-				interviewRepo,
-				ai,
+			convo, err := conversationService.CreateConversation(
 				tc.convo,
 				tc.interviewID,
 				tc.prompt,
@@ -126,8 +120,7 @@ func TestCreateConversation(t *testing.T) {
 }
 
 func TestAppendConversation(t *testing.T) {
-	ai := &mocks.MockOpenAIClient{}
-
+	mockAIService := &mocks.MockAIService{}
 	tests := []struct {
 		name        string
 		message     string
@@ -156,7 +149,7 @@ func TestAppendConversation(t *testing.T) {
 			failRepo:    false,
 			expectError: false,
 			setup: func() {
-				ai.Scenario = mocks.ScenarioAppended1
+				mockAIService.Scenario = mocks.ScenarioAppended1
 			},
 		},
 		{
@@ -180,21 +173,17 @@ func TestAppendConversation(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			var buf strings.Builder
-			log.SetOutput(&buf)
-			defer showLogsIfFail(t, tc.name, buf)
 			if tc.setup != nil {
 				tc.setup()
 			}
-
-			repo := conversation.NewMockRepo()
+			var buf strings.Builder
+			logger := slog.New(slog.NewTextHandler(&buf, &slog.HandlerOptions{Level: slog.LevelDebug, AddSource: true}))
+			conversationRepo := conversation.NewMockRepo()
 			interviewRepo := interview.NewMockRepo()
-			repo.FailRepo = tc.failRepo
+			conversationService := conversation.NewConversationService(conversationRepo, interviewRepo, mockAIService, logger)
+			conversationRepo.FailRepo = tc.failRepo
 
-			convo, err := conversation.CreateConversation(
-				repo,
-				interviewRepo,
-				ai,
+			convo, err := conversationService.CreateConversation(
 				tc.convo,
 				tc.interviewID,
 				"Prompt",
@@ -209,7 +198,12 @@ func TestAppendConversation(t *testing.T) {
 				t.Fatalf("failed to create initial conversation: %v", err)
 			}
 
-			updatedConvo, err := conversation.AppendConversation(repo, interviewRepo, ai, tc.interviewID, tc.userID, convo, tc.message, tc.prompt)
+			updatedConvo, err := conversationService.AppendConversation(
+				tc.interviewID,
+				tc.userID,
+				convo,
+				tc.message,
+				tc.prompt)
 
 			if tc.expectError && err == nil {
 				t.Fatalf("expected error but got nil")
@@ -223,12 +217,5 @@ func TestAppendConversation(t *testing.T) {
 				}
 			}
 		})
-	}
-}
-
-func showLogsIfFail(t *testing.T, name string, buf strings.Builder) {
-	log.SetOutput(os.Stderr)
-	if t.Failed() {
-		fmt.Printf("---- logs for test: %s ----\n%s\n", name, buf.String())
 	}
 }

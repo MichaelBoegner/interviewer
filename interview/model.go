@@ -2,7 +2,12 @@ package interview
 
 import (
 	"errors"
+	"log/slog"
 	"time"
+
+	"github.com/michaelboegner/interviewer/billing"
+	"github.com/michaelboegner/interviewer/chatgpt"
+	"github.com/michaelboegner/interviewer/user"
 )
 
 type Interview struct {
@@ -31,7 +36,25 @@ type Summary struct {
 	Score     *int      `json:"score,omitempty"`
 }
 
+type InterviewService struct {
+	InterviewRepo InterviewRepo
+	UserRepo      user.UserRepo
+	BillingRepo   billing.BillingRepo
+	AI            chatgpt.AIClient
+	Logger        *slog.Logger
+}
+
 var ErrNoValidCredits = errors.New("no valid credits")
+
+func NewInterviewService(interviewRepo InterviewRepo, userRepo user.UserRepo, billingRepo billing.BillingRepo, ai chatgpt.AIClient, logger *slog.Logger) *InterviewService {
+	return &InterviewService{
+		InterviewRepo: interviewRepo,
+		UserRepo:      userRepo,
+		BillingRepo:   billingRepo,
+		AI:            ai,
+		Logger:        logger,
+	}
+}
 
 type InterviewRepo interface {
 	LinkConversation(interviewID, conversationID int) error

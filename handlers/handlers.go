@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -13,11 +14,8 @@ import (
 
 	"github.com/michaelboegner/interviewer/billing"
 	"github.com/michaelboegner/interviewer/chatgpt"
-	"github.com/michaelboegner/interviewer/conversation"
-	"github.com/michaelboegner/interviewer/dashboard"
 	"github.com/michaelboegner/interviewer/interview"
 	"github.com/michaelboegner/interviewer/middleware"
-	"github.com/michaelboegner/interviewer/token"
 	"github.com/michaelboegner/interviewer/user"
 )
 
@@ -52,7 +50,7 @@ func (h *Handler) RequestVerificationHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	verificationJWT, err := user.VerificationToken(req.Email, req.Username, req.Password)
+	verificationJWT, err := h.UserService.VerificationToken(req.Email, req.Username, req.Password)
 	if err != nil {
 		RespondWithError(w, http.StatusInternalServerError, "Failed to create token")
 		return
@@ -90,7 +88,7 @@ func (h *Handler) CheckEmailHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := user.GetUserByEmail(h.UserRepo, req.Email)
+	err := h.UserService.GetUserByEmail(req.Email)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			RespondWithJSON(w, http.StatusOK, map[string]bool{"exists": false})
@@ -118,14 +116,15 @@ func (h *Handler) CreateUsersHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userCreated, err := user.CreateUser(h.UserRepo, req.Token)
+	userCreated, err := h.UserService.CreateUser(req.Token)
 	if err != nil {
 		RespondWithError(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
 
-	jwt, err := token.CreateJWT(strconv.Itoa(userCreated.ID), 0)
+	jwt, err := h.TokenService.CreateJWT(strconv.Itoa(userCreated.ID), 0)
 	if err != nil {
+		h.Logger.Error("h.TokenService.CreateJWT failed", "error", err)
 		RespondWithError(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
@@ -167,7 +166,7 @@ func (h *Handler) GetUsersHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userReturned, err := user.GetUser(h.UserRepo, userID)
+	userReturned, err := h.UserService.GetUser(userID)
 	if err != nil {
 		return
 	}
@@ -204,25 +203,26 @@ func (h *Handler) DeleteUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userReturned, err := user.GetUser(h.UserRepo, userID)
+	userReturned, err := h.UserService.GetUser(userID)
 	if err != nil {
 		RespondWithError(w, http.StatusInternalServerError, "Failed to find user")
 		return
 	}
 
-	err = h.Billing.CancelSubscription(h.UserRepo, userReturned.Email)
+	err = h.BillingService.CancelSubscription(userReturned.Email)
 	if err != nil {
+		h.Logger.Error("h.BillingService.CancelSubscription failed", "error", err)
 		RespondWithError(w, http.StatusInternalServerError, "Failed to update user")
 		return
 	}
 
-	err = user.MarkUserDeleted(h.UserRepo, userID)
+	err = h.UserService.MarkUserDeleted(userID)
 	if err != nil {
 		RespondWithError(w, http.StatusInternalServerError, "Failed to delete user")
 		return
 	}
 
-	err = token.DeleteRefreshToken(h.TokenRepo, userID)
+	err = h.TokenService.DeleteRefreshToken(userID)
 	if err != nil {
 		RespondWithError(w, http.StatusInternalServerError, "Internal server error")
 		return
@@ -256,7 +256,7 @@ func (h *Handler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 	}
 
-	jwToken, username, userID, err := user.LoginUser(h.UserRepo, params.Email, params.Password)
+	username, userID, err := h.UserService.LoginUser(params.Email, params.Password)
 	if err != nil {
 		if errors.Is(err, user.ErrAccountDeleted) {
 			RespondWithError(w, http.StatusUnauthorized, user.ErrAccountDeleted.Error())
@@ -266,7 +266,14 @@ func (h *Handler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	refreshToken, err := token.CreateRefreshToken(h.TokenRepo, userID)
+	jwToken, err := h.TokenService.CreateJWT(strconv.Itoa(userID), 0)
+	if err != nil {
+		log.Printf("JWT creation failed: %v", err)
+		RespondWithError(w, http.StatusInternalServerError, "Internal server error")
+		return
+	}
+
+	refreshToken, err := h.TokenService.CreateRefreshToken(userID)
 	if err != nil {
 		RespondWithError(w, http.StatusUnauthorized, "")
 		return
@@ -380,19 +387,21 @@ func (h *Handler) GithubLoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := user.GetOrCreateByEmail(h.UserRepo, githubUser.Email, githubUser.Login)
+	user, err := h.UserService.GetOrCreateByEmail(githubUser.Email, githubUser.Login)
 	if err != nil {
 		RespondWithError(w, http.StatusInternalServerError, "User creation failed")
 		return
 	}
 
-	jwt, err := token.CreateJWT(strconv.Itoa(user.ID), 0)
+	jwt, err := h.TokenService.CreateJWT(strconv.Itoa(user.ID), 0)
 	if err != nil {
+		h.Logger.Error("h.TokenService.CreateJWT failed", "error", err)
 		RespondWithError(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
-	refreshToken, err := token.CreateRefreshToken(h.TokenRepo, user.ID)
+	refreshToken, err := h.TokenService.CreateRefreshToken(user.ID)
 	if err != nil {
+		h.Logger.Error("h.TokenService.CreateRefreshToken failed", "error", err)
 		RespondWithError(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
@@ -430,25 +439,25 @@ func (h *Handler) RefreshTokensHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	storedToken, err := token.GetStoredRefreshToken(h.TokenRepo, params.UserID)
+	storedToken, err := h.TokenService.GetStoredRefreshToken(params.UserID)
 	if err != nil {
 		RespondWithError(w, http.StatusBadRequest, "Invalid user_id")
 		return
 	}
 
-	ok := token.VerifyRefreshToken(storedToken, providedToken)
+	ok := h.TokenService.VerifyRefreshToken(storedToken, providedToken)
 	if !ok {
 		RespondWithError(w, http.StatusUnauthorized, "Refresh token is invalid")
 		return
 	}
 
-	refreshToken, err := token.CreateRefreshToken(h.TokenRepo, params.UserID)
+	refreshToken, err := h.TokenService.CreateRefreshToken(params.UserID)
 	if err != nil {
 		RespondWithError(w, http.StatusUnauthorized, "")
 		return
 	}
 
-	user, err := h.UserRepo.GetUser(params.UserID)
+	user, err := h.UserService.UserRepo.GetUser(params.UserID)
 	if err != nil {
 		RespondWithError(w, http.StatusUnauthorized, "Account deactivated")
 		return
@@ -458,7 +467,7 @@ func (h *Handler) RefreshTokensHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	jwToken, err := token.CreateJWT(strconv.Itoa(params.UserID), 0)
+	jwToken, err := h.TokenService.CreateJWT(strconv.Itoa(params.UserID), 0)
 	if err != nil {
 		RespondWithError(w, http.StatusInternalServerError, "")
 		return
@@ -491,17 +500,13 @@ func (h *Handler) InterviewsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userReturned, err := user.GetUser(h.UserRepo, userID)
+	userReturned, err := h.UserService.GetUser(userID)
 	if err != nil {
 		RespondWithError(w, http.StatusInternalServerError, "Failed to find user")
 		return
 	}
 
-	interviewStarted, err := interview.StartInterview(
-		h.InterviewRepo,
-		h.UserRepo,
-		h.BillingRepo,
-		h.OpenAI,
+	interviewStarted, err := h.InterviewService.StartInterview(
 		userReturned,
 		30,
 		3,
@@ -521,13 +526,13 @@ func (h *Handler) InterviewsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	conversationID, err := conversation.CreateEmptyConversation(h.ConversationRepo, interviewStarted.Id, interviewStarted.Subtopic)
+	conversationID, err := h.ConversationService.CreateEmptyConversation(interviewStarted.Id, interviewStarted.Subtopic)
 	if err != nil {
 		RespondWithError(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
 
-	err = interview.LinkConversation(h.InterviewRepo, interviewStarted.Id, conversationID)
+	err = h.InterviewService.LinkConversation(interviewStarted.Id, conversationID)
 	if err != nil {
 		RespondWithError(w, http.StatusInternalServerError, "Internal server error")
 		return
@@ -560,7 +565,7 @@ func (h *Handler) GetInterviewHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	interviewReturned, err := interview.GetInterview(h.InterviewRepo, interviewID)
+	interviewReturned, err := h.InterviewService.GetInterview(interviewID)
 	if err != nil {
 		RespondWithError(w, http.StatusNotFound, "Interview not found")
 		return
@@ -603,7 +608,7 @@ func (h *Handler) UpdateInterviewStatusHandler(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	interviewReturned, err := interview.GetInterview(h.InterviewRepo, interviewID)
+	interviewReturned, err := h.InterviewService.GetInterview(interviewID)
 	if err != nil {
 		RespondWithError(w, http.StatusBadRequest, "Invalid ID")
 		return
@@ -615,7 +620,7 @@ func (h *Handler) UpdateInterviewStatusHandler(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	err = h.InterviewRepo.UpdateStatus(interviewID, userID, payload.Status)
+	err = h.InterviewService.InterviewRepo.UpdateStatus(interviewID, userID, payload.Status)
 	if err != nil {
 		RespondWithError(w, http.StatusInternalServerError, "Could not update status")
 		return
@@ -650,7 +655,7 @@ func (h *Handler) CreateConversationsHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	interviewReturned, err := interview.GetInterview(h.InterviewRepo, interviewID)
+	interviewReturned, err := h.InterviewService.GetInterview(interviewID)
 	if err != nil {
 		RespondWithError(w, http.StatusBadRequest, "Invalid ID")
 		return
@@ -664,16 +669,13 @@ func (h *Handler) CreateConversationsHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	conversationReturned, err := conversation.GetConversation(h.ConversationRepo, interviewID)
+	conversationReturned, err := h.ConversationService.GetConversation(interviewID)
 	if err != nil {
 		RespondWithError(w, http.StatusBadRequest, "Invalid ID")
 		return
 	}
 
-	conversationCreated, err := conversation.CreateConversation(
-		h.ConversationRepo,
-		h.InterviewRepo,
-		h.OpenAI,
+	conversationCreated, err := h.ConversationService.CreateConversation(
 		conversationReturned,
 		interviewID,
 		interviewReturned.Prompt,
@@ -726,7 +728,7 @@ func (h *Handler) AppendConversationsHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	interviewReturned, err := interview.GetInterview(h.InterviewRepo, interviewID)
+	interviewReturned, err := h.InterviewService.GetInterview(interviewID)
 	if err != nil {
 		RespondWithError(w, http.StatusBadRequest, "Invalid ID")
 		return
@@ -740,16 +742,13 @@ func (h *Handler) AppendConversationsHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	conversationReturned, err := conversation.GetConversation(h.ConversationRepo, interviewID)
+	conversationReturned, err := h.ConversationService.GetConversation(interviewID)
 	if err != nil {
 		RespondWithError(w, http.StatusBadRequest, "Invalid ID.")
 		return
 	}
 
-	conversationReturned, err = conversation.AppendConversation(
-		h.ConversationRepo,
-		h.InterviewRepo,
-		h.OpenAI,
+	conversationReturned, err = h.ConversationService.AppendConversation(
 		interviewID,
 		userID,
 		conversationReturned,
@@ -789,7 +788,7 @@ func (h *Handler) GetConversationHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	interviewReturned, err := interview.GetInterview(h.InterviewRepo, interviewID)
+	interviewReturned, err := h.InterviewService.GetInterview(interviewID)
 	if err != nil {
 		RespondWithError(w, http.StatusBadRequest, "Invalid ID")
 		return
@@ -799,7 +798,7 @@ func (h *Handler) GetConversationHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	conversationReturned, err := conversation.GetConversation(h.ConversationRepo, interviewID)
+	conversationReturned, err := h.ConversationService.GetConversation(interviewID)
 	if err != nil {
 		RespondWithError(w, http.StatusBadRequest, "Invalid ID.")
 		return
@@ -824,7 +823,13 @@ func (h *Handler) RequestResetHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resetJWT, err := user.RequestPasswordReset(h.UserRepo, params.Email)
+	err = h.UserService.GetUserByEmail(params.Email)
+	if err != nil {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+
+	resetJWT, err := h.TokenService.CreateJWT(params.Email, 900)
 	if err != nil {
 		w.WriteHeader(http.StatusOK)
 		return
@@ -855,7 +860,7 @@ func (h *Handler) ResetPasswordHandler(w http.ResponseWriter, r *http.Request) {
 		RespondWithError(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
-	err := user.ResetPassword(h.UserRepo, params.NewPassword, params.Token)
+	err := h.UserService.ResetPassword(params.NewPassword, params.Token)
 	if err != nil {
 		RespondWithError(w, http.StatusUnauthorized, "Invalid or expired token")
 		return
@@ -883,7 +888,7 @@ func (h *Handler) CreateCheckoutSessionHandler(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	user, err := user.GetUser(h.UserRepo, userID)
+	user, err := h.UserService.GetUser(userID)
 	if err != nil {
 		RespondWithError(w, http.StatusInternalServerError, "Could not find user")
 		return
@@ -908,7 +913,7 @@ func (h *Handler) CreateCheckoutSessionHandler(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	url, err := h.Billing.RequestCheckoutSession(user.Email, priceIDInt)
+	url, err := h.BillingService.RequestCheckoutSession(user.Email, priceIDInt)
 	if err != nil {
 		RespondWithError(w, http.StatusInternalServerError, "Could not start checkout")
 		return
@@ -929,13 +934,13 @@ func (h *Handler) CancelSubscriptionHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	userReturned, err := user.GetUser(h.UserRepo, userID)
+	userReturned, err := h.UserService.GetUser(userID)
 	if err != nil {
 		RespondWithError(w, http.StatusInternalServerError, "Could not retrieve user")
 		return
 	}
 
-	err = h.Billing.RequestDeleteSubscription(userReturned.SubscriptionID)
+	err = h.BillingService.RequestDeleteSubscription(userReturned.SubscriptionID)
 	if err != nil {
 		RespondWithError(w, http.StatusInternalServerError, "Could not cancel subscription")
 		return
@@ -956,13 +961,13 @@ func (h *Handler) ResumeSubscriptionHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	userReturned, err := user.GetUser(h.UserRepo, userID)
+	userReturned, err := h.UserService.GetUser(userID)
 	if err != nil {
 		RespondWithError(w, http.StatusInternalServerError, "Could not retrieve user")
 		return
 	}
 
-	err = h.Billing.RequestResumeSubscription(userReturned.SubscriptionID)
+	err = h.BillingService.RequestResumeSubscription(userReturned.SubscriptionID)
 	if err != nil {
 		RespondWithError(w, http.StatusInternalServerError, "Could not cancel subscription")
 		return
@@ -989,7 +994,7 @@ func (h *Handler) ChangePlanHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := user.GetUser(h.UserRepo, userID)
+	user, err := h.UserService.GetUser(userID)
 	if err != nil {
 		RespondWithError(w, http.StatusInternalServerError, "Could not find user")
 		return
@@ -1012,7 +1017,8 @@ func (h *Handler) ChangePlanHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.Billing.RequestUpdateSubscriptionVariant(user.SubscriptionID, priceIDInt); err != nil {
+	if err := h.BillingService.RequestUpdateSubscriptionVariant(user.SubscriptionID, priceIDInt); err != nil {
+		h.Logger.Error("UpdateLemonSubscriptionVariant failed", "error", err)
 		RespondWithError(w, http.StatusInternalServerError, "Failed to update subscription")
 		return
 	}
@@ -1034,7 +1040,8 @@ func (h *Handler) BillingWebhookHandler(w http.ResponseWriter, r *http.Request) 
 	defer r.Body.Close()
 
 	signature := r.Header.Get("X-Signature")
-	if !h.Billing.VerifyBillingSignature(signature, body, os.Getenv("LEMON_WEBHOOK_SECRET")) {
+	if !h.BillingService.VerifyBillingSignature(signature, body, os.Getenv("LEMON_WEBHOOK_SECRET")) {
+		h.Logger.Error("Invalid billing event signature")
 		RespondWithError(w, http.StatusUnauthorized, "Invalid signature")
 		return
 	}
@@ -1047,8 +1054,9 @@ func (h *Handler) BillingWebhookHandler(w http.ResponseWriter, r *http.Request) 
 	}
 	subscriptionID := webhookPayload.Data.SubscriptionID
 	webhookID := webhookPayload.Meta.WebhookID
-	exists, err := h.BillingRepo.HasWebhookBeenProcessed(webhookID)
+	exists, err := h.BillingService.BillingRepo.HasWebhookBeenProcessed(webhookID)
 	if err != nil {
+		h.Logger.Error("h.BillingRepo.HasWebhookBeenProcessed failed", "error", err)
 		RespondWithError(w, http.StatusInternalServerError, "Error checking webhook")
 		return
 	}
@@ -1071,8 +1079,9 @@ func (h *Handler) BillingWebhookHandler(w http.ResponseWriter, r *http.Request) 
 			return
 		}
 
-		err = h.Billing.ApplyCredits(h.UserRepo, h.BillingRepo, orderAttrs.UserEmail, orderAttrs.FirstOrderItem.VariantID)
+		err = h.BillingService.ApplyCredits(orderAttrs.UserEmail, orderAttrs.FirstOrderItem.VariantID)
 		if err != nil {
+			h.Logger.Error("h.Billing.ApplyCredits failed", "error", err)
 			RespondWithError(w, http.StatusInternalServerError, "Failed to update user")
 			return
 		}
@@ -1083,7 +1092,7 @@ func (h *Handler) BillingWebhookHandler(w http.ResponseWriter, r *http.Request) 
 			return
 		}
 
-		exists, err := h.UserRepo.HasActiveOrCancelledSubscription(SubCreatedAttrs.UserEmail)
+		exists, err := h.UserService.UserRepo.HasActiveOrCancelledSubscription(SubCreatedAttrs.UserEmail)
 		if err != nil {
 			RespondWithError(w, http.StatusInternalServerError, "Subscription check failed")
 			return
@@ -1092,7 +1101,7 @@ func (h *Handler) BillingWebhookHandler(w http.ResponseWriter, r *http.Request) 
 			return
 		}
 
-		err = h.Billing.CreateSubscription(h.UserRepo, SubCreatedAttrs, subscriptionID)
+		err = h.BillingService.CreateSubscription(SubCreatedAttrs, subscriptionID)
 		if err != nil {
 			RespondWithError(w, http.StatusInternalServerError, "Failed to update user")
 			return
@@ -1103,8 +1112,9 @@ func (h *Handler) BillingWebhookHandler(w http.ResponseWriter, r *http.Request) 
 			return
 		}
 
-		err = h.Billing.CancelSubscription(h.UserRepo, emailAttribute.UserEmail)
+		err = h.BillingService.CancelSubscription(emailAttribute.UserEmail)
 		if err != nil {
+			h.Logger.Error("h.Billing.CancelSubscription failed", "error", err)
 			RespondWithError(w, http.StatusInternalServerError, "Failed to update user")
 			return
 		}
@@ -1114,8 +1124,9 @@ func (h *Handler) BillingWebhookHandler(w http.ResponseWriter, r *http.Request) 
 			return
 		}
 
-		err = h.Billing.ResumeSubscription(h.UserRepo, emailAttribute.UserEmail)
+		err = h.BillingService.ResumeSubscription(emailAttribute.UserEmail)
 		if err != nil {
+			h.Logger.Error("h.Billing.ResumeSubscription failed", "error", err)
 			RespondWithError(w, http.StatusInternalServerError, "Failed to update user")
 			return
 		}
@@ -1125,7 +1136,7 @@ func (h *Handler) BillingWebhookHandler(w http.ResponseWriter, r *http.Request) 
 			return
 		}
 
-		err = h.Billing.ExpireSubscription(h.UserRepo, h.BillingRepo, emailAttribute.UserEmail)
+		err = h.BillingService.ExpireSubscription(emailAttribute.UserEmail)
 		if err != nil {
 			RespondWithError(w, http.StatusInternalServerError, "Failed to update user")
 			return
@@ -1141,7 +1152,7 @@ func (h *Handler) BillingWebhookHandler(w http.ResponseWriter, r *http.Request) 
 			return
 		}
 
-		err = h.Billing.RenewSubscription(h.UserRepo, h.BillingRepo, SubRenewAttrs)
+		err = h.BillingService.RenewSubscription(SubRenewAttrs)
 		if err != nil {
 			RespondWithError(w, http.StatusInternalServerError, "Failed to update user")
 			return
@@ -1153,7 +1164,7 @@ func (h *Handler) BillingWebhookHandler(w http.ResponseWriter, r *http.Request) 
 			return
 		}
 
-		err = h.Billing.ChangeSubscription(h.UserRepo, h.BillingRepo, SubChangedAttrs)
+		err = h.BillingService.ChangeSubscription(SubChangedAttrs)
 		if err != nil {
 			RespondWithError(w, http.StatusInternalServerError, "Failed to update user")
 			return
@@ -1165,7 +1176,7 @@ func (h *Handler) BillingWebhookHandler(w http.ResponseWriter, r *http.Request) 
 			return
 		}
 
-		err = h.Billing.UpdateSubscription(h.UserRepo, SubChangedAttrs, subscriptionID)
+		err = h.BillingService.UpdateSubscription(SubChangedAttrs, subscriptionID)
 		if err != nil {
 			RespondWithError(w, http.StatusInternalServerError, "Failed to update user")
 			return
@@ -1177,7 +1188,7 @@ func (h *Handler) BillingWebhookHandler(w http.ResponseWriter, r *http.Request) 
 			return
 		}
 
-		err = h.Billing.DeductCredits(h.UserRepo, h.BillingRepo, orderAttrs)
+		err = h.BillingService.DeductCredits(orderAttrs)
 		if err != nil {
 			RespondWithError(w, http.StatusInternalServerError, "Failed to update user")
 			return
@@ -1198,7 +1209,7 @@ func (h *Handler) BillingWebhookHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	err = h.BillingRepo.MarkWebhookProcessed(webhookID, eventType)
+	err = h.BillingService.BillingRepo.MarkWebhookProcessed(webhookID, eventType)
 	if err != nil {
 		w.WriteHeader(http.StatusOK)
 		return
@@ -1219,7 +1230,7 @@ func (h *Handler) DashboardHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dashboardData, err := dashboard.GetDashboardData(userID, h.UserRepo, h.InterviewRepo)
+	dashboardData, err := h.DashboardService.GetDashboardData(userID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			RespondWithError(w, http.StatusUnauthorized, "User not found")
@@ -1246,7 +1257,7 @@ func (h *Handler) JDInputHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	jdInput, err := h.OpenAI.ExtractJDInput(input.JobDescription)
+	jdInput, err := h.AIService.ExtractJDInput(input.JobDescription)
 	if err != nil {
 		var openaiErr *chatgpt.OpenAIError
 		if errors.As(err, &openaiErr) {
@@ -1257,7 +1268,7 @@ func (h *Handler) JDInputHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	jdSummary, err := h.OpenAI.ExtractJDSummary(jdInput)
+	jdSummary, err := h.AIService.ExtractJDSummary(jdInput)
 	if err != nil {
 		var openaiErr *chatgpt.OpenAIError
 		if errors.As(err, &openaiErr) {

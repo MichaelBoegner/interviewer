@@ -2,19 +2,16 @@ package dashboard
 
 import (
 	"log"
-
-	"github.com/michaelboegner/interviewer/interview"
-	"github.com/michaelboegner/interviewer/user"
 )
 
-func GetDashboardData(userID int, userRepo user.UserRepo, interviewRepo interview.InterviewRepo) (*DashboardData, error) {
-	user, err := userRepo.GetUser(userID)
+func (d *DashboardService) GetDashboardData(userID int) (*DashboardData, error) {
+	user, err := d.UserRepo.GetUser(userID)
 	if err != nil {
 		log.Printf("GetUser failed for userID %d: %v", userID, err)
 		return nil, err
 	}
 
-	interviews, err := interviewRepo.GetInterviewSummariesByUserID(userID)
+	interviews, err := d.InterviewRepo.GetInterviewSummariesByUserID(userID)
 	if err != nil {
 		log.Printf("GetInterviewSummariesByUserID failed for userID %d: %v", userID, err)
 		return nil, err
