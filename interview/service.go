@@ -2,7 +2,6 @@ package interview
 
 import (
 	"fmt"
-	"log/slog"
 	"time"
 
 	"github.com/michaelboegner/interviewer/billing"
@@ -17,7 +16,7 @@ func (i *InterviewService) StartInterview(
 	difficulty string,
 	jd string) (*Interview, error) {
 
-	err := deductAndLogCredit(user, i.UserRepo, i.BillingRepo, i.Logger)
+	err := i.deductAndLogCredit(user)
 	if err != nil {
 		i.Logger.Error("checkCreditsLogTransaction failed", "error", err)
 		return nil, err
@@ -93,39 +92,20 @@ func (i *InterviewService) GetInterview(interviewID int) (*Interview, error) {
 	return interview, nil
 }
 
-func canUseCredit(user *user.User, logger *slog.Logger) (string, error) {
-	now := time.Now()
-
-	switch {
-	case user.SubscriptionEndDate != nil &&
-		user.SubscriptionEndDate.After(now) &&
-		user.SubscriptionStatus != "expired" &&
-		user.SubscriptionCredits > 0:
-		logger.Info("subscription plan in canUseCredit check")
-		return "subscription", nil
-	case user.IndividualCredits > 0:
-		logger.Info("individual plan in canUseCredit check")
-		return "individual", nil
-	default:
-		logger.Info("no valid credits in canUseCredit check")
-		return "", ErrNoValidCredits
-	}
-}
-
-func deductAndLogCredit(user *user.User, userRepo user.UserRepo, billingRepo billing.BillingRepo, logger *slog.Logger) error {
-	creditType, err := canUseCredit(user, logger)
+func (i *InterviewService) deductAndLogCredit(user *user.User) error {
+	creditType, err := i.canUseCredit(user)
 	if err != nil {
-		logger.Error("canUseCredit failed", "error", err)
+		i.Logger.Error("canUseCredit failed", "error", err)
 		return err
 	}
 	if creditType == "" {
-		logger.Info("user doesn't have a valid plan or credits")
+		i.Logger.Info("user doesn't have a valid plan or credits")
 		return fmt.Errorf("user doesn't have a valid plan or credits")
 	}
 
-	err = userRepo.AddCredits(user.ID, -1, creditType)
+	err = i.UserRepo.AddCredits(user.ID, -1, creditType)
 	if err != nil {
-		logger.Error("AddCredits failed", "error", err)
+		i.Logger.Error("AddCredits failed", "error", err)
 		return err
 	}
 
@@ -136,10 +116,29 @@ func deductAndLogCredit(user *user.User, userRepo user.UserRepo, billingRepo bil
 		CreditType: creditType,
 		Reason:     reason,
 	}
-	if err := billingRepo.LogCreditTransaction(tx); err != nil {
-		logger.Error("billingRepo.LogCreditTransaction failed", "error", err)
+	if err := i.BillingRepo.LogCreditTransaction(tx); err != nil {
+		i.Logger.Error("billingRepo.LogCreditTransaction failed", "error", err)
 		return err
 	}
 
 	return nil
+}
+
+func (i *InterviewService) canUseCredit(user *user.User) (string, error) {
+	now := time.Now()
+
+	switch {
+	case user.SubscriptionEndDate != nil &&
+		user.SubscriptionEndDate.After(now) &&
+		user.SubscriptionStatus != "expired" &&
+		user.SubscriptionCredits > 0:
+		i.Logger.Info("subscription plan in canUseCredit check")
+		return "subscription", nil
+	case user.IndividualCredits > 0:
+		i.Logger.Info("individual plan in canUseCredit check")
+		return "individual", nil
+	default:
+		i.Logger.Info("no valid credits in canUseCredit check")
+		return "", ErrNoValidCredits
+	}
 }
